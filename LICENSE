@@ -1,0 +1,22 @@
+Minecraft Bedrock Unlocker — License
+
+The installer scripts in this repository are OPEN SOURCE and licensed under
+the GNU General Public License v3 (GPLv3):
+
+  - i.ps1
+  - install.ps1
+  - uninstall.ps1
+
+See https://www.gnu.org/licenses/gpl-3.0.html for the full GPLv3 text.
+
+The unlock binary (release/winmm.dll) is CLOSED SOURCE / PROPRIETARY.
+
+Copyright (c) 2026 CoelhoFZ. All rights reserved.
+
+The source code of release/winmm.dll is not provided and is not part of this
+repository. Permission is granted to use the compiled binary for personal,
+non-commercial, educational purposes, and to redistribute it unmodified
+together with this notice. Reverse engineering, decompilation, disassembly
+or modification of the binary is prohibited.
+
+No warranty of any kind is provided, express or implied.
