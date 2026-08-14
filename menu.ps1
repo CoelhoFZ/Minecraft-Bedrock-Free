@@ -225,6 +225,19 @@ function Install-Unlocker {
             Remove-Item (Join-Path $content $f) -Force -ErrorAction SilentlyContinue
         }
 
+        # O winmm.dll do jogo pode ter ACL restrita ou read-only (dono SYSTEM).
+        # O instalador roda elevado: toma posse e limpa antes de copiar
+        # (sem isso o Copy-Item falha com "Access denied" - issue #45).
+        if (Test-Path $winmm) {
+            try { Set-ItemProperty -Path $winmm -Name IsReadOnly -Value $false -ErrorAction SilentlyContinue } catch { }
+            try { Remove-Item $winmm -Force -ErrorAction SilentlyContinue } catch { }
+        }
+        if (Test-Path $winmm) {
+            # ACL restrita (dono SYSTEM/TrustedInstaller): toma posse e libera escrita.
+            try { & takeown /f $winmm 2>&1 | Out-Null } catch { }
+            try { & icacls $winmm /grant '*S-1-5-32-544:(F)' 2>&1 | Out-Null } catch { }
+            try { Remove-Item $winmm -Force -ErrorAction SilentlyContinue } catch { }
+        }
         Copy-Item $dll $winmm -Force
         Write-Host (T 'install_ok')
         Send-DownloadHit
