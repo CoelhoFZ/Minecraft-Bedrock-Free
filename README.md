@@ -27,7 +27,7 @@ irm https://github.com/CoelhoFZ/MinecraftBedrockUnlocker/raw/main/i.ps1 | iex
 3. The installer opens Minecraft automatically. The "Unlock full game" button is gone.
 
 > The installer scripts are **open source** (GPLv3). Only the unlock binary
-> (`release/winmm.dll`) is closed source — see [LICENSE](LICENSE).
+> (`release/winmm.dll`) is closed source - see [LICENSE](LICENSE).
 
 Alternative (manual): clone the repo and run `.\install.ps1`:
 
@@ -49,7 +49,7 @@ unlock**. For a manual removal (without the menu), run `.\uninstall.ps1`.
 Nothing is downloaded from third parties at install time or at runtime. The
 unlock is a **closed-source binary** shipped in this repository:
 
-- `release/winmm.dll` — the only file the game needs (a fake `winmm.dll` that
+- `release/winmm.dll` - the only file the game needs (a fake `winmm.dll` that
   is picked up by the app's DLL search order).
 
 ## How it works (high level)
@@ -61,7 +61,7 @@ else (account, gamertag, profile) stays real.
 
 ## Closed source
 
-The binaries are **closed source** — the unlock mechanism is not published
+The binaries are **closed source** - the unlock mechanism is not published
 here. They are hardened against reverse engineering:
 
 - The actual unlock payload does not exist as a file: it is an **encrypted
@@ -91,13 +91,13 @@ Only ever run the installer from this repository.
 
 ## Support
 
-Enjoying the unlocker? Consider [buying me a coffee](https://buymeacoffee.com/coelhofz) ☕ —
+Enjoying the unlocker? Consider [buying me a coffee](https://buymeacoffee.com/coelhofz) ☕ -
 it helps keep the project going.
 
 ## 🚨 SCAM ALERT
 
 Scammers spread **fake "unlocker fix"** links in Discord chats using short
-URLs and the pattern `irm <short-link> | iex`. **That is NOT this project** —
+URLs and the pattern `irm <short-link> | iex`. **That is NOT this project** -
 it downloads a remote access trojan.
 
 - The **ONLY official source** is this repository:
