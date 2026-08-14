@@ -1,0 +1,29 @@
+# MinecraftBedrockUnlocker - closed-source binaries
+
+# Lixo local / SO / editor
+*.tmp
+Thumbs.db
+.DS_Store
+desktop.ini
+.vscode/
+.idea/
+
+# Segredos (nunca commitar)
+.env
+.env.*
+*.key
+*.pem
+
+# AGENTS.md e regras sensiveis sao LOCAIS - nunca commitar
+AGENTS.md
+
+# Source privada (defensivo: se for copiada pra ca, nunca commitar)
+Source-MinecraftBedrockUnlocker/
+
+# Artefatos de build dev/release - SO o winmm.dll do --harden e distribuido
+XGameCore.GDK.dll
+unlock-CoelhoFZ.ini
+payload.dll
+mapper.dll
+
+# O binario fica versionado (release/) - nunca regerar aqui

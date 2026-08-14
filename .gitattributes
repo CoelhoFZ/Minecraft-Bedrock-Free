@@ -1,0 +1,38 @@
+# Normalize text files
+* text=auto
+
+# Documentation and source
+*.md text eol=lf
+*.html text eol=lf
+*.cs text eol=lf
+*.sh text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.json text eol=lf
+
+# Windows scripts/resources
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.rc text eol=crlf
+*.manifest text eol=crlf
+
+# Binary files
+*.dll binary
+*.exe binary
+*.pdb binary
+*.ico binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.zip binary
+*.tar binary
+*.gz binary
+*.7z binary
+*.jar binary
+*.rar binary
+
+# GitHub Linguist
+*.ps1 linguist-language=PowerShell
+.history/** linguist-excluded=true
