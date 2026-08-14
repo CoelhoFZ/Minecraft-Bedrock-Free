@@ -4,8 +4,10 @@
   <img src="docs/logo.png" alt="Minecraft Bedrock Unlocker logo" width="128">
   <br>
   <a href="https://github.com/CoelhoFZ/MinecraftBedrockUnlocker/releases"><img alt="GitHub release" src="https://img.shields.io/github/v/release/CoelhoFZ/MinecraftBedrockUnlocker"></a>
+  <a href="https://github.com/CoelhoFZ/MinecraftBedrockUnlocker/releases"><img alt="Downloads" src="https://badgen.net/github/assets-dl/CoelhoFZ/MinecraftBedrockUnlocker"></a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%2010%2F11-blue">
   <img alt="License" src="https://img.shields.io/badge/license-GPLv3%20(scripts)-blue">
+  <a href="https://buymeacoffee.com/coelhofz"><img alt="Buy Me a Coffee" src="https://img.shields.io/badge/Support-Buy%20Me%20a%20Coffee-FFDD00"></a>
 </p>
 
 Unlock the full version of **Minecraft Bedrock Edition (GDK)** on Windows 10/11.
@@ -87,6 +89,11 @@ The unlock binary is **closed source**, so Windows Defender or SmartScreen may
 show a false-positive warning. This is expected. Verify the binary before
 installing using the SHA-256 in `SHA256SUMS.txt` (see "Binary integrity").
 Only ever run the installer from this repository.
+
+## Support
+
+Enjoying the unlocker? Consider [buying me a coffee](https://buymeacoffee.com/coelhofz) ☕ —
+it helps keep the project going.
 
 ## 🚨 SCAM ALERT
 
