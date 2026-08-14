@@ -56,31 +56,26 @@ export default {
 };
 
 function badge(count) {
-  const label = "downloads";
+  // for-the-badge style (shields.io): 28px tall, square corners, uppercase.
+  const label = "DOWNLOADS";
   const value = String(count);
-  const labelW = 10 * label.length + 18;
-  const valueW = 10 * value.length + 18;
+  const charW = 7.7; // approx Verdana uppercase width at 10px
+  const pad = 12;
+  const labelW = label.length * charW + pad * 2;
+  const valueW = Math.max(value.length * charW + pad * 2, 30);
   const totalW = labelW + valueW;
   const labelX = labelW / 2;
   const valueX = labelW + valueW / 2;
   return [
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW}" height="20" role="img" aria-label="downloads: ${value}">`,
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${totalW.toFixed(1)}" height="28" role="img" aria-label="downloads: ${value}">`,
     `<title>downloads: ${value}</title>`,
-    `<linearGradient id="s" x2="0" y2="100%">`,
-    `<stop offset="0" stop-color="#bbb" stop-opacity=".1"/>`,
-    `<stop offset="1" stop-opacity=".1"/>`,
-    `</linearGradient>`,
-    `<clipPath id="r"><rect width="${totalW}" height="20" rx="3" fill="#fff"/></clipPath>`,
-    `<g clip-path="url(#r)">`,
-    `<rect width="${labelW}" height="20" fill="#555"/>`,
-    `<rect x="${labelW}" width="${valueW}" height="20" fill="#4c1"/>`,
-    `<rect width="${totalW}" height="20" fill="url(#s)"/>`,
+    `<g shape-rendering="crispEdges">`,
+    `<rect width="${labelW}" height="28" fill="#555"/>`,
+    `<rect x="${labelW}" width="${valueW}" height="28" fill="#4c1"/>`,
     `</g>`,
-    `<g fill="#fff" text-anchor="middle" font-family="Verdana,DejaVu Sans,sans-serif" font-size="11">`,
-    `<text x="${labelX}" y="15" fill="#010101" fill-opacity=".3">${label}</text>`,
-    `<text x="${labelX}" y="14">${label}</text>`,
-    `<text x="${valueX}" y="15" fill="#010101" fill-opacity=".3">${value}</text>`,
-    `<text x="${valueX}" y="14">${value}</text>`,
+    `<g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" text-rendering="geometricPrecision" font-size="10">`,
+    `<text x="${labelX}" y="17.5">${label}</text>`,
+    `<text x="${valueX}" y="17.5" font-weight="bold">${value}</text>`,
     `</g>`,
     `</svg>`,
   ].join("");
