@@ -4,8 +4,10 @@
   <img src="docs/logo.png" alt="Minecraft Bedrock Unlocker logo" width="128">
   <br>
   <a href="https://github.com/CoelhoFZ/MinecraftBedrockUnlocker/releases"><img alt="GitHub release" src="https://img.shields.io/github/v/release/CoelhoFZ/MinecraftBedrockUnlocker"></a>
+  <a href="https://github.com/CoelhoFZ/MinecraftBedrockUnlocker/releases"><img alt="Downloads" src="https://badgen.net/github/assets-dl/CoelhoFZ/MinecraftBedrockUnlocker"></a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%2010%2F11-blue">
   <img alt="License" src="https://img.shields.io/badge/license-GPLv3%20(scripts)-blue">
+  <a href="https://buymeacoffee.com/coelhofz"><img alt="Buy Me a Coffee" src="https://img.shields.io/badge/Support-Buy%20Me%20a%20Coffee-FFDD00"></a>
 </p>
 
 Desbloqueie a versão completa do **Minecraft Bedrock Edition (GDK)** no
@@ -91,6 +93,11 @@ O binário do unlock é de **código fechado**, então o Windows Defender ou o
 SmartScreen podem mostrar um aviso de falso positivo. Isso é esperado.
 Verifique o binário antes de instalar usando o SHA-256 de `SHA256SUMS.txt`
 (veja "Integridade do binário"). Rode o instalador apenas deste repositório.
+
+## Apoie o projeto
+
+Gostou do unlocker? Considere [me pagar um café](https://buymeacoffee.com/coelhofz) ☕ —
+ajuda a manter o projeto vivo.
 
 ## 🚨 ALERTA DE GOLPE
 
