@@ -29,7 +29,7 @@ irm https://github.com/CoelhoFZ/MinecraftBedrockUnlocker/raw/main/i.ps1 | iex
 3. O instalador abre o Minecraft automaticamente. O botão "Desbloquear Jogo Completo" some.
 
 > Os scripts do instalador são **open source** (GPLv3). Apenas o binário do
-> unlock (`release/winmm.dll`) é código fechado — veja [LICENSE](LICENSE).
+> unlock (`release/winmm.dll`) é código fechado - veja [LICENSE](LICENSE).
 
 Alternativa (manual): clone o repo e rode o `.\install.ps1`:
 
@@ -51,7 +51,7 @@ desbloqueio**. Para remoção manual (sem o menu), rode o `.\uninstall.ps1`.
 Nada é baixado de terceiros na instalação nem em runtime. O unlock é um
 **binário de código fechado** distribuído neste repositório:
 
-- `release/winmm.dll` — o único arquivo que o jogo precisa (um `winmm.dll`
+- `release/winmm.dll` - o único arquivo que o jogo precisa (um `winmm.dll`
   falso que é carregado pela ordem de busca de DLLs do app).
 
 ## Como funciona (visão geral)
@@ -64,7 +64,7 @@ gamertag, perfil) continua real.
 
 ## Código fechado
 
-Os binários são **código fechado** — o mecanismo do unlock não é publicado
+Os binários são **código fechado** - o mecanismo do unlock não é publicado
 aqui. Eles são endurecidos contra engenharia reversa:
 
 - O payload real do unlock não existe como arquivo: é um **blob criptografado
@@ -95,14 +95,14 @@ Verifique o binário antes de instalar usando o SHA-256 de `SHA256SUMS.txt`
 
 ## Apoie o projeto
 
-Gostou do unlocker? Considere [me pagar um café](https://buymeacoffee.com/coelhofz) ☕ —
+Gostou do unlocker? Considere [me pagar um café](https://buymeacoffee.com/coelhofz) ☕ -
 ajuda a manter o projeto vivo.
 
 ## 🚨 ALERTA DE GOLPE
 
 Golpistas espalham **links falsos de "fix do unlocker"** em chats do Discord
 usando URLs curtas e o padrão `irm <link-curto> | iex`. **Isso NÃO é este
-projeto** — baixa um trojan de acesso remoto.
+projeto** - baixa um trojan de acesso remoto.
 
 - A **única fonte oficial** é este repositório:
   `https://github.com/CoelhoFZ/MinecraftBedrockUnlocker`
