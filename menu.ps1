@@ -227,6 +227,7 @@ function Install-Unlocker {
 
         Copy-Item $dll $winmm -Force
         Write-Host (T 'install_ok')
+        Send-DownloadHit
         Start-Minecraft
     } finally {
         Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
@@ -254,6 +255,15 @@ function Restore-Original {
     }
     Write-Host (T 'unlock_removed')
     Start-Minecraft
+}
+
+function Send-DownloadHit {
+    # Conta 1 instalacao no contador (Worker + KV). Fire-and-forget: qualquer
+    # falha (offline/timeout) e ignorada - nunca quebra nem atrasa o instalador.
+    # Nenhum dado pessoal e enviado: apenas um POST anonimo em /hit.
+    try {
+        Invoke-WebRequest -UseBasicParsing -Uri 'https://mbu-download-counter.xgobg2020.workers.dev/hit' -Method Post -TimeoutSec 5 | Out-Null
+    } catch { }
 }
 
 function Start-Minecraft {
