@@ -9,7 +9,7 @@
 $ErrorActionPreference = 'Stop'
 $Script:Version = '4.3.0'
 $base = 'https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main'
-$expectedHash = '86689c9724be7f391ba9bd1f4ef8dddaa73baec0b76b9c73bebef89f37b76e97'
+$expectedHash = 'f7b1408c36590abbfcb5310cf98c1efb1fa16f3a54a9387df56b1441de90335b'
 
 function Resolve-MbuLanguage {
     $candidates = New-Object System.Collections.Generic.List[string]
