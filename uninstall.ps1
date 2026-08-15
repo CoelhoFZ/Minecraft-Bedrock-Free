@@ -9,6 +9,7 @@ function Find-MinecraftContent {
         $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction Stop |
             Select-Object -First 1
         if ($appx -and $appx.InstallLocation) {
+            $candidates += $appx.InstallLocation
             $candidates += (Join-Path $appx.InstallLocation 'Content')
         }
     } catch { }
@@ -28,7 +29,15 @@ if ($p) {
     Start-Sleep -Seconds 2
 }
 
+# Garante escrita na pasta e no winmm.dll (WindowsApps e protegida por TrustedInstaller).
+try { & takeown /f $content 2>&1 | Out-Null } catch { }
+try { & icacls $content /grant '*S-1-5-32-544:(OI)(CI)F' 2>&1 | Out-Null } catch { }
+
 $winmm = Join-Path $content 'winmm.dll'
+if (Test-Path $winmm) {
+    try { & takeown /f $winmm 2>&1 | Out-Null } catch { }
+    try { & icacls $winmm /grant '*S-1-5-32-544:(F)' 2>&1 | Out-Null } catch { }
+}
 Remove-Item $winmm -Force -ErrorAction SilentlyContinue
 if (Test-Path (Join-Path $content 'winmm.dll.orig')) {
     Move-Item (Join-Path $content 'winmm.dll.orig') $winmm -Force

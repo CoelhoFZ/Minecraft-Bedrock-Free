@@ -12,14 +12,14 @@
 Desbloqueie a versão completa do **Minecraft Bedrock Edition (GDK)** no
 Windows 10/11.
 
-**Funciona apenas com instalação via Xbox App** (NÃO a versão da Microsoft
-Store).
+**Funciona com instalações via Xbox App (GDK) e Microsoft Store** no
+Windows 10/11.
 
 > ⚠️ Projeto educacional. Apoie os desenvolvedores comprando o jogo.
 
 ## Instalação
 
-1. Instale o Minecraft pelo **Xbox App** e abra uma vez.
+1. Instale o Minecraft pelo **Xbox App** ou pela **Microsoft Store** e abra uma vez.
 2. Abra o **PowerShell** e rode:
 
 ```powershell
