@@ -7,6 +7,7 @@
   <img alt="Downloads" src="https://mbu-download-counter.xgobg2020.workers.dev/?v=2">
   <img alt="License" src="https://img.shields.io/badge/license-GPLv3%20(scripts)-blue?style=for-the-badge">
   <a href="https://buymeacoffee.com/coelhofz"><img alt="Buy Me a Coffee" src="https://img.shields.io/badge/Support-Buy%20Me%20a%20Coffee-FFDD00?style=for-the-badge"></a>
+  <a href="https://discord.gg/u3S4gFgK6M"><img alt="Discord" src="https://img.shields.io/badge/Discord-Join%20community-5865F2?style=for-the-badge&logo=discord&logoColor=white"></a>
 </p>
 
 Unlock the full version of **Minecraft Bedrock Edition (GDK)** on Windows 10/11.
