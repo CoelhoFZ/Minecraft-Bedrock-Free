@@ -15,10 +15,17 @@ $base = if ($env:MBU_BASE_URL) { $env:MBU_BASE_URL.TrimEnd('/') } else {
 
 $menu = Join-Path $env:TEMP 'mbu-menu.ps1'
 Invoke-WebRequest -UseBasicParsing -Uri "$base/menu.ps1" -OutFile $menu
-$menuHash = 'a5f62c9c851f446290f02754e26c7f8a7b8d5cc3e99b5d4b1d0292d159ddd512'
+$menuHash = '3712b08beac7b163c2a7a18e37f6435142e44302a50c55fa8e9a79283dc7369e'
 $menuActual = (Get-FileHash -Path $menu -Algorithm SHA256).Hash.ToLowerInvariant()
 if ($menuActual -ne $menuHash) {
-    Write-Host "Hash do menu.ps1 invalido: $menuActual (esperado $menuHash). Abortando."
+    Write-Host ''
+    Write-Host 'ERRO: o hash do menu.ps1 baixado nao confere com o esperado.' -ForegroundColor Red
+    Write-Host "  Esperado: $menuHash"
+    Write-Host "  Recebido: $menuActual"
+    Write-Host 'Isso geralmente significa que o menu.ps1 no repositorio foi' -ForegroundColor Yellow
+    Write-Host 'atualizado sem sincronizar o hash neste bootstrap (i.ps1).' -ForegroundColor Yellow
+    Write-Host 'Se voce nao e o mantenedor, desconfie do link que usou.'
+    Read-Host 'Pressione Enter para fechar esta janela'
     exit 1
 }
 

@@ -1,5 +1,11 @@
 ﻿# menu.ps1 - Minecraft Bedrock Free - menu interativo (open source, GPLv3).
 # Suporte a 8 idiomas (pt/en/es/fr/zh/hi/ar/ru) com deteccao automatica.
+#
+# IMPORTANTE: o i.ps1 (bootstrap via irm | iex) valida o hash SHA256 DESTE
+# arquivo antes de executa-lo. Qualquer edicao aqui muda o hash e quebra o
+# bootstrap ate que o $menuHash no i.ps1 seja atualizado. Apos editar, rode:
+#   (Get-FileHash .\menu.ps1 -Algorithm SHA256).Hash.ToLowerInvariant()
+# e cole o resultado em i.ps1 (variavel $menuHash).
 $ErrorActionPreference = 'Stop'
 $Script:Version = '4.3.0'
 $base = 'https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main'
