@@ -1,9 +1,9 @@
-# Minecraft Bedrock Unlocker
+# Minecraft Bedrock Free
 
 <p align="center">
-  <img src="docs/logo.png" alt="Minecraft Bedrock Unlocker logo" width="128">
+  <img src="docs/logo.png" alt="Minecraft Bedrock Free logo" width="128">
   <br>
-  <a href="https://github.com/CoelhoFZ/MinecraftBedrockUnlocker/releases"><img alt="GitHub release" src="https://img.shields.io/github/v/release/CoelhoFZ/MinecraftBedrockUnlocker?style=for-the-badge"></a>
+  <a href="https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases"><img alt="GitHub release" src="https://img.shields.io/github/v/release/CoelhoFZ/Minecraft-Bedrock-Free?style=for-the-badge"></a>
   <img alt="Downloads" src="https://mbu-download-counter.xgobg2020.workers.dev/?v=2">
   <img alt="License" src="https://img.shields.io/badge/license-GPLv3%20(scripts)-blue?style=for-the-badge">
   <a href="https://buymeacoffee.com/coelhofz"><img alt="Buy Me a Coffee" src="https://img.shields.io/badge/Support-Buy%20Me%20a%20Coffee-FFDD00?style=for-the-badge"></a>
@@ -23,7 +23,7 @@ Store).
 2. Abra o **PowerShell** e rode:
 
 ```powershell
-irm https://github.com/CoelhoFZ/MinecraftBedrockUnlocker/raw/main/i.ps1 | iex
+irm https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/i.ps1 | iex
 ```
 
 3. O instalador abre o Minecraft automaticamente. O botão "Desbloquear Jogo Completo" some.
@@ -34,8 +34,8 @@ irm https://github.com/CoelhoFZ/MinecraftBedrockUnlocker/raw/main/i.ps1 | iex
 Alternativa (manual): clone o repo e rode o `.\install.ps1`:
 
 ```powershell
-git clone https://github.com/CoelhoFZ/MinecraftBedrockUnlocker
-cd MinecraftBedrockUnlocker
+git clone https://github.com/CoelhoFZ/Minecraft-Bedrock-Free
+cd Minecraft-Bedrock-Free
 .\install.ps1
 ```
 
@@ -86,12 +86,10 @@ de instalar:
 Get-FileHash .\release\winmm.dll -Algorithm SHA256
 ```
 
-## Antivírus / SmartScreen
+## Antivírus
 
-O binário do unlock é de **código fechado**, então o Windows Defender ou o
-SmartScreen podem mostrar um aviso de falso positivo. Isso é esperado.
-Verifique o binário antes de instalar usando o SHA-256 de `SHA256SUMS.txt`
-(veja "Integridade do binário"). Rode o instalador apenas deste repositório.
+Alguns antivírus marcam o binário do unlock como falso positivo. Isso é
+esperado para um unlocker — veja [Falsos positivos de antivírus](docs/antivirus-false-positives.md).
 
 ## Apoie o projeto
 
@@ -105,7 +103,7 @@ usando URLs curtas e o padrão `irm <link-curto> | iex`. **Isso NÃO é este
 projeto** - baixa um trojan de acesso remoto.
 
 - A **única fonte oficial** é este repositório:
-  `https://github.com/CoelhoFZ/MinecraftBedrockUnlocker`
+  `https://github.com/CoelhoFZ/Minecraft-Bedrock-Free`
 - **NUNCA** rode `irm <qualquer coisa> | iex` vindo de link curto (bit.ly,
   tinyurl, …), outro domínio, DM do Discord ou servidor aleatório.
 - O instalador oficial só copia os arquivos deste repositório.

@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability or a scam
 
-- **GitHub issues**: https://github.com/CoelhoFZ/MinecraftBedrockUnlocker/issues
+- **GitHub issues**: https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/issues
 - **Discord**: https://discord.gg/byDkXzhvuZ
 
 Please include: the link/domain, a screenshot, the exact PowerShell command you were shown,
@@ -27,14 +27,14 @@ Fake "unlocker fix" installers are being distributed in Discord chats:
   `irm | iex` install pattern taught in the README.
 
 **Do not run** `irm <anything> | iex` unless the URL literally starts with
-`https://github.com/CoelhoFZ/MinecraftBedrockUnlocker`.
+`https://github.com/CoelhoFZ/Minecraft-Bedrock-Free`.
 
 ## Official sources
 
 | Channel | URL |
 |---|---|
-| Repository | https://github.com/CoelhoFZ/MinecraftBedrockUnlocker |
-| Releases | https://github.com/CoelhoFZ/MinecraftBedrockUnlocker/releases |
+| Repository | https://github.com/CoelhoFZ/Minecraft-Bedrock-Free |
+| Releases | https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases |
 | Discord | https://discord.gg/byDkXzhvuZ |
 
 ## Supported versions

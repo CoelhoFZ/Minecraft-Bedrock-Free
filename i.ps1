@@ -1,14 +1,14 @@
-# i.ps1 - Minecraft Bedrock Unlocker - bootstrap (open source, GPLv3).
+# i.ps1 - Minecraft Bedrock Free - bootstrap (open source, GPLv3).
 #
 # Baixa o menu interativo e o abre em uma janela CMD (fundo preto classico),
 # igual ao install.bat. Solicita elevacao (UAC) se preciso.
 #
 # Uso (PowerShell):
-#   irm https://github.com/CoelhoFZ/MinecraftBedrockUnlocker/raw/main/i.ps1 | iex
+#   irm https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/i.ps1 | iex
 $ErrorActionPreference = 'Stop'
 
 $base = if ($env:MBU_BASE_URL) { $env:MBU_BASE_URL.TrimEnd('/') } else {
-    'https://raw.githubusercontent.com/CoelhoFZ/MinecraftBedrockUnlocker/main'
+    'https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main'
 }
 
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -27,7 +27,7 @@ if ($menuActual -ne $menuHash) {
 $launcher = Join-Path $env:TEMP 'mbu-launch.bat'
 [System.IO.File]::WriteAllLines($launcher, @(
     '@echo off',
-    'title Minecraft Bedrock Unlocker',
+    'title Minecraft Bedrock Free',
     'color 07',
     ('powershell.exe -NoProfile -ExecutionPolicy Bypass -File "{0}"' -f $menu),
     'del "%~f0" >nul 2>&1'

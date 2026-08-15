@@ -1,8 +1,8 @@
-# install.ps1 - MinecraftBedrockUnlocker - instalador (open source, GPLv3).
+# install.ps1 - Minecraft-Bedrock-Free - instalador (open source, GPLv3).
 #
 # Instala o winmm.dll proprio (release/) no diretorio do Minecraft.
-# Uso:   git clone https://github.com/CoelhoFZ/MinecraftBedrockUnlocker
-#        cd MinecraftBedrockUnlocker
+# Uso:   git clone https://github.com/CoelhoFZ/Minecraft-Bedrock-Free
+#        cd Minecraft-Bedrock-Free
 #        .\install.ps1
 param([string]$DllPath)
 

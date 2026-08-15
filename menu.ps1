@@ -1,8 +1,8 @@
-﻿# menu.ps1 - Minecraft Bedrock Unlocker - menu interativo (open source, GPLv3).
+﻿# menu.ps1 - Minecraft Bedrock Free - menu interativo (open source, GPLv3).
 # Suporte a 8 idiomas (pt/en/es/fr/zh/hi/ar/ru) com deteccao automatica.
 $ErrorActionPreference = 'Stop'
 $Script:Version = '4.3.0'
-$base = 'https://raw.githubusercontent.com/CoelhoFZ/MinecraftBedrockUnlocker/main'
+$base = 'https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main'
 $expectedHash = '86689c9724be7f391ba9bd1f4ef8dddaa73baec0b76b9c73bebef89f37b76e97'
 
 function Resolve-MbuLanguage {

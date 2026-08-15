@@ -1,4 +1,4 @@
-# uninstall.ps1 - MinecraftBedrockUnlocker - remove o unlock e restaura.
+# uninstall.ps1 - Minecraft-Bedrock-Free - remove o unlock e restaura.
 # Uso:   .\uninstall.ps1
 $ErrorActionPreference = 'Stop'
 

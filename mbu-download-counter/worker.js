@@ -1,4 +1,4 @@
-// mbu-download-counter - download/install counter for Minecraft Bedrock Unlocker.
+// mbu-download-counter - download/install counter for Minecraft Bedrock Free.
 // Module worker (Cloudflare Workers), deployed via ./s.py cloudflare workers-deploy.
 //
 // Endpoints:
