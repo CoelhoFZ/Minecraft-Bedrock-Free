@@ -72,8 +72,8 @@ $Script:PT = @{
     'greet_morning'      = 'Bom dia'
     'greet_afternoon'    = 'Boa tarde'
     'greet_evening'      = 'Boa noite'
-    'err_content_not_found' = 'Content do Minecraft nao encontrado. Instale o Minecraft pelo Xbox App.'
-    'err_store_not_supported' = 'Versao da Microsoft Store NAO suportada. Instale o Minecraft pelo Xbox App.'
+    'err_content_not_found' = 'Content do Minecraft nao encontrado. Instale o Minecraft pelo Xbox App ou pela Microsoft Store e tente de novo.'
+    'err_package_incomplete' = 'Pacote do Minecraft encontrado, mas o executavel esta faltando. Reinstale o Minecraft e tente de novo.'
     'closing_mc'         = 'Fechando Minecraft...'
     'downloading_bin'    = 'Baixando o binario (winmm.dll)...'
     'err_hash_invalid'   = 'Hash do winmm.dll invalido: {0}'
@@ -103,8 +103,8 @@ $Script:I18N = @{
     'greet_morning' = @{ en='Good morning'; zh='早上好'; hi='सुप्रभात'; es='Buenos días'; fr='Bonjour'; ar='صباح الخير'; ru='Доброе утро' }
     'greet_afternoon' = @{ en='Good afternoon'; zh='下午好'; hi='शुभ दोपहर'; es='Buenas tardes'; fr='Bon après-midi'; ar='مساء الخير'; ru='Добрый день' }
     'greet_evening' = @{ en='Good evening'; zh='晚上好'; hi='शुभ संध्या'; es='Buenas noches'; fr='Bonsoir'; ar='مساء النور'; ru='Добрый вечер' }
-    'err_content_not_found' = @{ en='Minecraft Content folder not found. Install Minecraft from the Xbox App.'; zh='未找到 Minecraft Content 文件夹。请从 Xbox 应用安装 Minecraft。'; hi='Minecraft Content फ़ोल्डर नहीं मिला। Xbox App से Minecraft इंस्टॉल करें।'; es='No se encontró la carpeta Content de Minecraft. Instala Minecraft desde la Xbox App.'; fr='Dossier Content de Minecraft introuvable. Installez Minecraft depuis l''application Xbox.'; ar='لم يتم العثور على مجلد Content الخاص بـ Minecraft. ثبّت Minecraft من تطبيق Xbox.'; ru='Папка Content Minecraft не найдена. Установите Minecraft из приложения Xbox.' }
-    'err_store_not_supported' = @{ en='Microsoft Store version is NOT supported. Install Minecraft from the Xbox App.'; zh='不支持 Microsoft Store 版本。请通过 Xbox 应用安装 Minecraft。'; hi='Microsoft Store संस्करण समर्थित नहीं है। Xbox App से Minecraft इंस्टॉल करें।'; es='La versión de Microsoft Store NO es compatible. Instala Minecraft desde la Xbox App.'; fr='La version Microsoft Store n''est PAS prise en charge. Installez Minecraft depuis l''application Xbox.'; ar='إصدار Microsoft Store غير مدعوم. ثبّت Minecraft من تطبيق Xbox.'; ru='Версия из Microsoft Store НЕ поддерживается. Установите Minecraft из приложения Xbox.' }
+    'err_content_not_found' = @{ en='Minecraft Content folder not found. Install Minecraft from the Xbox App or the Microsoft Store and try again.'; zh='未找到 Minecraft Content 文件夹。请从 Xbox 应用安装 Minecraft。'; hi='Minecraft Content फ़ोल्डर नहीं मिला। Xbox App से Minecraft इंस्टॉल करें।'; es='No se encontró la carpeta Content de Minecraft. Instala Minecraft desde la Xbox App.'; fr='Dossier Content de Minecraft introuvable. Installez Minecraft depuis l''application Xbox.'; ar='لم يتم العثور على مجلد Content الخاص بـ Minecraft. ثبّت Minecraft من تطبيق Xbox.'; ru='Папка Content Minecraft не найдена. Установите Minecraft из приложения Xbox.' }
+    'err_package_incomplete' = @{ en='Minecraft package found but the game executable is missing. Reinstall Minecraft and try again.'; zh='找到 Minecraft 包，但缺少游戏可执行文件。请重新安装 Minecraft 后再试。'; hi='Minecraft पैकेज मिला, लेकिन गेम एक्ज़ीक्यूटेबल गायब है। Minecraft फिर से इंस्टॉल करके देखें。'; es='Se encontró el paquete de Minecraft, pero falta el ejecutable del juego. Reinstala Minecraft e inténtalo de nuevo.'; fr='Le package Minecraft est présent, mais l''exécutable du jeu est manquant. Réinstallez Minecraft et réessayez.'; ar='تم العثور على حزمة Minecraft، لكن ملف تشغيل اللعبة مفقود. أعد تثبيت Minecraft وحاول مرة أخرى.'; ru='Пакет Minecraft найден, но исполняемый файл игры отсутствует. Переустановите Minecraft и попробуйте снова.' }
     'closing_mc' = @{ en='Closing Minecraft...'; zh='正在关闭 Minecraft...'; hi='Minecraft बंद किया जा रहा है...'; es='Cerrando Minecraft...'; fr='Fermeture de Minecraft...'; ar='جارٍ إغلاق Minecraft...'; ru='Закрытие Minecraft...' }
     'downloading_bin' = @{ en='Downloading the binary (winmm.dll)...'; zh='正在下载二进制文件 (winmm.dll)...'; hi='बाइनरी डाउनलोड हो रही है (winmm.dll)...'; es='Descargando el binario (winmm.dll)...'; fr='Téléchargement du binaire (winmm.dll)...'; ar='جارٍ تنزيل الملف الثنائي (winmm.dll)...'; ru='Загрузка бинарного файла (winmm.dll)...' }
     'err_hash_invalid' = @{ en='Invalid winmm.dll hash: {0}'; zh='winmm.dll 哈希无效: {0}'; hi='winmm.dll का हैश अमान्य: {0}'; es='Hash de winmm.dll inválido: {0}'; fr='Hash de winmm.dll invalide : {0}'; ar='تجزئة winmm.dll غير صالحة: {0}'; ru='Неверный хеш winmm.dll: {0}' }
@@ -169,17 +169,36 @@ function Get-TimeGreeting {
 }
 
 function Find-MinecraftContent {
-    # Xbox App (suportada): instala em C:\XboxGames\Minecraft for Windows\Content.
+    # Xbox App (GDK/MSIXVC): instala em C:\XboxGames\Minecraft for Windows\Content.
     $xbox = 'C:\XboxGames\Minecraft for Windows\Content'
     if ((Test-Path $xbox) -and (Test-Path (Join-Path $xbox 'Minecraft.Windows.exe'))) {
         return $xbox
     }
-    # Microsoft Store (NAO suportada): instala em C:\Program Files\WindowsApps\...
+    # Microsoft Store (UWP): instala em C:\Program Files\WindowsApps\Microsoft.MinecraftUWP_*.
+    # O InstallLocation do pacote vale para a Store e tambem para outros drives.
     $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction SilentlyContinue | Select-Object -First 1
-    if ($appx -and $appx.InstallLocation -and ($appx.InstallLocation -like '*WindowsApps*')) {
-        throw (T 'err_store_not_supported')
+    if ($appx -and $appx.InstallLocation) {
+        if (Test-Path (Join-Path $appx.InstallLocation 'Minecraft.Windows.exe')) {
+            return $appx.InstallLocation
+        }
+        throw (T 'err_package_incomplete')
     }
     throw (T 'err_content_not_found')
+}
+
+function Ensure-ContentWritable {
+    param([string]$Content)
+    # Pasta do pacote (WindowsApps) e protegida (TrustedInstaller): toma posse da
+    # pasta e libera escrita para Administradores. Tambem garante o winmm.dll
+    # (pode ter ACL restrita ou read-only - issue #45).
+    try { & takeown /f $Content 2>&1 | Out-Null } catch { }
+    try { & icacls $Content /grant '*S-1-5-32-544:(OI)(CI)F' 2>&1 | Out-Null } catch { }
+    $winmm = Join-Path $Content 'winmm.dll'
+    if (Test-Path $winmm) {
+        try { Set-ItemProperty -Path $winmm -Name IsReadOnly -Value $false -ErrorAction SilentlyContinue } catch { }
+        try { & takeown /f $winmm 2>&1 | Out-Null } catch { }
+        try { & icacls $winmm /grant '*S-1-5-32-544:(F)' 2>&1 | Out-Null } catch { }
+    }
 }
 
 function Test-UnlockInstalled {
@@ -221,6 +240,11 @@ function Install-Unlocker {
 
         Close-Minecraft
 
+        # Garante escrita na pasta e no winmm.dll antes de mexer (WindowsApps e
+        # protegido por TrustedInstaller; o winmm.dll do jogo pode ter ACL
+        # restrita ou read-only - issue #45).
+        Ensure-ContentWritable -Content $content
+
         $winmm = Join-Path $content 'winmm.dll'
         if ((Test-Path $winmm) -and -not (Test-Path (Join-Path $content 'winmm.dll.orig'))) {
             Copy-Item $winmm (Join-Path $content 'winmm.dll.orig') -Force
@@ -231,19 +255,7 @@ function Install-Unlocker {
             Remove-Item (Join-Path $content $f) -Force -ErrorAction SilentlyContinue
         }
 
-        # O winmm.dll do jogo pode ter ACL restrita ou read-only (dono SYSTEM).
-        # O instalador roda elevado: toma posse e limpa antes de copiar
-        # (sem isso o Copy-Item falha com "Access denied" - issue #45).
-        if (Test-Path $winmm) {
-            try { Set-ItemProperty -Path $winmm -Name IsReadOnly -Value $false -ErrorAction SilentlyContinue } catch { }
-            try { Remove-Item $winmm -Force -ErrorAction SilentlyContinue } catch { }
-        }
-        if (Test-Path $winmm) {
-            # ACL restrita (dono SYSTEM/TrustedInstaller): toma posse e libera escrita.
-            try { & takeown /f $winmm 2>&1 | Out-Null } catch { }
-            try { & icacls $winmm /grant '*S-1-5-32-544:(F)' 2>&1 | Out-Null } catch { }
-            try { Remove-Item $winmm -Force -ErrorAction SilentlyContinue } catch { }
-        }
+        Remove-Item $winmm -Force -ErrorAction SilentlyContinue
         Copy-Item $dll $winmm -Force
         Write-Host (T 'install_ok')
         Send-DownloadHit
@@ -256,6 +268,8 @@ function Install-Unlocker {
 function Restore-Original {
     $content = Find-MinecraftContent
     Close-Minecraft
+
+    Ensure-ContentWritable -Content $content
 
     $winmm = Join-Path $content 'winmm.dll'
     $orig = Join-Path $content 'winmm.dll.orig'

@@ -14,23 +14,31 @@ if (-not (Test-Path $dll)) {
     throw "winmm.dll nao encontrado. Use o comando irm do README ou execute a partir do clone do repo."
 }
 
-# ---- 1. localiza o Content do Minecraft (instalacao via Xbox App) ----
+# ---- 1. localiza o Content do Minecraft (Xbox App GDK ou Microsoft Store) ----
 function Find-MinecraftContent {
-    # Xbox App (suportada): instala em C:\XboxGames\Minecraft for Windows\Content.
+    # Xbox App (GDK/MSIXVC): instala em C:\XboxGames\Minecraft for Windows\Content.
     $xbox = 'C:\XboxGames\Minecraft for Windows\Content'
     if ((Test-Path $xbox) -and (Test-Path (Join-Path $xbox 'Minecraft.Windows.exe'))) {
         return $xbox
     }
-    # Microsoft Store (NAO suportada): instala em C:\Program Files\WindowsApps\...
+    # Microsoft Store (UWP): instala em C:\Program Files\WindowsApps\Microsoft.MinecraftUWP_*.
+    # O InstallLocation do pacote vale para a Store e tambem para outros drives.
     $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction SilentlyContinue | Select-Object -First 1
-    if ($appx -and $appx.InstallLocation -and ($appx.InstallLocation -like '*WindowsApps*')) {
-        throw "Versao da Microsoft Store NAO suportada. Instale o Minecraft pelo Xbox App."
+    if ($appx -and $appx.InstallLocation) {
+        if (Test-Path (Join-Path $appx.InstallLocation 'Minecraft.Windows.exe')) {
+            return $appx.InstallLocation
+        }
+        throw "Pacote do Minecraft encontrado, mas o executavel esta faltando. Reinstale o Minecraft e tente de novo."
     }
-    throw "Content do Minecraft nao encontrado. Instale o Minecraft pelo Xbox App e tente de novo."
+    throw "Content do Minecraft nao encontrado. Instale o Minecraft pelo Xbox App ou pela Microsoft Store e tente de novo."
 }
 
 $content = Find-MinecraftContent
 Write-Output "Content: $content"
+
+# ---- 1b. garante escrita na pasta (WindowsApps e protegida por TrustedInstaller) ----
+try { & takeown /f $content 2>&1 | Out-Null } catch { }
+try { & icacls $content /grant '*S-1-5-32-544:(OI)(CI)F' 2>&1 | Out-Null } catch { }
 
 # ---- 2. fecha o jogo (UWP segura as DLLs mapeadas - falha silenciosa) ----
 $p = Get-Process Minecraft.Windows -ErrorAction SilentlyContinue

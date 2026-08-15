@@ -11,13 +11,13 @@
 
 Unlock the full version of **Minecraft Bedrock Edition (GDK)** on Windows 10/11.
 
-**Only works with Xbox App installations** (NOT the Microsoft Store version).
+**Works with Xbox App (GDK) and Microsoft Store installations** on Windows 10/11.
 
 > ⚠️ Educational project. Please support the developers by purchasing the game.
 
 ## Install
 
-1. Install Minecraft from the **Xbox App** and run it once.
+1. Install Minecraft from the **Xbox App** or the **Microsoft Store** and run it once.
 2. Open **PowerShell** and run:
 
 ```powershell
