@@ -92,6 +92,10 @@ Get-FileHash .\release\winmm.dll -Algorithm SHA256
 Alguns antivírus marcam o binário do unlock como falso positivo. Isso é
 esperado para um unlocker — veja [Falsos positivos de antivírus](docs/antivirus-false-positives.md).
 
+## Solução de problemas
+
+Problemas ao instalar ou abrir o jogo? Veja [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+
 ## Apoie o projeto
 
 Gostou do unlocker? Considere [me pagar um café](https://buymeacoffee.com/coelhofz) ☕ -

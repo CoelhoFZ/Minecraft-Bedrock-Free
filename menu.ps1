@@ -77,6 +77,10 @@ $Script:PT = @{
     'closing_mc'         = 'Fechando Minecraft...'
     'downloading_bin'    = 'Baixando o binario (winmm.dll)...'
     'err_hash_invalid'   = 'Hash do winmm.dll invalido: {0}'
+    'err_acl'            = 'Nao foi possivel tomar posse da pasta do Minecraft. Rode como administrador.'
+    'err_copy_corrupt'   = 'Falha ao copiar winmm.dll (copia corrompida/bloqueada). Verifique se o antivirus nao bloqueou e tente de novo.'
+    'err_replace'        = 'Nao foi possivel substituir winmm.dll (Access denied ou arquivo em uso). Feche o Minecraft e rode como administrador.'
+    'err_av_quarantine'  = 'O winmm.dll foi corrompido/removido pelo antivirus logo apos a copia. Adicione uma exclusao para a pasta do Minecraft e rode de novo.'
     'backup_orig'        = 'Backup do winmm original em winmm.dll.orig'
     'install_ok'         = 'OK - unlock instalado.'
     'restored_ok'        = 'winmm original restaurado.'
@@ -100,6 +104,10 @@ $Script:PT = @{
 }
 
 $Script:I18N = @{
+    'err_acl' = @{ en='Could not take ownership of the Minecraft folder. Run as administrator.'; es='No se pudo tomar posesion de la carpeta de Minecraft. Ejecuta como administrador.' }
+    'err_copy_corrupt' = @{ en='Failed to copy winmm.dll (corrupted/blocked copy). Check if your antivirus blocked it and try again.'; es='Error al copiar winmm.dll (copia corrupta/bloqueada). Comprueba si tu antivirus lo bloqueo e intentalo de nuevo.' }
+    'err_replace' = @{ en='Could not replace winmm.dll (access denied or file in use). Close Minecraft and run as administrator.'; es='No se pudo reemplazar winmm.dll (acceso denegado o archivo en uso). Cierra Minecraft y ejecuta como administrador.' }
+    'err_av_quarantine' = @{ en='winmm.dll was corrupted/removed by antivirus right after copying. Add an exclusion for the Minecraft folder and run again.'; es='winmm.dll fue corrompido/eliminado por el antivirus justo despues de copiarlo. Anade una exclusion para la carpeta de Minecraft y vuelve a intentarlo.' }
     'greet_morning' = @{ en='Good morning'; zh='早上好'; hi='सुप्रभात'; es='Buenos días'; fr='Bonjour'; ar='صباح الخير'; ru='Доброе утро' }
     'greet_afternoon' = @{ en='Good afternoon'; zh='下午好'; hi='शुभ दोपहर'; es='Buenas tardes'; fr='Bon après-midi'; ar='مساء الخير'; ru='Добрый день' }
     'greet_evening' = @{ en='Good evening'; zh='晚上好'; hi='शुभ संध्या'; es='Buenas noches'; fr='Bonsoir'; ar='مساء النور'; ru='Добрый вечер' }
@@ -178,8 +186,13 @@ function Find-MinecraftContent {
     # O InstallLocation do pacote vale para a Store e tambem para outros drives.
     $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($appx -and $appx.InstallLocation) {
-        if (Test-Path (Join-Path $appx.InstallLocation 'Minecraft.Windows.exe')) {
-            return $appx.InstallLocation
+        # GDK (Xbox App) fora do drive canonico pode resolver o InstallLocation
+        # para a RAIZ do jogo, com o exe dentro de \Content (mesmo layout que o
+        # uninstall.ps1 ja cobre). Tenta as duas formas antes de desistir.
+        foreach ($c in @($appx.InstallLocation, (Join-Path $appx.InstallLocation 'Content'))) {
+            if (Test-Path (Join-Path $c 'Minecraft.Windows.exe')) {
+                return $c
+            }
         }
         throw (T 'err_package_incomplete')
     }
@@ -191,14 +204,19 @@ function Ensure-ContentWritable {
     # Pasta do pacote (WindowsApps) e protegida (TrustedInstaller): toma posse da
     # pasta e libera escrita para Administradores. Tambem garante o winmm.dll
     # (pode ter ACL restrita ou read-only - issue #45).
-    try { & takeown /f $Content 2>&1 | Out-Null } catch { }
-    try { & icacls $Content /grant '*S-1-5-32-544:(OI)(CI)F' 2>&1 | Out-Null } catch { }
+    & takeown.exe /f $Content 2>&1 | Out-Null
+    if ($LASTEXITCODE -ne 0) { return $false }
+    & icacls.exe $Content /grant '*S-1-5-32-544:(OI)(CI)F' 2>&1 | Out-Null
+    if ($LASTEXITCODE -ne 0) { return $false }
     $winmm = Join-Path $Content 'winmm.dll'
     if (Test-Path $winmm) {
-        try { Set-ItemProperty -Path $winmm -Name IsReadOnly -Value $false -ErrorAction SilentlyContinue } catch { }
-        try { & takeown /f $winmm 2>&1 | Out-Null } catch { }
-        try { & icacls $winmm /grant '*S-1-5-32-544:(F)' 2>&1 | Out-Null } catch { }
+        Set-ItemProperty -Path $winmm -Name IsReadOnly -Value $false -ErrorAction SilentlyContinue
+        & takeown.exe /f $winmm 2>&1 | Out-Null
+        if ($LASTEXITCODE -ne 0) { return $false }
+        & icacls.exe $winmm /grant '*S-1-5-32-544:(F)' 2>&1 | Out-Null
+        if ($LASTEXITCODE -ne 0) { return $false }
     }
+    return $true
 }
 
 function Test-UnlockInstalled {
@@ -243,7 +261,9 @@ function Install-Unlocker {
         # Garante escrita na pasta e no winmm.dll antes de mexer (WindowsApps e
         # protegido por TrustedInstaller; o winmm.dll do jogo pode ter ACL
         # restrita ou read-only - issue #45).
-        Ensure-ContentWritable -Content $content
+        if (-not (Ensure-ContentWritable -Content $content)) {
+            throw (T 'err_acl')
+        }
 
         $winmm = Join-Path $content 'winmm.dll'
         if ((Test-Path $winmm) -and -not (Test-Path (Join-Path $content 'winmm.dll.orig'))) {
@@ -255,8 +275,34 @@ function Install-Unlocker {
             Remove-Item (Join-Path $content $f) -Force -ErrorAction SilentlyContinue
         }
 
-        Remove-Item $winmm -Force -ErrorAction SilentlyContinue
-        Copy-Item $dll $winmm -Force
+        # Copia atomica: grava em .new, valida o hash e so entao substitui o
+        # original. Evita deixar um winmm.dll truncado (o Minecraft abriria com
+        # "Bad Image" 0xc0e90007).
+        $stagedDll = Join-Path $content 'winmm.dll.new'
+        Remove-Item $stagedDll -Force -ErrorAction SilentlyContinue
+        Copy-Item $dll $stagedDll -Force
+        if ((Get-FileHash -Path $stagedDll -Algorithm SHA256).Hash -ne $expectedHash) {
+            Remove-Item $stagedDll -Force -ErrorAction SilentlyContinue
+            throw (T 'err_copy_corrupt')
+        }
+        if (Test-Path $winmm) {
+            Remove-Item $winmm -Force -ErrorAction SilentlyContinue
+        }
+        if (Test-Path $winmm) {
+            Remove-Item $stagedDll -Force -ErrorAction SilentlyContinue
+            throw (T 'err_replace')
+        }
+        Move-Item $stagedDll $winmm -Force
+        # Antivirus pode quarentenar o DLL logo apos a copia: valida de novo e,
+        # se corromper, restaura o original (o jogo volta a rodar como Trial).
+        if ((Get-FileHash -Path $winmm -Algorithm SHA256).Hash -ne $expectedHash) {
+            $orig = Join-Path $content 'winmm.dll.orig'
+            if (Test-Path $orig) {
+                Remove-Item $winmm -Force -ErrorAction SilentlyContinue
+                Copy-Item $orig $winmm -Force -ErrorAction SilentlyContinue
+            }
+            throw (T 'err_av_quarantine')
+        }
         Write-Host (T 'install_ok')
         Send-DownloadHit
         Start-Minecraft

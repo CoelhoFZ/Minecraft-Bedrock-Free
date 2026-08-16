@@ -88,6 +88,10 @@ Get-FileHash .\release\winmm.dll -Algorithm SHA256
 Some antivirus engines flag the unlock binary as a false positive. This is
 expected for an unlocker — see [Antivirus false positives](docs/antivirus-false-positives.md).
 
+## Troubleshooting
+
+Problems installing or launching the game? See [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
+
 ## Support
 
 Enjoying the unlocker? Consider [buying me a coffee](https://buymeacoffee.com/coelhofz) ☕ -

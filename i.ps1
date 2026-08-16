@@ -15,7 +15,7 @@ $base = if ($env:MBU_BASE_URL) { $env:MBU_BASE_URL.TrimEnd('/') } else {
 
 $menu = Join-Path $env:TEMP 'mbu-menu.ps1'
 Invoke-WebRequest -UseBasicParsing -Uri "$base/menu.ps1" -OutFile $menu
-$menuHash = 'a4a5b06c12ce5b1fdbb95f0d3b3e0ffe7dba2016b1abb003c3c91422bbfe279e'
+$menuHash = '7ae41651236be10a5a00f3d48b32d3d5076f48ede0c1e7597846a1541dc368d9'
 $menuActual = (Get-FileHash -Path $menu -Algorithm SHA256).Hash.ToLowerInvariant()
 if ($menuActual -ne $menuHash) {
     Write-Host ''
