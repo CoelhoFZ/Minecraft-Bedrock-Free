@@ -69,6 +69,7 @@ function Grant-AdminFullControl {
 
 $content = Find-MinecraftContent
 Write-Output "Content: $content"
+Write-Output "AVISO: suporte apenas ao build OFICIAL (Store/Xbox App) na versao ATUAL. Launchers de terceiros e versoes antigas NAO sao suportados."
 
 if (-not (Grant-AdminFullControl -Path $content -Perm '*S-1-5-32-544:(OI)(CI)F')) {
     throw "Nao foi possivel tomar posse da pasta do Minecraft (rode como administrador)."
@@ -144,12 +145,27 @@ if ((Get-FileHash -Path $winmm -Algorithm SHA256).Hash -ne $dllHash) {
 Write-Output "OK - unlock instalado."
 
 # ---- 6. abre o Minecraft automaticamente ----
+# GDK (Xbox App) abre pelo executavel direto no Content; Store (UWP) abre via
+# AUMID com o AppId REAL do manifest ("Game", nao "App" - o entry point do
+# pacote Store e o GameLaunchHelper.exe, nao o Minecraft.Windows.exe).
 try {
-    $exe = Join-Path $content 'Minecraft.Windows.exe'
-    if (Test-Path $exe) {
-        Start-Process -FilePath $exe -WorkingDirectory $content -ErrorAction Stop
+    $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction SilentlyContinue | Select-Object -First 1
+    $isStore = $appx -and ($content -eq $appx.InstallLocation)
+    if ($isStore) {
+        $appId = 'Game'
+        try {
+            $m = Get-AppxPackageManifest -Package $appx.PackageFullName -ErrorAction Stop
+            $id = $m.Package.Applications.Application | Select-Object -First 1 -ExpandProperty Id
+            if ($id) { $appId = $id }
+        } catch { }
+        Start-Process "shell:AppsFolder\$($appx.PackageFamilyName)!$appId" -ErrorAction Stop
     } else {
-        Start-Process 'shell:AppsFolder\Microsoft.MinecraftUWP_8wekyb3d8bbwe!App' -ErrorAction Stop
+        $exe = Join-Path $content 'Minecraft.Windows.exe'
+        if (Test-Path $exe) {
+            Start-Process -FilePath $exe -WorkingDirectory $content -ErrorAction Stop
+        } else {
+            throw 'Executavel nao encontrado'
+        }
     }
     Write-Output "Minecraft iniciado."
 } catch {

@@ -16,6 +16,18 @@ Unlock the full version of **Minecraft Bedrock Edition (GDK)** on Windows 10/11.
 
 > ⚠️ Educational project. Please support the developers by purchasing the game.
 
+## Requirements
+
+- **Official build only.** Works exclusively with the official **Microsoft
+  Store** or **Xbox App** build of Minecraft Bedrock for Windows. It will NOT
+  work with third-party launchers or version switchers (they don't use the GDK
+  license API the unlock hooks).
+- **Current version only.** Built and tested against the latest version.
+  Microsoft does not let you install older versions, and this project does not
+  provide one.
+- Do **not** copy `winmm.dll` into another launcher/folder. It only unlocks
+  the official build and can break other launchers.
+
 ## Install
 
 1. Install Minecraft from the **Xbox App** or the **Microsoft Store** and run it once.
