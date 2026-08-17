@@ -78,3 +78,18 @@ Get-FileHash "C:\XboxGames\Minecraft for Windows\Content\winmm.dll" -Algorithm S
 Compare against the hash published in
 [`SHA256SUMS.txt`](https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/blob/main/SHA256SUMS.txt).
 If it does not match, the file was modified — reinstall.
+
+## FAQ
+
+### Does it work with a third-party launcher / version switcher?
+
+No. The unlock only works with the official **Microsoft Store / Xbox App**
+build. Other launchers don't use the GDK license API the DLL hooks, so the
+`winmm.dll` does nothing there - and can break the launcher. Do not copy it
+into another launcher.
+
+### Does it work on an older Minecraft version?
+
+The unlock targets the official build and is only tested on the **current**
+version. Microsoft doesn't let you install an older version, so there's no
+supported way to run an older version with this unlocker.

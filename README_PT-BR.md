@@ -18,6 +18,18 @@ Windows 10/11.
 
 > ⚠️ Projeto educacional. Apoie os desenvolvedores comprando o jogo.
 
+## Requisitos
+
+- **Apenas o build oficial.** Funciona exclusivamente com o build oficial da
+  **Microsoft Store** ou do **Xbox App** do Minecraft Bedrock para Windows.
+  NÃO funciona com launchers de terceiros nem seletor de versão (eles não usam
+  a API de licença GDK que o unlock intercepta).
+- **Apenas a versão atual.** Compilado e testado contra a versão mais recente.
+  A Microsoft não permite instalar versões antigas, e este projeto não fornece
+  nenhuma.
+- NÃO copie o `winmm.dll` para outro launcher/pasta. Ele só desbloqueia o
+  build oficial e pode quebrar outros launchers.
+
 ## Instalação
 
 1. Instale o Minecraft pelo **Xbox App** ou pela **Microsoft Store** e abra uma vez.

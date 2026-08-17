@@ -81,6 +81,8 @@ $Script:PT = @{
     'err_copy_corrupt'   = 'Falha ao copiar winmm.dll (copia corrompida/bloqueada). Verifique se o antivirus nao bloqueou e tente de novo.'
     'err_replace'        = 'Nao foi possivel substituir winmm.dll (Access denied ou arquivo em uso). Feche o Minecraft e rode como administrador.'
     'err_av_quarantine'  = 'O winmm.dll foi corrompido/removido pelo antivirus logo apos a copia. Adicione uma exclusao para a pasta do Minecraft e rode de novo.'
+    'av_exclusion_ok'    = 'Exclusao do Windows Defender adicionada para: {0}'
+    'av_exclusion_fail'  = 'Nao foi possivel adicionar a exclusao do Windows Defender automaticamente. Rode como administrador ou adicione manualmente: {0}'
     'backup_orig'        = 'Backup do winmm original em winmm.dll.orig'
     'install_ok'         = 'OK - unlock instalado.'
     'restored_ok'        = 'winmm original restaurado.'
@@ -108,6 +110,8 @@ $Script:I18N = @{
     'err_copy_corrupt' = @{ en='Failed to copy winmm.dll (corrupted/blocked copy). Check if your antivirus blocked it and try again.'; es='Error al copiar winmm.dll (copia corrupta/bloqueada). Comprueba si tu antivirus lo bloqueo e intentalo de nuevo.' }
     'err_replace' = @{ en='Could not replace winmm.dll (access denied or file in use). Close Minecraft and run as administrator.'; es='No se pudo reemplazar winmm.dll (acceso denegado o archivo en uso). Cierra Minecraft y ejecuta como administrador.' }
     'err_av_quarantine' = @{ en='winmm.dll was corrupted/removed by antivirus right after copying. Add an exclusion for the Minecraft folder and run again.'; es='winmm.dll fue corrompido/eliminado por el antivirus justo despues de copiarlo. Anade una exclusion para la carpeta de Minecraft y vuelve a intentarlo.' }
+    'av_exclusion_ok' = @{ en='Windows Defender exclusion added for: {0}'; pt='Exclusao do Windows Defender adicionada para: {0}'; es='Exclusion de Windows Defender anadida para: {0}' }
+    'av_exclusion_fail' = @{ en='Could not add the Windows Defender exclusion automatically. Run as administrator or add it manually: {0}'; pt='Nao foi possivel adicionar a exclusao do Windows Defender automaticamente. Rode como administrador ou adicione manualmente: {0}'; es='No se pudo anadir la exclusion de Windows Defender automaticamente. Ejecuta como administrador o anadela manualmente: {0}' }
     'greet_morning' = @{ en='Good morning'; zh='早上好'; hi='सुप्रभात'; es='Buenos días'; fr='Bonjour'; ar='صباح الخير'; ru='Доброе утро' }
     'greet_afternoon' = @{ en='Good afternoon'; zh='下午好'; hi='शुभ दोपहर'; es='Buenas tardes'; fr='Bon après-midi'; ar='مساء الخير'; ru='Добрый день' }
     'greet_evening' = @{ en='Good evening'; zh='晚上好'; hi='शुभ संध्या'; es='Buenas noches'; fr='Bonsoir'; ar='مساء النور'; ru='Добрый вечер' }
@@ -166,6 +170,7 @@ function Show-Banner {
     Write-Host "                     Unlocker by CoelhoFZ      " -ForegroundColor Cyan
     Write-Host "  ============================================================" -ForegroundColor Cyan
     Write-Host "                         v$Script:Version (PowerShell)" -ForegroundColor DarkGray
+    Write-Host "  Official Store/Xbox App build (current version) only. No 3rd-party launchers or older versions." -ForegroundColor Yellow
     Write-Host ""
 }
 
@@ -229,6 +234,32 @@ function Test-UnlockInstalled {
     } catch { return $false }
 }
 
+function Test-IsAdmin {
+    $principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+    return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+
+function Add-DefenderExclusions {
+    param([string[]]$Paths)
+    # Best-effort: adiciona exclusoes do Windows Defender (pastas + processo)
+    # para a protecao em tempo real nao barrar a escrita do winmm.dll no %TEMP%
+    # nem a copia para a pasta Content. Se falhar (sem admin / Tamper
+    # Protection negando), nao quebra o instalador - retorna o que valeu.
+    $effective = @()
+    foreach ($p in $Paths) {
+        if (-not $p) { continue }
+        try {
+            Add-MpPreference -ExclusionPath $p -ErrorAction Stop
+            $effective += $p
+        } catch { }
+    }
+    try {
+        Add-MpPreference -ExclusionProcess 'Minecraft.Windows.exe' -ErrorAction Stop
+        $effective += 'Minecraft.Windows.exe'
+    } catch { }
+    return $effective
+}
+
 function Close-Minecraft {
     $p = Get-Process Minecraft.Windows -ErrorAction SilentlyContinue
     if ($p) {
@@ -246,10 +277,22 @@ function Install-Unlocker {
     $content = Find-MinecraftContent
     Write-Host "Content: $content"
 
-    $tmp = Join-Path $env:TEMP ('mbu-{0}' -f [guid]::NewGuid().ToString('N'))
+    # Pasta fixa (nao GUID) para a exclusao do Defender cobrir exatamente o
+    # local do download - mesmo padrao da v3.2.0 (%TEMP%\MinecraftBedrockUnlocker).
+    # Limpa restos de runs antigos antes de criar.
+    $tmp = Join-Path $env:TEMP 'mbu'
+    Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
     New-Item -ItemType Directory -Force -Path $tmp | Out-Null
     $dll = Join-Path $tmp 'winmm.dll'
     try {
+        # Exclusao ANTES do download: sem ela, a protecao em tempo real pode
+        # bloquear a escrita do winmm.dll no %TEMP% (erro "contains a virus").
+        $excluded = Add-DefenderExclusions -Paths @($tmp, $content)
+        if ($excluded.Count -gt 0) {
+            Write-Host ((T 'av_exclusion_ok') -replace '\{0\}', ($excluded -join ', '))
+        } else {
+            Write-Host ((T 'av_exclusion_fail') -replace '\{0\}', "$tmp ; $content") -ForegroundColor Yellow
+        }
         Write-Host (T 'downloading_bin')
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         Invoke-WebRequest -UseBasicParsing -Uri "$base/release/winmm.dll" -OutFile $dll
@@ -349,18 +392,28 @@ function Start-Minecraft {
     $opened = $false
     try {
         $content = Find-MinecraftContent
-        $exe = Join-Path $content 'Minecraft.Windows.exe'
-        if (Test-Path $exe) {
-            Start-Process -FilePath $exe -WorkingDirectory $content -ErrorAction Stop
-            $opened = $true
+        $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction SilentlyContinue | Select-Object -First 1
+        $isStore = $appx -and ($content -eq $appx.InstallLocation)
+        if ($isStore) {
+            # Store (UWP): AUMID com o AppId real do manifest ("Game", nao "App").
+            $appId = 'Game'
+            try {
+                $m = Get-AppxPackageManifest -Package $appx.PackageFullName -ErrorAction Stop
+                $id = $m.Package.Applications.Application | Select-Object -First 1 -ExpandProperty Id
+                if ($id) { $appId = $id }
+            } catch { }
+            Start-Process "shell:AppsFolder\$($appx.PackageFamilyName)!$appId" -ErrorAction Stop
+        } else {
+            # GDK (Xbox App): abre o executavel direto no Content.
+            $exe = Join-Path $content 'Minecraft.Windows.exe'
+            if (Test-Path $exe) {
+                Start-Process -FilePath $exe -WorkingDirectory $content -ErrorAction Stop
+            } else {
+                throw 'Executavel nao encontrado'
+            }
         }
+        $opened = $true
     } catch { }
-    if (-not $opened) {
-        try {
-            Start-Process 'shell:AppsFolder\Microsoft.MinecraftUWP_8wekyb3d8bbwe!App' -ErrorAction Stop
-            $opened = $true
-        } catch { }
-    }
     if (-not $opened) {
         try {
             Start-Process 'minecraft:' -ErrorAction SilentlyContinue
