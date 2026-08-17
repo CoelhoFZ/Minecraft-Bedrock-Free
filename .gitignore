@@ -19,6 +19,9 @@ AGENTS.md
 
 # Source privada (defensivo: se for copiada pra ca, nunca commitar)
 Source-MinecraftBedrockUnlocker/
+Source-Minecraft-Bedrock-Free/
+Source-MinecraftBedrockFree/
+Source-Minecraft*/
 
 # Artefatos de build dev/release - SO o winmm.dll do --harden e distribuido
 XGameCore.GDK.dll
