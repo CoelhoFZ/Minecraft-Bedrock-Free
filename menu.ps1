@@ -72,6 +72,7 @@ $Script:PT = @{
     'greet_morning'      = 'Bom dia'
     'greet_afternoon'    = 'Boa tarde'
     'greet_evening'      = 'Boa noite'
+    'banner_build_note'  = 'Suporte apenas ao build OFICIAL (Store/Xbox App) na versao ATUAL. Launchers de terceiros e versoes antigas NAO sao suportados.'
     'err_content_not_found' = 'Content do Minecraft nao encontrado. Instale o Minecraft pelo Xbox App ou pela Microsoft Store e tente de novo.'
     'err_package_incomplete' = 'Pacote do Minecraft encontrado, mas o executavel esta faltando. Reinstale o Minecraft e tente de novo.'
     'closing_mc'         = 'Fechando Minecraft...'
@@ -115,6 +116,7 @@ $Script:I18N = @{
     'greet_morning' = @{ en='Good morning'; zh='早上好'; hi='सुप्रभात'; es='Buenos días'; fr='Bonjour'; ar='صباح الخير'; ru='Доброе утро' }
     'greet_afternoon' = @{ en='Good afternoon'; zh='下午好'; hi='शुभ दोपहर'; es='Buenas tardes'; fr='Bon après-midi'; ar='مساء الخير'; ru='Добрый день' }
     'greet_evening' = @{ en='Good evening'; zh='晚上好'; hi='शुभ संध्या'; es='Buenas noches'; fr='Bonsoir'; ar='مساء النور'; ru='Добрый вечер' }
+    'banner_build_note' = @{ en='Official Store/Xbox App build (current version) only. No 3rd-party launchers or older versions.'; zh='仅支持官方 Store/Xbox App 版本（当前版本）。不支持第三方启动器或旧版本。'; hi='केवल आधिकारिक Store/Xbox App बिल्ड (वर्तमान संस्करण)। कोई तृतीय-पक्ष लॉन्चर या पुराना संस्करण नहीं।'; es='Solo el build oficial de Store/Xbox App (version actual). Sin launchers de terceros ni versiones antiguas.'; fr='Uniquement le build officiel Store/Xbox App (version actuelle). Pas de launchers tiers ni d''anciennes versions.'; ar='فقط إصدار Store/Xbox App الرسمي (النسخة الحالية). لا توجد مشغلات طرف ثالث أو إصدارات قديمة.'; ru='Только официальная сборка Store/Xbox App (текущая версия). Без сторонних лаунчеров и старых версий.' }
     'err_content_not_found' = @{ en='Minecraft Content folder not found. Install Minecraft from the Xbox App or the Microsoft Store and try again.'; zh='未找到 Minecraft Content 文件夹。请从 Xbox 应用安装 Minecraft。'; hi='Minecraft Content फ़ोल्डर नहीं मिला। Xbox App से Minecraft इंस्टॉल करें।'; es='No se encontró la carpeta Content de Minecraft. Instala Minecraft desde la Xbox App.'; fr='Dossier Content de Minecraft introuvable. Installez Minecraft depuis l''application Xbox.'; ar='لم يتم العثور على مجلد Content الخاص بـ Minecraft. ثبّت Minecraft من تطبيق Xbox.'; ru='Папка Content Minecraft не найдена. Установите Minecraft из приложения Xbox.' }
     'err_package_incomplete' = @{ en='Minecraft package found but the game executable is missing. Reinstall Minecraft and try again.'; zh='找到 Minecraft 包，但缺少游戏可执行文件。请重新安装 Minecraft 后再试。'; hi='Minecraft पैकेज मिला, लेकिन गेम एक्ज़ीक्यूटेबल गायब है। Minecraft फिर से इंस्टॉल करके देखें。'; es='Se encontró el paquete de Minecraft, pero falta el ejecutable del juego. Reinstala Minecraft e inténtalo de nuevo.'; fr='Le package Minecraft est présent, mais l''exécutable du jeu est manquant. Réinstallez Minecraft et réessayez.'; ar='تم العثور على حزمة Minecraft، لكن ملف تشغيل اللعبة مفقود. أعد تثبيت Minecraft وحاول مرة أخرى.'; ru='Пакет Minecraft найден, но исполняемый файл игры отсутствует. Переустановите Minecraft и попробуйте снова.' }
     'closing_mc' = @{ en='Closing Minecraft...'; zh='正在关闭 Minecraft...'; hi='Minecraft बंद किया जा रहा है...'; es='Cerrando Minecraft...'; fr='Fermeture de Minecraft...'; ar='جارٍ إغلاق Minecraft...'; ru='Закрытие Minecraft...' }
@@ -170,7 +172,7 @@ function Show-Banner {
     Write-Host "                     Unlocker by CoelhoFZ      " -ForegroundColor Cyan
     Write-Host "  ============================================================" -ForegroundColor Cyan
     Write-Host "                         v$Script:Version (PowerShell)" -ForegroundColor DarkGray
-    Write-Host "  Official Store/Xbox App build (current version) only. No 3rd-party launchers or older versions." -ForegroundColor Yellow
+    Write-Host "  $(T 'banner_build_note')" -ForegroundColor Yellow
     Write-Host ""
 }
 
@@ -358,7 +360,7 @@ function Restore-Original {
     $content = Find-MinecraftContent
     Close-Minecraft
 
-    Ensure-ContentWritable -Content $content
+    $null = Ensure-ContentWritable -Content $content
 
     $winmm = Join-Path $content 'winmm.dll'
     $orig = Join-Path $content 'winmm.dll.orig'
