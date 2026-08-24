@@ -10,6 +10,16 @@ $ErrorActionPreference = 'Stop'
 $Script:Version = '4.3.0'
 $base = 'https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main'
 $expectedHash = 'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e'
+# Hashes de TODOS os unlocks validos ja publicados (rebuilds anteriores). O estado
+# "desbloqueado" vale para QUALQUER hash desta lista: quem instalou com um DLL
+# antigo continua desbloqueado (o jogo abre), mesmo que o binario atual seja mais
+# novo. Ao rebuildar o binario: adicionar o hash antigo aqui e manter o
+# $expectedHash = hash novo (instalacao/download continua exigindo o atual).
+$knownUnlockHashes = @(
+    'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e', # atual (rebuild 3df891c)
+    'f7b1408c36590abbfcb5310cf98c1efb1fa16f3a54a9387df56b1441de90335b', # rebuild 7334f82 (pix key)
+    '86689c9724be7f391ba9bd1f4ef8dddaa73baec0b76b9c73bebef89f37b76e97'  # v4.3.0 (a2ec0d4)
+)
 
 function Resolve-MbuLanguage {
     $candidates = New-Object System.Collections.Generic.List[string]
@@ -232,7 +242,7 @@ function Test-UnlockInstalled {
     if (-not (Test-Path $winmm)) { return $false }
     try {
         $actual = (Get-FileHash -Path $winmm -Algorithm SHA256).Hash.ToLowerInvariant()
-        return ($actual -eq $expectedHash)
+        return ($knownUnlockHashes -contains $actual)
     } catch { return $false }
 }
 
@@ -311,7 +321,15 @@ function Install-Unlocker {
         }
 
         $winmm = Join-Path $content 'winmm.dll'
-        if ((Test-Path $winmm) -and -not (Test-Path (Join-Path $content 'winmm.dll.orig'))) {
+        # Backup do original SO se o winmm.dll presente NAO for um unlock nosso
+        # (hash conhecido): um DLL antigo do unlocker nao e o "original" do jogo -
+        # copia-lo para .orig faria o "remover desbloqueio" restaurar um DLL que
+        # continua desbloqueando o jogo.
+        $isKnownUnlock = $false
+        if (Test-Path $winmm) {
+            try { $isKnownUnlock = ($knownUnlockHashes -contains (Get-FileHash -Path $winmm -Algorithm SHA256).Hash.ToLowerInvariant()) } catch { }
+        }
+        if ((Test-Path $winmm) -and -not (Test-Path (Join-Path $content 'winmm.dll.orig')) -and -not $isKnownUnlock) {
             Copy-Item $winmm (Join-Path $content 'winmm.dll.orig') -Force
             Write-Host (T 'backup_orig')
         }
