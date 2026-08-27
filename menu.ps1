@@ -7,7 +7,7 @@
 #   (Get-FileHash .\menu.ps1 -Algorithm SHA256).Hash.ToLowerInvariant()
 # e cole o resultado em i.ps1 (variavel $menuHash).
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.3.0'
+$Script:Version = '4.4.0'
 $base = 'https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main'
 $expectedHash = 'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e'
 # Hashes de TODOS os unlocks validos ja publicados (rebuilds anteriores). O estado
@@ -20,6 +20,29 @@ $knownUnlockHashes = @(
     'f7b1408c36590abbfcb5310cf98c1efb1fa16f3a54a9387df56b1441de90335b', # rebuild 7334f82 (pix key)
     '86689c9724be7f391ba9bd1f4ef8dddaa73baec0b76b9c73bebef89f37b76e97'  # v4.3.0 (a2ec0d4)
 )
+
+# ---- Windows-on-ARM (beta) ----
+# O loader do Windows so carrega DLL da MESMA arquitetura do processo: em PC
+# arm64 com o pacote arm64 da Store, um winmm.dll x64 nem e mapeado. Com o
+# suporte a ARM64 a release passa a ter tambem release/winmm-arm64.dll e o
+# instalador escolhe o binario correto lendo o campo Machine do PE do jogo.
+# Hash da variante arm64: preenchido quando sair a primeira release; vazio =
+# verificacao fica desligada so nessa variante (com aviso na tela).
+$expectedHashArm64 = '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
+function Get-PeMachineType {
+    param([string]$Path)
+    try {
+        if (-not (Test-Path $Path)) { return 0 }
+        $fs = [IO.File]::OpenRead($Path)
+        try {
+            $br = New-Object IO.BinaryReader($fs)
+            $fs.Position = 0x3C
+            $peOff = $br.ReadInt32()
+            $fs.Position = $peOff + 4
+            return [UInt16]$br.ReadUInt16()   # 0x8664=x64 | 0xAA64=ARM64
+        } finally { $fs.Dispose() }
+    } catch { return 0 }
+}
 
 function Resolve-MbuLanguage {
     $candidates = New-Object System.Collections.Generic.List[string]
@@ -305,11 +328,38 @@ function Install-Unlocker {
         } else {
             Write-Host ((T 'av_exclusion_fail') -replace '\{0\}', "$tmp ; $content") -ForegroundColor Yellow
         }
+        # Arquitetura do JOGO (nao da sessao PS): campo Machine do PE do exe
+        # instalado; fallback para a arquitetura da maquina.
+        $machine = Get-PeMachineType -Path (Join-Path $content 'Minecraft.Windows.exe')
+        if (-not $machine) {
+            $machine = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { 0xAA64 } else { 0x8664 }
+        }
+        $isArm = ($machine -eq 0xAA64)
+        if ($isArm) {
+            Write-Host '[ARM64] PC Windows-on-ARM detectado: usando o unlocker nativo ARM64 (BETA).' -ForegroundColor Cyan
+        }
         Write-Host (T 'downloading_bin')
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        Invoke-WebRequest -UseBasicParsing -Uri "$base/release/winmm.dll" -OutFile $dll
+        $remoteDll = if ($isArm) { "$base/release/winmm-arm64.dll" } else { "$base/release/winmm.dll" }
+        try {
+            Invoke-WebRequest -UseBasicParsing -Uri $remoteDll -OutFile $dll
+        } catch {
+            if ($isArm) {
+                Write-Host '[ARM64] O build ARM64 ainda nao foi publicado nesta release.' -ForegroundColor Red
+                Write-Host '       Acompanhe https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases' -ForegroundColor Yellow
+            }
+            throw
+        }
         $actual = (Get-FileHash -Path $dll -Algorithm SHA256).Hash.ToLowerInvariant()
-        if ($actual -ne $expectedHash) { throw ((T 'err_hash_invalid') -replace '\{0\}', $actual) }
+        if ($isArm) {
+            if (-not $expectedHashArm64) {
+                Write-Host '[ARM64] Verificacao de hash indisponivel nesta fase beta.' -ForegroundColor Yellow
+            } elseif ($actual -ne $expectedHashArm64) {
+                throw ((T 'err_hash_invalid') -replace '\{0\}', $actual)
+            }
+        } else {
+            if ($actual -ne $expectedHash) { throw ((T 'err_hash_invalid') -replace '\{0\}', $actual) }
+        }
 
         Close-Minecraft
 

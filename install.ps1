@@ -69,6 +69,34 @@ function Grant-AdminFullControl {
 
 $content = Find-MinecraftContent
 Write-Output "Content: $content"
+# ---- ARM64 (beta): troca o dll padrao pelo nativo quando o jogo rodar
+# como processo ARM64 (pacote arm64 da Store em PCs Snapdragon/WoA).
+function Get-PeMachineType {
+    param([string]$Path)
+    try {
+        if (-not (Test-Path $Path)) { return 0 }
+        $fs = [IO.File]::OpenRead($Path)
+        try {
+            $br = New-Object IO.BinaryReader($fs)
+            $fs.Position = 0x3C
+            $peOff = $br.ReadInt32()
+            $fs.Position = $peOff + 4
+            return [UInt16]$br.ReadUInt16()   # 0x8664=x64 | 0xAA64=ARM64
+        } finally { $fs.Dispose() }
+    } catch { return 0 }
+}
+$gameMachine = Get-PeMachineType -Path (Join-Path $content 'Minecraft.Windows.exe')
+if ($gameMachine -eq 0xAA64) {
+    $armDll = Join-Path $here 'release\winmm-arm64.dll'
+    if (Test-Path $armDll) {
+        $dll = $armDll
+        Write-Output '[ARM64] Jogo ARM64 detectado: instalando o unlocker nativo ARM64 (BETA).'
+    } else {
+        Write-Output '[ARM64] AVISO: jogo ARM64 mas release\winmm-arm64.dll ausente no clone;'
+        Write-Output '[ARM64] o instalador segue com a variante x64 (nao vai carregar neste PC).'
+    }
+}
+
 Write-Output "AVISO: suporte apenas ao build OFICIAL (Store/Xbox App) na versao ATUAL. Launchers de terceiros e versoes antigas NAO sao suportados."
 
 if (-not (Grant-AdminFullControl -Path $content -Perm '*S-1-5-32-544:(OI)(CI)F')) {

@@ -27,6 +27,10 @@ Windows 10/11.
 - **Apenas a versão atual.** Compilado e testado contra a versão mais recente.
   A Microsoft não permite instalar versões antigas, e este projeto não fornece
   nenhuma.
+> **Windows on ARM (beta):** em PCs com Snapdragon o instalador agora escolhe
+> sozinho o build nativo ARM64 (`release/winmm-arm64.dll`). Requisito: o pacote
+> ARM64 do Minecraft (Store/Xbox App). Reporte problemas com o prefixo `[ARM64]`.
+
 - NÃO copie o `winmm.dll` para outro launcher/pasta. Ele só desbloqueia o
   build oficial e pode quebrar outros launchers.
 

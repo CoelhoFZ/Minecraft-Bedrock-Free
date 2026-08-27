@@ -25,6 +25,10 @@ Unlock the full version of **Minecraft Bedrock Edition (GDK)** on Windows 10/11.
 - **Current version only.** Built and tested against the latest version.
   Microsoft does not let you install older versions, and this project does not
   provide one.
+> **Windows on ARM (beta):** on Snapdragon PCs the installer now picks the native
+> ARM64 build automatically (`release/winmm-arm64.dll`). Requirements: the ARM64
+> Store/Xbox package of Minecraft. Report issues with the `[ARM64]` prefix.
+
 - Do **not** copy `winmm.dll` into another launcher/folder. It only unlocks
   the official build and can break other launchers.
 
