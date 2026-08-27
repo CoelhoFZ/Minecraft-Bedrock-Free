@@ -43,6 +43,10 @@ Windows 10/11.
 irm https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/i.ps1 | iex
 ```
 
+O arquivo é **`i.ps1`** (a letra **i**, como em instalador), **não** `e.ps1`.
+Um erro de digitação como `.../raw/main/e.ps1 | iex` falha com erro de conexão
+(`A solicitação foi anulada`) porque esse arquivo não existe.
+
 3. O instalador abre o Minecraft automaticamente. O botão "Desbloquear Jogo Completo" some.
 
 > Os scripts do instalador são **open source** (GPLv3). Apenas o binário do

@@ -41,6 +41,11 @@ Unlock the full version of **Minecraft Bedrock Edition (GDK)** on Windows 10/11.
 irm https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/i.ps1 | iex
 ```
 
+The file is **`i.ps1`** (the letter **i**, as in "install"), not
+`e.ps1`. A typo like `.../raw/main/e.ps1 | iex` fails with a connection
+error ("the request was aborted: the connection was closed unexpectedly")
+because that file does not exist.
+
 3. The installer opens Minecraft automatically. The "Unlock full game" button is gone.
 
 > The installer scripts are **open source** (GPLv3). Only the unlock binary
