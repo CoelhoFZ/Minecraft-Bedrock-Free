@@ -64,6 +64,37 @@ If it still fails, your antivirus may be blocking the write: temporarily
 disable real-time protection or add the Minecraft folder as an exclusion
 (see the previous section) and retry.
 
+## Installer fails while downloading with "contains a virus or potentially unwanted software" ([#49](https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/issues/49))
+During the download step the installer verifies the binary it just wrote to
+`%TEMP%\mbu\winmm.dll`. If your antivirus removes or blocks that file right
+after it is written you may see errors like:
+```
+Get-FileHash : The file '...\Temp\mbu\winmm.dll' cannot be read: Operation did not complete successfully because the file contains a virus or potentially unwanted software.
+```
+followed by "You cannot call a method on a null-valued expression."
+(on versions before v4.4.1 the second message replaced the real cause).
+
+**What it means:** Microsoft Defender (or a third-party antivirus) flagged the
+unlock binary during the write. The installer adds Defender exclusions before
+downloading, but some setups still block the file anyway (cloud-delivered
+protection acting at first sight, the engine applying new exclusions
+asynchronously, managed policy ignoring local exclusions, or another
+antivirus product running alongside Defender).
+
+**How to fix:**
+1. Open **Windows Security -> Virus & threat protection -> Protection history**
+and look for the blocked `winmm.dll`. Choose **Allow** or **Restore**.
+2. Add the exclusions manually (both folders):
+   - `%TEMP%\mbu` (the download folder)
+   - the Minecraft `Content` folder from the first section above
+3. If you use another antivirus in addition to Defender, add the same
+exclusions there too.
+4. Run the installer again. Since v4.4.1 it retries automatically and shows a
+clear message naming the folders when this happens.
+
+See [docs/antivirus-false-positives.md](docs/antivirus-false-positives.md)
+for why these detections happen.
+
 ## Verifying the installed file
 
 The installer verifies the SHA-256 of `winmm.dll` both before and after copying

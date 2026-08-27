@@ -15,8 +15,21 @@ $base = if ($env:MBU_BASE_URL) { $env:MBU_BASE_URL.TrimEnd('/') } else {
 
 $menu = Join-Path $env:TEMP 'mbu-menu.ps1'
 Invoke-WebRequest -UseBasicParsing -Uri "$base/menu.ps1" -OutFile $menu
-$menuHash = 'd709e1b34d00bcbe5b640e3c2dbb0eddd5b6270baedb7cca8c0d4d9fa21c5924'
-$menuActual = (Get-FileHash -Path $menu -Algorithm SHA256).Hash.ToLowerInvariant()
+# O hash abaixo e calculado sobre o CONTEUDO normalizado para LF (todos os
+# bytes 0x0D removidos), PRESERVANDO o BOM UTF-8 do inicio do arquivo. Isso
+# deixa a verificacao imune a finais de linha: o GitHub serve o arquivo do
+# jeito que esta no blob (LF ou CRLF) e o mantenedor pode gerar hash numa
+# copia com o outro fim, os dois passam, eliminando o bug classico "hash do
+# menu nao confere" por CRLF vs LF. Para gerar o hash apos editar menu.ps1,
+# use este mesmo normalize (remover 0x0D, manter BOM) sobre o arquivo.
+$menuHash = '710fa2789c7de6ba395ed0db5a6a9022bd2f1ba9f356eed04f4992fb092da84c'
+$menuBytes = [IO.File]::ReadAllBytes($menu)
+# Filtra todos os bytes de CR (0x0D) preservando os demais (incl. o BOM).
+$clean = New-Object System.Collections.Generic.List[byte]
+foreach ($b in $menuBytes) { if ($b -ne 13) { $clean.Add([byte]$b) } }
+$menuBytes = $clean.ToArray()
+$tmpHash = [System.Security.Cryptography.SHA256]::Create()
+$menuActual = [BitConverter]::ToString($tmpHash.ComputeHash($menuBytes)).Replace('-','').ToLowerInvariant()
 if ($menuActual -ne $menuHash) {
     Write-Host ''
     Write-Host 'ERRO: o hash do menu.ps1 baixado nao confere com o esperado.' -ForegroundColor Red

@@ -67,6 +67,17 @@ function Grant-AdminFullControl {
     return $true
 }
 
+function Get-SafeFileHash {
+    # SHA256 a prova de antivirus (issue #49): se o arquivo nao puder ser lido
+    # (AV bloqueando), retorna $null em vez de explodir com null dereference.
+    param([string]$Path)
+    try {
+        $h = Get-FileHash -Path $Path -Algorithm SHA256 -ErrorAction Stop
+        if ($h -and $h.Hash) { return $h.Hash.ToLowerInvariant() }
+    } catch { }
+    return $null
+}
+
 $content = Find-MinecraftContent
 Write-Output "Content: $content"
 # ---- ARM64 (beta): troca o dll padrao pelo nativo quando o jogo rodar
@@ -140,11 +151,14 @@ foreach ($f in @('dlllist.txt',
 # uso) um winmm.dll truncado/corrompido ficaria no lugar e o Minecraft abriria
 # com "Bad Image" (0xc0e90007). Escrevendo em .new + validando o SHA256 antes do
 # move, um copia quebrada nunca substitui o original.
-$dllHash = (Get-FileHash -Path $dll -Algorithm SHA256).Hash
+$dllHash = Get-SafeFileHash -Path $dll
+if (-not $dllHash) {
+    throw "Nao foi possivel ler $dll (provavel antivirus bloqueando a leitura). Adicione uma exclusao para a pasta do projeto e rode de novo."
+}
 $tmp = Join-Path $content 'winmm.dll.new'
 Remove-Item $tmp -Force -ErrorAction SilentlyContinue
 Copy-Item $dll $tmp -Force
-if ((Get-FileHash -Path $tmp -Algorithm SHA256).Hash -ne $dllHash) {
+if ((Get-SafeFileHash -Path $tmp) -ne $dllHash) {
     Remove-Item $tmp -Force -ErrorAction SilentlyContinue
     throw "Falha ao copiar winmm.dll (copia corrompida/bloqueada). Verifique se o antivirus nao bloqueou e tente de novo."
 }
@@ -162,7 +176,7 @@ Move-Item $tmp $winmm -Force
 
 # Verificacao final: antivirus (ex.: Windows Defender) pode quarentenar o DLL
 # logo apos a copia. Se o hash nao bater aqui, restaura o original e avisa.
-if ((Get-FileHash -Path $winmm -Algorithm SHA256).Hash -ne $dllHash) {
+if ((Get-SafeFileHash -Path $winmm) -ne $dllHash) {
     $orig = Join-Path $content 'winmm.dll.orig'
     if (Test-Path $orig) {
         Remove-Item $winmm -Force -ErrorAction SilentlyContinue

@@ -7,7 +7,7 @@
 #   (Get-FileHash .\menu.ps1 -Algorithm SHA256).Hash.ToLowerInvariant()
 # e cole o resultado em i.ps1 (variavel $menuHash).
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.4.0'
+$Script:Version = '4.4.1'
 $base = 'https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main'
 $expectedHash = 'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e'
 # Hashes de TODOS os unlocks validos ja publicados (rebuilds anteriores). O estado
@@ -29,6 +29,16 @@ $knownUnlockHashes = @(
 # Hash da variante arm64: preenchido quando sair a primeira release; vazio =
 # verificacao fica desligada so nessa variante (com aviso na tela).
 $expectedHashArm64 = '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
+# Hashes validos INSTALAVEIS por arquitetura. O unlock e idempotente por arqu:
+# um PC arm64 so carrega winmm-arm64.dll e um x64 so winmm.dll. Guardamos a
+# lista da arquitetura do JOGO instalado (nao da sessao) para que o estado
+# "desbloqueado" em cada arquitetura seja reconhecido corretamente - o teste
+# de estado (Test-UnlockInstalled) consulta apenas a lista da arqu. atual.
+# Ao publicar novo binario de uma arqu, adicionar o hash antigo aqui (mesma
+# regra do x64).
+$knownUnlockHashesArm64 = @(
+    '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'  # atual (build native ARM64)
+)
 function Get-PeMachineType {
     param([string]$Path)
     try {
@@ -115,6 +125,8 @@ $Script:PT = @{
     'err_copy_corrupt'   = 'Falha ao copiar winmm.dll (copia corrompida/bloqueada). Verifique se o antivirus nao bloqueou e tente de novo.'
     'err_replace'        = 'Nao foi possivel substituir winmm.dll (Access denied ou arquivo em uso). Feche o Minecraft e rode como administrador.'
     'err_av_quarantine'  = 'O winmm.dll foi corrompido/removido pelo antivirus logo apos a copia. Adicione uma exclusao para a pasta do Minecraft e rode de novo.'
+    'err_av_blocked'     = 'O antivirus bloqueou o download do winmm.dll mesmo com a exclusao automatica. Abra a Seguranca do Windows, va em Protecao contra virus e ameacas, abra o Historico de protecao, localize o winmm.dll bloqueado e escolha Permitir ou Restaurar. Depois adicione manualmente as exclusoes para: {0}. Se voce usa outro antivirus, adicione as mesmas exclusoes nele. Rode o instalador de novo.'
+    'av_retrying'        = 'O antivirus pode ter removido o arquivo baixado. Tentando novamente ({0}/{1})...'
     'av_exclusion_ok'    = 'Exclusao do Windows Defender adicionada para: {0}'
     'av_exclusion_fail'  = 'Nao foi possivel adicionar a exclusao do Windows Defender automaticamente. Rode como administrador ou adicione manualmente: {0}'
     'backup_orig'        = 'Backup do winmm original em winmm.dll.orig'
@@ -144,6 +156,8 @@ $Script:I18N = @{
     'err_copy_corrupt' = @{ en='Failed to copy winmm.dll (corrupted/blocked copy). Check if your antivirus blocked it and try again.'; es='Error al copiar winmm.dll (copia corrupta/bloqueada). Comprueba si tu antivirus lo bloqueo e intentalo de nuevo.' }
     'err_replace' = @{ en='Could not replace winmm.dll (access denied or file in use). Close Minecraft and run as administrator.'; es='No se pudo reemplazar winmm.dll (acceso denegado o archivo en uso). Cierra Minecraft y ejecuta como administrador.' }
     'err_av_quarantine' = @{ en='winmm.dll was corrupted/removed by antivirus right after copying. Add an exclusion for the Minecraft folder and run again.'; es='winmm.dll fue corrompido/eliminado por el antivirus justo despues de copiarlo. Anade una exclusion para la carpeta de Minecraft y vuelve a intentarlo.' }
+    'err_av_blocked' = @{ en='Your antivirus blocked the downloaded winmm.dll even with the automatic exclusion. Open Windows Security, go to Virus & threat protection, open Protection history, find the blocked winmm.dll and choose Allow or Restore. Then add the exclusions manually for: {0}. If you use another antivirus, add the same exclusions there too. Run the installer again.'; es='Tu antivirus bloqueo la descarga de winmm.dll incluso con la exclusion automatica. Abra Seguridad de Windows, vaya a Proteccion contra virus y amenazas, abra el Historial de proteccion, encuentre el winmm.dll bloqueado y elija Permitir o Restaurar. Despues anada manualmente las exclusiones para: {0}. Si usa otro antivirus, anada las mismas exclusiones alli tambien. Ejecute el instalador de nuevo.' }
+    'av_retrying' = @{ en='The antivirus may have removed the downloaded file. Retrying ({0}/{1})...'; es='El antivirus pudo haber eliminado el archivo descargado. Reintentando ({0}/{1})...' }
     'av_exclusion_ok' = @{ en='Windows Defender exclusion added for: {0}'; pt='Exclusao do Windows Defender adicionada para: {0}'; es='Exclusion de Windows Defender anadida para: {0}' }
     'av_exclusion_fail' = @{ en='Could not add the Windows Defender exclusion automatically. Run as administrator or add it manually: {0}'; pt='Nao foi possivel adicionar a exclusao do Windows Defender automaticamente. Rode como administrador ou adicione manualmente: {0}'; es='No se pudo anadir la exclusion de Windows Defender automaticamente. Ejecuta como administrador o anadela manualmente: {0}' }
     'greet_morning' = @{ en='Good morning'; zh='早上好'; hi='सुप्रभात'; es='Buenos días'; fr='Bonjour'; ar='صباح الخير'; ru='Доброе утро' }
@@ -264,14 +278,41 @@ function Test-UnlockInstalled {
     $winmm = Join-Path $content 'winmm.dll'
     if (-not (Test-Path $winmm)) { return $false }
     try {
-        $actual = (Get-FileHash -Path $winmm -Algorithm SHA256).Hash.ToLowerInvariant()
-        return ($knownUnlockHashes -contains $actual)
+        $actual = Get-SafeFileHash -Path $winmm
+        # Arquitetura do JOGO (nao da sessao PS): decide qual lista de hashes
+        # validos consultar. Se a arquitetura nao puder ser lida, aceita
+        # qualquer hash valido das duas listas (x64 + arm64) para nao falso
+        # "TRIAL" num PC em que o exe esta protegido/ilegivel (GitHub issue #49
+        # tambem cobre leitura do DLL; aqui e leitura do exe para o Machine).
+        $machine = Get-PeMachineType -Path (Join-Path $content 'Minecraft.Windows.exe')
+        if (-not $machine) {
+            $machine = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { 0xAA64 } else { 0x8664 }
+        }
+        if ($machine) {
+            if ($machine -eq 0xAA64) {
+                return ($knownUnlockHashesArm64 -contains $actual) -or ($expectedHashArm64 -eq $actual)
+            }
+            return ($knownUnlockHashes -contains $actual)
+        }
+        return (($knownUnlockHashes -contains $actual) -or ($knownUnlockHashesArm64 -contains $actual))
     } catch { return $false }
 }
 
 function Test-IsAdmin {
     $principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
     return $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+
+function Get-SafeFileHash {
+    # SHA256 a prova de antivirus (issue #49): se o arquivo sumiu ou nao pode
+    # ser lido porque o AV esta bloqueando, nao explodimos nem derefenciamos
+    # null. Retorna $null e quem chama escolhe a mensagem amigavel.
+    param([string]$Path)
+    try {
+        $h = Get-FileHash -Path $Path -Algorithm SHA256 -ErrorAction Stop
+        if ($h -and $h.Hash) { return $h.Hash.ToLowerInvariant() }
+    } catch { }
+    return $null
 }
 
 function Add-DefenderExclusions {
@@ -338,27 +379,61 @@ function Install-Unlocker {
         if ($isArm) {
             Write-Host '[ARM64] PC Windows-on-ARM detectado: usando o unlocker nativo ARM64 (BETA).' -ForegroundColor Cyan
         }
+        # Hash esperado para a arquitetura desta instalacao. Usado em TODAS as
+        # validacoes de integridade (download, copia atomica e pos-copia) para
+        # que um PC ARM nunca seja comparado contra o hash x64 (e vice-versa) -
+        # sem isso a instalacao ARM64 falharia nas etapas de copia por comparar
+        # com o hash x64.
+        $checkHash = if ($isArm) { $expectedHashArm64 } else { $expectedHash }
         Write-Host (T 'downloading_bin')
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         $remoteDll = if ($isArm) { "$base/release/winmm-arm64.dll" } else { "$base/release/winmm.dll" }
-        try {
-            Invoke-WebRequest -UseBasicParsing -Uri $remoteDll -OutFile $dll
-        } catch {
-            if ($isArm) {
-                Write-Host '[ARM64] O build ARM64 ainda nao foi publicado nesta release.' -ForegroundColor Red
-                Write-Host '       Acompanhe https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases' -ForegroundColor Yellow
+        # O motor do Defender aplica exclusoes novas de forma assincrona e a
+        # protecao na nuvem (block-at-first-sight) pode agir na escrita mesmo
+        # com exclusao registrada (issue #49). Da tempo das exclusoes valerem
+        # antes do primeiro download e retenta com o arquivo fresco.
+        Start-Sleep -Seconds 2
+        $actual = $null
+        for ($attempt = 1; $attempt -le 3; $attempt++) {
+            Remove-Item $dll -Force -ErrorAction SilentlyContinue
+            try {
+                Invoke-WebRequest -UseBasicParsing -Uri $remoteDll -OutFile $dll
+                # IWR marca o arquivo baixado com MotW (Zone.Identifier) e isso
+                # reforca o block-at-first-sight do Defender: remove a marcacao.
+                Unblock-File $dll -ErrorAction SilentlyContinue
+            } catch {
+                if ($isArm) {
+                    Write-Host '[ARM64] O build ARM64 ainda nao foi publicado nesta release.' -ForegroundColor Red
+                    Write-Host '       Acompanhe https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases' -ForegroundColor Yellow
+                }
+                throw
             }
-            throw
+            # Arquivo presente, com tamanho e hash legiveis? Se o AV apagou ou
+            # travou o arquivo na escrita, algo aqui falharia com erro cru ou
+            # null ("You cannot call a method on a null-valued expression").
+            try {
+                if ((Test-Path $dll) -and ((Get-Item $dll -Force -ErrorAction Stop).Length -gt 0)) {
+                    $actual = Get-SafeFileHash -Path $dll
+                }
+            } catch {
+                $actual = $null
+            }
+            if ($actual) { break }
+            if ($attempt -lt 3) {
+                Write-Host (((T 'av_retrying') -replace '\{0\}', [string]$attempt) -replace '\{1\}', '3') -ForegroundColor Yellow
+                $null = Add-DefenderExclusions -Paths @($tmp, $content)
+                Start-Sleep -Seconds 5
+            }
         }
-        $actual = (Get-FileHash -Path $dll -Algorithm SHA256).Hash.ToLowerInvariant()
-        if ($isArm) {
-            if (-not $expectedHashArm64) {
-                Write-Host '[ARM64] Verificacao de hash indisponivel nesta fase beta.' -ForegroundColor Yellow
-            } elseif ($actual -ne $expectedHashArm64) {
-                throw ((T 'err_hash_invalid') -replace '\{0\}', $actual)
-            }
-        } else {
-            if ($actual -ne $expectedHash) { throw ((T 'err_hash_invalid') -replace '\{0\}', $actual) }
+        if (-not $actual) {
+            throw ((T 'err_av_blocked') -replace '\{0\}', ($excluded -join ', '))
+        }
+        if ($checkHash) {
+            if ($actual -ne $checkHash) { throw ((T 'err_hash_invalid') -replace '\{0\}', $actual) }
+        } elseif ($isArm) {
+            # Sem hash arm64 publicado ainda (fase beta): so verifica que o
+            # arquivo existe e tem tamanho e gera um aviso, nao bloqueia.
+            Write-Host '[ARM64] Verificacao de hash indisponivel nesta fase beta.' -ForegroundColor Yellow
         }
 
         Close-Minecraft
@@ -377,7 +452,12 @@ function Install-Unlocker {
         # continua desbloqueando o jogo.
         $isKnownUnlock = $false
         if (Test-Path $winmm) {
-            try { $isKnownUnlock = ($knownUnlockHashes -contains (Get-FileHash -Path $winmm -Algorithm SHA256).Hash.ToLowerInvariant()) } catch { }
+            try {
+                $installedHash = Get-SafeFileHash -Path $winmm
+                $isKnownUnlock = (($knownUnlockHashes -contains $installedHash) -or
+                                  ($knownUnlockHashesArm64 -contains $installedHash) -or
+                                  ($expectedHashArm64 -eq $installedHash))
+            } catch { }
         }
         if ((Test-Path $winmm) -and -not (Test-Path (Join-Path $content 'winmm.dll.orig')) -and -not $isKnownUnlock) {
             Copy-Item $winmm (Join-Path $content 'winmm.dll.orig') -Force
@@ -394,7 +474,7 @@ function Install-Unlocker {
         $stagedDll = Join-Path $content 'winmm.dll.new'
         Remove-Item $stagedDll -Force -ErrorAction SilentlyContinue
         Copy-Item $dll $stagedDll -Force
-        if ((Get-FileHash -Path $stagedDll -Algorithm SHA256).Hash -ne $expectedHash) {
+        if ($checkHash -and (Get-SafeFileHash -Path $stagedDll) -ne $checkHash) {
             Remove-Item $stagedDll -Force -ErrorAction SilentlyContinue
             throw (T 'err_copy_corrupt')
         }
@@ -408,7 +488,7 @@ function Install-Unlocker {
         Move-Item $stagedDll $winmm -Force
         # Antivirus pode quarentenar o DLL logo apos a copia: valida de novo e,
         # se corromper, restaura o original (o jogo volta a rodar como Trial).
-        if ((Get-FileHash -Path $winmm -Algorithm SHA256).Hash -ne $expectedHash) {
+        if ($checkHash -and (Get-SafeFileHash -Path $winmm) -ne $checkHash) {
             $orig = Join-Path $content 'winmm.dll.orig'
             if (Test-Path $orig) {
                 Remove-Item $winmm -Force -ErrorAction SilentlyContinue
