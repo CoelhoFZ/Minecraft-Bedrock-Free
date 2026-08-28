@@ -1,5 +1,8 @@
 # MinecraftBedrockUnlocker - closed-source binaries
 
+# Backup de scripts descontinuados (nunca commitar)
+backup/
+
 # Lixo local / SO / editor
 *.tmp
 Thumbs.db

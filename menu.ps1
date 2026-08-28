@@ -7,7 +7,7 @@
 #   (Get-FileHash .\menu.ps1 -Algorithm SHA256).Hash.ToLowerInvariant()
 # e cole o resultado em i.ps1 (variavel $menuHash).
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.4.1'
+$Script:Version = '4.4.2'
 $base = 'https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main'
 $expectedHash = 'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e'
 # Hashes de TODOS os unlocks validos ja publicados (rebuilds anteriores). O estado
@@ -149,6 +149,12 @@ $Script:PT = @{
     'choose_option'      = 'Escolha uma opcao'
     'invalid_option'     = 'Opcao invalida.'
     'press_enter'        = 'Pressione ENTER para continuar'
+    'arch_line'          = 'Build do jogo detectado: {0} (Machine={1})'
+    'arch_unknown'       = 'Nao foi possivel ler o build do jogo no executavel, assumindo x64.'
+    'arm64_detected'     = '[ARM64] PC Windows on ARM detectado: usando o unlocker nativo ARM64 (BETA).'
+    'arm64_no_release'   = '[ARM64] O build ARM64 ainda nao foi publicado nesta release.'
+    'arm64_hash_skipped' = '[ARM64] Verificacao de hash indisponivel nesta fase beta.'
+    'track_releases'     = 'Acompanhe novos releases em {0}'
 }
 
 $Script:I18N = @{
@@ -189,6 +195,12 @@ $Script:I18N = @{
     'choose_option' = @{ en='Choose an option'; zh='请选择一个选项'; hi='एक विकल्प चुनें'; es='Elige una opción'; fr='Choisissez une option'; ar='اختر خيارًا'; ru='Выберите вариант' }
     'invalid_option' = @{ en='Invalid option.'; zh='无效选项。'; hi='अमान्य विकल्प।'; es='Opción no válida.'; fr='Option invalide.'; ar='خيار غير صالح.'; ru='Неверный вариант.' }
     'press_enter' = @{ en='Press Enter to continue...'; zh='按 Enter 键继续...'; hi='जारी रखने के लिए Enter दबाएँ...'; es='Pulse Enter para continuar...'; fr='Appuyez sur Entrée pour continuer...'; ar='اضغط Enter للمتابعة...'; ru='Нажмите Enter для продолжения...' }
+    'arch_line' = @{ en='Detected game build: {0} (Machine={1})'; zh='检测到的游戏构建：{0}（Machine={1}）'; hi='गेम बिल्ड पहचाना गया: {0} (Machine={1})'; es='Build del juego detectado: {0} (Machine={1})'; fr='Build du jeu détecté : {0} (Machine={1})'; ar='إصدار اللعبة المكتشف: {0} (Machine={1})'; ru='Обнаружена сборка игры: {0} (Machine={1})' }
+    'arch_unknown' = @{ en='Could not read the game build from the executable, assuming x64.'; zh='无法从可执行文件读取游戏构建，将按 x64 处理。'; hi='एक्ज़ीक्यूटेबल से गेम बिल्ड नहीं पढ़ा जा सका, x64 मान लिया जा रहा है।'; es='No se pudo leer la build del juego desde el ejecutable, se asume x64.'; fr='Impossible de lire la build du jeu depuis l''exécutable, x64 supposé.'; ar='تعذر قراءة إصدار اللعبة من الملف التنفيذي، سيتم افتراض x64.'; ru='Не удалось прочитать сборку игры из исполняемого файла, используется x64.' }
+    'arm64_detected' = @{ en='[ARM64] Windows on ARM PC detected: using the native ARM64 unlocker (BETA).'; zh='[ARM64] 检测到 Windows on ARM 电脑：使用原生 ARM64 解锁器（测试版）。'; hi='[ARM64] Windows on ARM पीसी पाया गया: नेटिव ARM64 अनलॉकर का उपयोग हो रहा है (बीटा)।'; es='[ARM64] PC con Windows on ARM detectado: usando el unlocker ARM64 nativo (BETA).'; fr='[ARM64] PC Windows on ARM détecté : utilisation de l''unlocker ARM64 natif (BETA).'; ar='[ARM64] تم اكتشاف جهاز Windows on ARM: سيتم استخدام أداة الفتح الأصلية ARM64 (نسخة تجريبية).'; ru='[ARM64] Обнаружен ПК с Windows on ARM: используется нативный ARM64 анлокер (БЕТА).' }
+    'arm64_no_release' = @{ en='[ARM64] The ARM64 build has not been published in this release yet.'; zh='[ARM64] 此版本尚未发布 ARM64 构建。'; hi='[ARM64] ARM64 बिल्ड अभी इस रिलीज़ में प्रकाशित नहीं हुआ है।'; es='[ARM64] La build ARM64 aún no ha sido publicada en esta release.'; fr='[ARM64] La build ARM64 n''est pas encore publiée dans cette release.'; ar='[ARM64] لم يتم نشر إصدار ARM64 في هذا الإصدار بعد.'; ru='[ARM64] Сборка ARM64 еще не опубликована в этом релизе.' }
+    'arm64_hash_skipped' = @{ en='[ARM64] Hash verification is unavailable in this beta phase.'; zh='[ARM64] 此测试阶段无法进行哈希校验。'; hi='[ARM64] इस बीटा चरण में हैश सत्यापन उपलब्ध नहीं है।'; es='[ARM64] La verificación de hash no está disponible en esta fase beta.'; fr='[ARM64] La vérification de hash n''est pas disponible dans cette phase bêta.'; ar='[ARM64] التحقق من التجزئة غير متاح في هذه المرحلة التجريبية.'; ru='[ARM64] Проверка хеша недоступна на этой бета-стадии.' }
+    'track_releases' = @{ en='Track new releases at {0}'; zh='在此查看新版本：{0}'; hi='नए रिलीज़ यहाँ देखें: {0}'; es='Consulta las nuevas releases en {0}'; fr='Suivez les nouvelles releases sur {0}'; ar='تابع الإصدارات الجديدة على {0}'; ru='Следите за новыми релизами здесь: {0}' }
 }
 
 function T {
@@ -285,9 +297,10 @@ function Test-UnlockInstalled {
         # "TRIAL" num PC em que o exe esta protegido/ilegivel (GitHub issue #49
         # tambem cobre leitura do DLL; aqui e leitura do exe para o Machine).
         $machine = Get-PeMachineType -Path (Join-Path $content 'Minecraft.Windows.exe')
-        if (-not $machine) {
-            $machine = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { 0xAA64 } else { 0x8664 }
-        }
+        # Sem chute de arquitetura da SESSAO: se a leitura do PE falhar, o
+        # bloco abaixo aceita hashes das duas listas (x64 e arm64). O fallback
+        # antigo via PROCESSOR_ARCHITECTURE escolheu o DLL errado em PC WoA
+        # com o jogo rodando como x64 emulado.
         if ($machine) {
             if ($machine -eq 0xAA64) {
                 return ($knownUnlockHashesArm64 -contains $actual) -or ($expectedHashArm64 -eq $actual)
@@ -369,15 +382,26 @@ function Install-Unlocker {
         } else {
             Write-Host ((T 'av_exclusion_fail') -replace '\{0\}', "$tmp ; $content") -ForegroundColor Yellow
         }
-        # Arquitetura do JOGO (nao da sessao PS): campo Machine do PE do exe
-        # instalado; fallback para a arquitetura da maquina.
+        # Arquitetura do JOGO (nunca da sessao PS): campo Machine do PE do exe.
+        # Se a leitura falhar, assume x64, o caso dominante, inclusive em PCs
+        # WoA onde o jogo costuma rodar como x64 emulado. Chutar ARM64 pela
+        # sessao baixou winmm-arm64.dll para jogo x64 e o jogo voltava pra
+        # Trial sem crash, pois um DLL ARM64 nao carrega num processo x64.
         $machine = Get-PeMachineType -Path (Join-Path $content 'Minecraft.Windows.exe')
-        if (-not $machine) {
-            $machine = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { 0xAA64 } else { 0x8664 }
+        $machineReadOk = ($machine -ne 0)
+        if (-not $machineReadOk) {
+            $machine = 0x8664
         }
         $isArm = ($machine -eq 0xAA64)
+        $archLabel = if ($isArm) { 'ARM64' } else { 'x64' }
+        $machineHex = '0x{0:X4}' -f $machine
+        if ($machineReadOk) {
+            Write-Host (((T 'arch_line') -replace '\{0\}', $archLabel) -replace '\{1\}', $machineHex)
+        } else {
+            Write-Host (T 'arch_unknown') -ForegroundColor Yellow
+        }
         if ($isArm) {
-            Write-Host '[ARM64] PC Windows-on-ARM detectado: usando o unlocker nativo ARM64 (BETA).' -ForegroundColor Cyan
+            Write-Host (T 'arm64_detected') -ForegroundColor Cyan
         }
         # Hash esperado para a arquitetura desta instalacao. Usado em TODAS as
         # validacoes de integridade (download, copia atomica e pos-copia) para
@@ -403,8 +427,8 @@ function Install-Unlocker {
                 Unblock-File $dll -ErrorAction SilentlyContinue
             } catch {
                 if ($isArm) {
-                    Write-Host '[ARM64] O build ARM64 ainda nao foi publicado nesta release.' -ForegroundColor Red
-                    Write-Host '       Acompanhe https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases' -ForegroundColor Yellow
+                    Write-Host (T 'arm64_no_release') -ForegroundColor Red
+                    Write-Host ((T 'track_releases') -replace '\{0\}', 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases') -ForegroundColor Yellow
                 }
                 throw
             }
@@ -433,7 +457,7 @@ function Install-Unlocker {
         } elseif ($isArm) {
             # Sem hash arm64 publicado ainda (fase beta): so verifica que o
             # arquivo existe e tem tamanho e gera um aviso, nao bloqueia.
-            Write-Host '[ARM64] Verificacao de hash indisponivel nesta fase beta.' -ForegroundColor Yellow
+            Write-Host (T 'arm64_hash_skipped') -ForegroundColor Yellow
         }
 
         Close-Minecraft

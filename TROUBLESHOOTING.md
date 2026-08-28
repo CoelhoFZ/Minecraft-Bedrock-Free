@@ -55,9 +55,9 @@ modified by an elevated (administrator) process.
 
 1. Close Minecraft completely (the game keeps the DLL mapped while running).
 2. Make sure the installer runs **as administrator**. The official bootstrap
-   (`irm ... | iex`) and `install.bat` request elevation automatically; the
-   manual `.\install.ps1` path now also self-elevates. If you are on an
-   account without admin rights, ask the machine's administrator to run it.
+   (`irm ... | iex`) and `install.bat` request elevation automatically. If you
+   are on an account without admin rights, ask the machine's administrator to
+   run it.
 3. Run the installer again.
 
 If it still fails, your antivirus may be blocking the write: temporarily

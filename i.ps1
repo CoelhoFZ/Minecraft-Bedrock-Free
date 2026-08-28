@@ -22,7 +22,7 @@ Invoke-WebRequest -UseBasicParsing -Uri "$base/menu.ps1" -OutFile $menu
 # copia com o outro fim, os dois passam, eliminando o bug classico "hash do
 # menu nao confere" por CRLF vs LF. Para gerar o hash apos editar menu.ps1,
 # use este mesmo normalize (remover 0x0D, manter BOM) sobre o arquivo.
-$menuHash = '710fa2789c7de6ba395ed0db5a6a9022bd2f1ba9f356eed04f4992fb092da84c'
+$menuHash = '3694781384320c115be0d73c93b119af9879ede3e8976f9be7350eda7c821455'
 $menuBytes = [IO.File]::ReadAllBytes($menu)
 # Filtra todos os bytes de CR (0x0D) preservando os demais (incl. o BOM).
 $clean = New-Object System.Collections.Generic.List[byte]

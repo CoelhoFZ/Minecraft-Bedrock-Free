@@ -51,14 +51,6 @@ because that file does not exist.
 > The installer scripts are **open source** (GPLv3). Only the unlock binary
 > (`release/winmm.dll`) is closed source - see [LICENSE](LICENSE).
 
-Alternative (manual): clone the repo and run `.\install.ps1`:
-
-```powershell
-git clone https://github.com/CoelhoFZ/Minecraft-Bedrock-Free
-cd Minecraft-Bedrock-Free
-.\install.ps1
-```
-
 The installer locates the game's `Content` folder, closes the game if it is
 running, backs up any original `winmm.dll` (as `winmm.dll.orig`) and installs
 the unlock. Old artifacts from previous versions are removed.

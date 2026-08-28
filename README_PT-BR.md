@@ -52,14 +52,6 @@ Um erro de digitação como `.../raw/main/e.ps1 | iex` falha com erro de conexã
 > Os scripts do instalador são **open source** (GPLv3). Apenas o binário do
 > unlock (`release/winmm.dll`) é código fechado - veja [LICENSE](LICENSE).
 
-Alternativa (manual): clone o repo e rode o `.\install.ps1`:
-
-```powershell
-git clone https://github.com/CoelhoFZ/Minecraft-Bedrock-Free
-cd Minecraft-Bedrock-Free
-.\install.ps1
-```
-
 O instalador localiza a pasta `Content` do jogo, fecha o jogo se estiver
 aberto, faz backup de qualquer `winmm.dll` original (como `winmm.dll.orig`) e
 instala o unlock. Artefatos antigos de versões anteriores são removidos.
