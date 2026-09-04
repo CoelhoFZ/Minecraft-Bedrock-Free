@@ -4,6 +4,15 @@ Common problems and how to recover. Run the installer again (`irm
 https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/i.ps1 | iex`)
 after fixing the underlying cause.
 
+## Quick diagnostics
+
+The installer menu has a **[3] Diagnostics** option: it prints (and copies to
+the clipboard) the OS version, PowerShell version, admin status, game folder,
+install source (Store/Xbox App), game version and architecture (PE Machine
+field), the installed unlock build, Defender exclusions related to
+Minecraft/mbu and the offline cache status. When asking for help on Discord,
+paste that report - it answers the first ten questions support would ask.
+
 ## "Bad Image" error (status 0xc0e90007) for WINMM.dll when launching Minecraft
 
 ```

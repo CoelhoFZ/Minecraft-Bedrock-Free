@@ -1,14 +1,21 @@
 ﻿# menu.ps1 - Minecraft Bedrock Free - menu interativo (open source, GPLv3).
 # Suporte a 8 idiomas (pt/en/es/fr/zh/hi/ar/ru) com deteccao automatica.
 #
-# IMPORTANTE: o i.ps1 (bootstrap via irm | iex) valida o hash SHA256 DESTE
-# arquivo antes de executa-lo. Qualquer edicao aqui muda o hash e quebra o
-# bootstrap ate que o $menuHash no i.ps1 seja atualizado. Apos editar, rode:
-#   (Get-FileHash .\menu.ps1 -Algorithm SHA256).Hash.ToLowerInvariant()
-# e cole o resultado em i.ps1 (variavel $menuHash).
+# IMPORTANTE: o i.ps1 (bootstrap via irm | iex) e o install.bat validam o hash
+# SHA256 DESTE arquivo antes de executa-lo. Qualquer edicao aqui muda o hash e
+# quebra AMBOS os caminhos de entrada ate que ele seja atualizado em: (1) a
+# variavel $menuHash no i.ps1 e (2) o hash fixado no install.bat. O hash e
+# calculado sobre o conteudo normalizado (todos os bytes 0x0D removidos, BOM
+# preservado) - imune a CRLF vs LF. Apos editar, gere o hash com:
+#   python3 -c "import hashlib; print(hashlib.sha256(open('menu.ps1','rb').read().replace(b'\r', b'')).hexdigest())"
+# e cole o resultado no i.ps1 ($menuHash) e no install.bat ($menuHashPin).
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.4.2'
-$base = 'https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main'
+$Script:Version = '4.5.0'
+# Base URL sobrescrevivel (forks/testes em VM): mesma variavel que o i.ps1 ja
+# respeita. Afeta menu, binario e tested-versions.json.
+$base = if ($env:MBU_BASE_URL) { $env:MBU_BASE_URL.TrimEnd('/') } else {
+    'https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main'
+}
 $expectedHash = 'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e'
 # Hashes de TODOS os unlocks validos ja publicados (rebuilds anteriores). O estado
 # "desbloqueado" vale para QUALQUER hash desta lista: quem instalou com um DLL
@@ -39,6 +46,34 @@ $expectedHashArm64 = '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557
 $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'  # atual (build native ARM64)
 )
+# Rotulo de build por hash: o estado "DESBLOQUEADO (vX.Y.Z)" e o diagnostico
+# mostram QUAL versao do unlock esta instalada, e o menu avisa quando ela e
+# mais antiga que o proprio menu. Manter em sincronia com as listas acima
+# (hash atual rotula com a versao do menu, abaixo).
+$unlockBuildLabels = @{
+    # Binario atual: segue o MESMO hash desde a v4.4.2 (a 4.5.0 e release de
+    # scripts, sem rebuild). Rotular com a versao do MENU evita falso aviso
+    # de "unlock mais antigo". Ao rebuildar: mover este hash p/ historico.
+    'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.5.0'
+    'f7b1408c36590abbfcb5310cf98c1efb1fa16f3a54a9387df56b1441de90335b' = 'v4.4.1'
+    '86689c9724be7f391ba9bd1f4ef8dddaa73baec0b76b9c73bebef89f37b76e97' = 'v4.3.0'
+}
+$unlockBuildLabelsArm64 = @{
+    '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46' = 'v4.4.2'
+}
+# Cache local do binario ja validado (reinstalacao OFFLINE): o instalador
+# guarda o winmm aprovado aqui apos o hash conferir, e o usa quando o
+# download falhar (sem internet / AV comendo o download).
+$cacheDir = Join-Path $env:LOCALAPPDATA 'mbu-cache'
+# Versoes do JOGO testadas (tested-versions.json no repo): buscado UMA vez
+# por sessao. $null = ainda nao buscou; $false = indisponivel (offline/404).
+$Script:TestedVersionData = $null
+# Atalhos do menu (opcoes 4/5/6).
+$urls = @{
+    'troubleshooting' = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/blob/main/TROUBLESHOOTING.md'
+    'discord'         = 'https://discord.gg/u3S4gFgK6M'
+    'donate'          = 'https://buymeacoffee.com/coelhofz'
+}
 function Get-PeMachineType {
     param([string]$Path)
     try {
@@ -84,6 +119,8 @@ function Resolve-MbuLanguage {
         if ([string]::IsNullOrWhiteSpace($candidate)) { continue }
         $value = $candidate.Trim().ToLowerInvariant()
         switch -Wildcard ($value) {
+            'en*' { return 'en' }
+            '*english*' { return 'en' }
             'pt*' { return 'pt' }
             '*portugu*' { return 'pt' }
             '*brasil*' { return 'pt' }
@@ -155,17 +192,53 @@ $Script:PT = @{
     'arm64_no_release'   = '[ARM64] O build ARM64 ainda nao foi publicado nesta release.'
     'arm64_hash_skipped' = '[ARM64] Verificacao de hash indisponivel nesta fase beta.'
     'track_releases'     = 'Acompanhe novos releases em {0}'
+    'state_unlocked_v'   = 'O Minecraft ja esta DESBLOQUEADO ({0}).'
+    'state_older_hint'   = 'O unlock instalado ({0}) e mais antigo que este menu ({1}) - use [2] para atualizar.'
+    'tested_warning'     = 'Aviso: a versao do jogo {0} ainda NAO foi testada com este unlocker. Se algo falhar, reporte no Discord.'
+    'cache_used'         = 'Sem internet: usando copia local validada do binario ({0}).'
+    'cache_saved'        = 'Copia local salva para reinstalacao offline: {0}'
+    'menu_3_diag'        = 'Diagnostico (copia relatorio p/ o Discord)'
+    'menu_4_trouble'     = 'Abrir guia de problemas (web)'
+    'menu_5_discord'     = 'Abrir Discord da comunidade'
+    'menu_6_bmc'         = 'Apoiar o projeto (Buy Me a Coffee)'
+    'diag_title'         = 'Relatorio de diagnostico - Minecraft Bedrock Free v{0}'
+    'diag_os'            = 'Sistema'
+    'diag_ps'            = 'PowerShell'
+    'diag_admin'         = 'Administrador'
+    'diag_yes'           = 'sim'
+    'diag_no'            = 'nao'
+    'diag_content'       = 'Pasta Content'
+    'diag_source'        = 'Origem da instalacao'
+    'diag_source_store'  = 'Microsoft Store (UWP)'
+    'diag_source_gdk'    = 'Xbox App (GDK)'
+    'diag_source_unknown'= 'desconhecida'
+    'diag_game_version'  = 'Versao do jogo'
+    'diag_game_arch'     = 'Arquitetura do jogo'
+    'diag_unlock'        = 'Unlock instalado'
+    'diag_unlock_none'   = 'nao instalado (Trial)'
+    'diag_tested'        = 'Versao do jogo vs versoes testadas'
+    'diag_tested_ok'     = 'OK - coberta por tested-versions.json'
+    'diag_tested_bad'    = 'ATENCAO - fora da lista de testadas'
+    'diag_tested_unknown'= 'indisponivel (sem internet ou sem dados)'
+    'diag_av'            = 'Exclusoes do Defender (mbu/Minecraft)'
+    'diag_av_none'       = 'nenhuma encontrada'
+    'diag_cache'         = 'Cache offline do binario'
+    'diag_cache_ok'      = 'presente e valido ({0})'
+    'diag_cache_bad'     = 'presente MAS com hash diferente do binario atual'
+    'diag_cache_none'    = 'ausente (sera criada na proxima instalacao)'
+    'diag_clipboard_ok'  = 'Relatorio copiado para a area de transferencia - cole no canal de suporte do Discord.'
+    'diag_clipboard_fail'= 'Nao foi possivel copiar automaticamente (copie da tela acima).'
 }
 
 $Script:I18N = @{
-    'err_acl' = @{ en='Could not take ownership of the Minecraft folder. Run as administrator.'; es='No se pudo tomar posesion de la carpeta de Minecraft. Ejecuta como administrador.' }
-    'err_copy_corrupt' = @{ en='Failed to copy winmm.dll (corrupted/blocked copy). Check if your antivirus blocked it and try again.'; es='Error al copiar winmm.dll (copia corrupta/bloqueada). Comprueba si tu antivirus lo bloqueo e intentalo de nuevo.' }
-    'err_replace' = @{ en='Could not replace winmm.dll (access denied or file in use). Close Minecraft and run as administrator.'; es='No se pudo reemplazar winmm.dll (acceso denegado o archivo en uso). Cierra Minecraft y ejecuta como administrador.' }
-    'err_av_quarantine' = @{ en='winmm.dll was corrupted/removed by antivirus right after copying. Add an exclusion for the Minecraft folder and run again.'; es='winmm.dll fue corrompido/eliminado por el antivirus justo despues de copiarlo. Anade una exclusion para la carpeta de Minecraft y vuelve a intentarlo.' }
-    'err_av_blocked' = @{ en='Your antivirus blocked the downloaded winmm.dll even with the automatic exclusion. Open Windows Security, go to Virus & threat protection, open Protection history, find the blocked winmm.dll and choose Allow or Restore. Then add the exclusions manually for: {0}. If you use another antivirus, add the same exclusions there too. Run the installer again.'; es='Tu antivirus bloqueo la descarga de winmm.dll incluso con la exclusion automatica. Abra Seguridad de Windows, vaya a Proteccion contra virus y amenazas, abra el Historial de proteccion, encuentre el winmm.dll bloqueado y elija Permitir o Restaurar. Despues anada manualmente las exclusiones para: {0}. Si usa otro antivirus, anada las mismas exclusiones alli tambien. Ejecute el instalador de nuevo.' }
-    'av_retrying' = @{ en='The antivirus may have removed the downloaded file. Retrying ({0}/{1})...'; es='El antivirus pudo haber eliminado el archivo descargado. Reintentando ({0}/{1})...' }
-    'av_exclusion_ok' = @{ en='Windows Defender exclusion added for: {0}'; pt='Exclusao do Windows Defender adicionada para: {0}'; es='Exclusion de Windows Defender anadida para: {0}' }
-    'av_exclusion_fail' = @{ en='Could not add the Windows Defender exclusion automatically. Run as administrator or add it manually: {0}'; pt='Nao foi possivel adicionar a exclusao do Windows Defender automaticamente. Rode como administrador ou adicione manualmente: {0}'; es='No se pudo anadir la exclusion de Windows Defender automaticamente. Ejecuta como administrador o anadela manualmente: {0}' }
+    'err_acl' = @{ en='Could not take ownership of the Minecraft folder. Run as administrator.'; es='No se pudo tomar posesion de la carpeta de Minecraft. Ejecuta como administrador.'; zh='无法取得 Minecraft 文件夹的所有权。请以管理员身份运行。'; hi='Minecraft फ़ोल्डर का स्वामित्व नहीं लिया जा सका। व्यवस्थापक के रूप में चलाएँ।'; fr='Impossible de prendre possession du dossier Minecraft. Exécutez en tant qu''administrateur.'; ar='تعذّر الحصول على ملكية مجلد Minecraft. شغّل كمسؤول.'; ru='Не удалось получить права на папку Minecraft. Запустите от имени администратора.' }
+    'err_copy_corrupt' = @{ en='Failed to copy winmm.dll (corrupted/blocked copy). Check if your antivirus blocked it and try again.'; es='Error al copiar winmm.dll (copia corrupta/bloqueada). Comprueba si tu antivirus lo bloqueo e intentalo de nuevo.'; zh='复制 winmm.dll 失败（副本损坏或受阻）。请检查杀毒软件是否阻止，然后重试。'; hi='winmm.dll की प्रतिलिपि विफल (दूषित/अवरुद्ध प्रतिलिपि)। जाँचें कि क्या आपके एंटीवायरस ने इसे रोका और फिर से प्रयास करें।'; fr='Échec de la copie de winmm.dll (copie corrompue/bloquée). Vérifiez que votre antivirus ne l''a pas bloquée et réessayez.'; ar='فشل نسخ winmm.dll (نسخة تالفة/محظورة). تحقق مما إذا كان برنامج مكافحة الفيروسات قد حظرها وحاول مرة أخرى.'; ru='Не удалось скопировать winmm.dll (копия повреждена/заблокирована). Проверьте, не заблокировал ли его антивирус, и попробуйте снова.' }
+    'err_replace' = @{ en='Could not replace winmm.dll (access denied or file in use). Close Minecraft and run as administrator.'; es='No se pudo reemplazar winmm.dll (acceso denegado o archivo en uso). Cierra Minecraft y ejecuta como administrador.'; zh='无法替换 winmm.dll（访问被拒绝或文件被占用）。请关闭 Minecraft 并以管理员身份运行。'; hi='winmm.dll को प्रतिस्थापित नहीं किया जा सका (पहुँच अस्वीकृत या फ़ाइल उपयोग में)। Minecraft बंद करें और व्यवस्थापक के रूप में चलाएँ।'; fr='Impossible de remplacer winmm.dll (accès refusé ou fichier utilisé). Fermez Minecraft et exécutez en tant qu''administrateur.'; ar='تعذّر استبدال winmm.dll (تم رفض الوصول أو الملف قيد الاستخدام). أغلق Minecraft وشغّل كمسؤول.'; ru='Не удалось заменить winmm.dll (отказано в доступе или файл используется). Закройте Minecraft и запустите от имени администратора.' }
+    'err_av_quarantine' = @{ en='winmm.dll was corrupted/removed by antivirus right after copying. Add an exclusion for the Minecraft folder and run again.'; es='winmm.dll fue corrompido/eliminado por el antivirus justo despues de copiarlo. Anade una exclusion para la carpeta de Minecraft y vuelve a intentarlo.'; zh='winmm.dll 刚复制完就被杀毒软件破坏/删除。请为 Minecraft 文件夹添加排除项后重新运行。'; hi='प्रतिलिपि के तुरंत बाद एंटीवायरस ने winmm.dll को दूषित/हटा दिया। Minecraft फ़ोल्डर के लिए बहिष्करण जोड़ें और फिर से चलाएँ।'; fr='winmm.dll a été corrompu/supprimé par l''antivirus juste après la copie. Ajoutez une exclusion pour le dossier Minecraft et relancez.'; ar='تم إتلاف/حذف winmm.dll بواسطة مكافح الفيروسات بعد النسخ مباشرة. أضف استثناءً لمجلد Minecraft وأعد التشغيل.'; ru='Антивирус повредил/удалил winmm.dll сразу после копирования. Добавьте исключение для папки Minecraft и запустите снова.' }
+    'err_av_blocked' = @{ en='Your antivirus blocked the downloaded winmm.dll even with the automatic exclusion. Open Windows Security, go to Virus & threat protection, open Protection history, find the blocked winmm.dll and choose Allow or Restore. Then add the exclusions manually for: {0}. If you use another antivirus, add the same exclusions there too. Run the installer again.'; es='Tu antivirus bloqueo la descarga de winmm.dll incluso con la exclusion automatica. Abra Seguridad de Windows, vaya a Proteccion contra virus y amenazas, abra el Historial de proteccion, encuentre el winmm.dll bloqueado y elija Permitir o Restaurar. Despues anada manualmente las exclusiones para: {0}. Si usa otro antivirus, anada las mismas exclusiones alli tambien. Ejecute el instalador de nuevo.'; zh='即使已自动添加排除项，杀毒软件仍阻止了下载的 winmm.dll。请打开 Windows 安全中心，进入“病毒和威胁防护”，打开“保护历史记录”，找到被阻止的 winmm.dll 并选择“允许”或“还原”。然后手动为以下路径添加排除项：{0}。如果你使用其他杀毒软件，请在其中添加相同的排除项。重新运行安装程序。'; hi='स्वचालित बहिष्करण के बावजूद आपके एंटीवायरस ने डाउनलोड किए गए winmm.dll को अवरुद्ध कर दिया। Windows Security खोलें, Virus & threat protection पर जाएँ, Protection history खोलें, अवरुद्ध winmm.dll ढूँढें और Allow या Restore चुनें। फिर इनके लिए मैन्युअल रूप से बहिष्करण जोड़ें: {0}। यदि आप कोई अन्य एंटीवायरस उपयोग करते हैं, तो उसमें भी वही बहिष्करण जोड़ें। इंस्टॉलर फिर से चलाएँ।'; fr='Votre antivirus a bloqué le winmm.dll téléchargé malgré l''exclusion automatique. Ouvrez Sécurité Windows, allez dans Protection contre les virus et menaces, ouvrez l''historique de protection, trouvez le winmm.dll bloqué et choisissez Autoriser ou Restaurer. Ajoutez ensuite manuellement les exclusions pour : {0}. Si vous utilisez un autre antivirus, ajoutez-y les mêmes exclusions. Relancez l''installateur.'; ar='حظر مكافح الفيروسات لديك ملف winmm.dll الذي تم تنزيله حتى مع الاستثناء التلقائي. افتح أمان Windows، وانتقل إلى الحماية من الفيروسات والتهديدات، وافتح سجل الحماية، وابحث عن winmm.dll المحظور واختر السماح أو الاستعادة. ثم أضف الاستثناءات يدويًا لهذه المسارات: {0}. إذا كنت تستخدم مكافح فيروسات آخر، أضف نفس الاستثناءات إليه أيضًا. شغّل المثبّت مرة أخرى.'; ru='Ваш антивирус заблокировал загруженный winmm.dll, даже несмотря на автоматическое исключение. Откройте «Безопасность Windows», перейдите в «Защита от вирусов и угроз», откройте «Журнал защиты», найдите заблокированный winmm.dll и выберите «Разрешить» или «Восстановить». Затем добавьте исключения вручную для: {0}. Если вы используете другой антивирус, добавьте такие же исключения и в него. Запустите установщик снова.' }
+    'av_retrying' = @{ en='The antivirus may have removed the downloaded file. Retrying ({0}/{1})...'; es='El antivirus pudo haber eliminado el archivo descargado. Reintentando ({0}/{1})...'; zh='杀毒软件可能已删除下载的文件。正在重试（{0}/{1}）...'; hi='एंटीवायरस ने डाउनलोड की गई फ़ाइल हटा दी हो सकती है। पुनः प्रयास ({0}/{1})...'; fr='L''antivirus a peut-être supprimé le fichier téléchargé. Nouvel essai ({0}/{1})...'; ar='ربما حذف مكافح الفيروسات الملف الذي تم تنزيله. إعادة المحاولة ({0}/{1})...'; ru='Возможно, антивирус удалил загруженный файл. Повторная попытка ({0}/{1})...' }
+    'av_exclusion_ok' = @{ en='Windows Defender exclusion added for: {0}'; pt='Exclusao do Windows Defender adicionada para: {0}'; es='Exclusion de Windows Defender anadida para: {0}'; zh='已为以下路径添加 Windows Defender 排除项：{0}'; hi='इनके लिए Windows Defender बहिष्करण जोड़ा गया: {0}'; fr='Exclusion Windows Defender ajoutée pour : {0}'; ar='تمت إضافة استثناء Windows Defender لهذه المسارات: {0}'; ru='Исключение Защитника Windows добавлено для: {0}' }
+    'av_exclusion_fail' = @{ en='Could not add the Windows Defender exclusion automatically. Run as administrator or add it manually: {0}'; pt='Nao foi possivel adicionar a exclusao do Windows Defender automaticamente. Rode como administrador ou adicione manualmente: {0}'; es='No se pudo anadir la exclusion de Windows Defender automaticamente. Ejecuta como administrador o anadela manualmente: {0}'; zh='无法自动添加 Windows Defender 排除项。请以管理员身份运行或手动添加：{0}'; hi='Windows Defender बहिष्करण स्वचालित रूप से नहीं जोड़ा जा सका। व्यवस्थापक के रूप में चलाएँ या मैन्युअल रूप से जोड़ें: {0}'; fr='Impossible d''ajouter automatiquement l''exclusion Windows Defender. Exécutez en tant qu''administrateur ou ajoutez-la manuellement : {0}'; ar='تعذّر إضافة استثناء Windows Defender تلقائيًا. شغّل كمسؤول أو أضفه يدويًا: {0}'; ru='Не удалось автоматически добавить исключение Защитника Windows. Запустите от имени администратора или добавьте вручную: {0}' }
     'greet_morning' = @{ en='Good morning'; zh='早上好'; hi='सुप्रभात'; es='Buenos días'; fr='Bonjour'; ar='صباح الخير'; ru='Доброе утро' }
     'greet_afternoon' = @{ en='Good afternoon'; zh='下午好'; hi='शुभ दोपहर'; es='Buenas tardes'; fr='Bon après-midi'; ar='مساء الخير'; ru='Добрый день' }
     'greet_evening' = @{ en='Good evening'; zh='晚上好'; hi='शुभ संध्या'; es='Buenas noches'; fr='Bonsoir'; ar='مساء النور'; ru='Добрый вечер' }
@@ -201,6 +274,42 @@ $Script:I18N = @{
     'arm64_no_release' = @{ en='[ARM64] The ARM64 build has not been published in this release yet.'; zh='[ARM64] 此版本尚未发布 ARM64 构建。'; hi='[ARM64] ARM64 बिल्ड अभी इस रिलीज़ में प्रकाशित नहीं हुआ है।'; es='[ARM64] La build ARM64 aún no ha sido publicada en esta release.'; fr='[ARM64] La build ARM64 n''est pas encore publiée dans cette release.'; ar='[ARM64] لم يتم نشر إصدار ARM64 في هذا الإصدار بعد.'; ru='[ARM64] Сборка ARM64 еще не опубликована в этом релизе.' }
     'arm64_hash_skipped' = @{ en='[ARM64] Hash verification is unavailable in this beta phase.'; zh='[ARM64] 此测试阶段无法进行哈希校验。'; hi='[ARM64] इस बीटा चरण में हैश सत्यापन उपलब्ध नहीं है।'; es='[ARM64] La verificación de hash no está disponible en esta fase beta.'; fr='[ARM64] La vérification de hash n''est pas disponible dans cette phase bêta.'; ar='[ARM64] التحقق من التجزئة غير متاح في هذه المرحلة التجريبية.'; ru='[ARM64] Проверка хеша недоступна на этой бета-стадии.' }
     'track_releases' = @{ en='Track new releases at {0}'; zh='在此查看新版本：{0}'; hi='नए रिलीज़ यहाँ देखें: {0}'; es='Consulta las nuevas releases en {0}'; fr='Suivez les nouvelles releases sur {0}'; ar='تابع الإصدارات الجديدة على {0}'; ru='Следите за новыми релизами здесь: {0}' }
+    'state_unlocked_v' = @{ en='Minecraft is already UNLOCKED ({0}).'; es='Minecraft ya está DESBLOQUEADO ({0}).'; zh='Minecraft 已经解锁（{0}）。'; hi='Minecraft पहले से अनलॉक है ({0})।'; fr='Minecraft est déjà DÉBLOQUÉ ({0}).'; ar='Minecraft مفتوح بالفعل ({0}).'; ru='Minecraft уже РАЗБЛОКИРОВАН ({0}).' }
+    'state_older_hint' = @{ en='Installed unlock ({0}) is older than this menu ({1}) - use [2] to update.'; es='El desbloqueo instalado ({0}) es más antiguo que este menú ({1}) - usa [2] para actualizar.'; zh='已安装的解锁（{0}）比当前菜单（{1}）旧 - 请使用 [2] 更新。'; hi='स्थापित अनलॉक ({0}) इस मेनू ({1}) से पुराना है - अपडेट के लिए [2] उपयोग करें।'; fr='Le déverrouillage installé ({0}) est plus ancien que ce menu ({1}) - utilisez [2] pour mettre à jour.'; ar='الفتح المثبّت ({0}) أقدم من هذه القائمة ({1}) - استخدم [2] للتحديث.'; ru='Установленная разблокировка ({0}) старее этого меню ({1}) - используйте [2] для обновления.' }
+    'tested_warning' = @{ en='Warning: game version {0} has NOT been tested with this unlocker yet. If anything fails, please report it on Discord.'; es='Aviso: la versión del juego {0} aún NO ha sido probada con este unlocker. Si algo falla, repórtalo en Discord.'; zh='警告：游戏版本 {0} 尚未经过此解锁器测试。如有问题，请在 Discord 上报告。'; hi='चेतावनी: गेम संस्करण {0} का अभी इस अनलॉकर से परीक्षण नहीं हुआ है। यदि कुछ विफल हो तो Discord पर रिपोर्ट करें।'; fr='Avertissement : la version {0} du jeu n''a pas encore été testée avec ce déverrouilleur. En cas de problème, signalez-le sur Discord.'; ar='تحذير: إصدار اللعبة {0} لم يُختبر بعد مع هذا الفاتح. إذا حدثت أي مشكلة، يُرجى الإبلاغ عنها على Discord.'; ru='Внимание: версия игры {0} ещё не протестирована с этим анлокером. Если что-то не работает, сообщите об этом в Discord.' }
+    'cache_used' = @{ en='Offline: using the local validated copy of the binary ({0}).'; es='Sin internet: usando la copia local validada del binario ({0}).'; zh='无网络：使用本地已验证的二进制副本（{0}）。'; hi='इंटरनेट नहीं: बाइनरी की स्थानीय सत्यापित प्रतिलिपि का उपयोग ({0})।'; fr='Hors ligne : utilisation de la copie locale validée du binaire ({0}).'; ar='بدون إنترنت: استخدام النسخة المحلية الموثّقة من الملف الثنائي ({0}).'; ru='Нет интернета: используется локальная проверенная копия бинарника ({0}).' }
+    'cache_saved' = @{ en='Local cache saved for offline reinstall: {0}'; es='Copia local guardada para reinstalación sin conexión: {0}'; zh='已保存本地缓存，供离线重装使用：{0}'; hi='ऑफ़लाइन पुनर्स्थापना के लिए स्थानीय कैश सहेजा गया: {0}'; fr='Cache local enregistré pour la réinstallation hors ligne : {0}'; ar='تم حفظ ذاكرة التخزين المؤقت المحلية لإعادة التثبيت دون اتصال: {0}'; ru='Локальный кэш сохранён для офлайн-переустановки: {0}' }
+    'menu_3_diag' = @{ en='Diagnostics (copy report for Discord)'; es='Diagnóstico (copiar informe p/ Discord)'; zh='诊断（复制报告以粘贴到 Discord）'; hi='डायग्नोस्टिक्स (Discord के लिए रिपोर्ट कॉपी करें)'; fr='Diagnostic (copier le rapport pour Discord)'; ar='التشخيص (نسخ التقرير إلى Discord)'; ru='Диагностика (скопировать отчёт для Discord)' }
+    'menu_4_trouble' = @{ en='Open troubleshooting guide (web)'; es='Abrir guía de problemas (web)'; zh='打开问题排查指南（网页）'; hi='समस्या समाधान मार्गदर्शिका खोलें (वेब)'; fr='Ouvrir le guide de dépannage (web)'; ar='فتح دليل استكشاف الأخطاء (ويب)'; ru='Открыть руководство по устранению неполадок (веб)' }
+    'menu_5_discord' = @{ en='Open community Discord'; es='Abrir Discord de la comunidad'; zh='打开社区 Discord'; hi='समुदाय Discord खोलें'; fr='Ouvrir le Discord de la communauté'; ar='فتح Discord المجتمع'; ru='Открыть Discord сообщества' }
+    'menu_6_bmc' = @{ en='Support the project (Buy Me a Coffee)'; es='Apoyar el proyecto (Buy Me a Coffee)'; zh='支持本项目（Buy Me a Coffee）'; hi='परियोजना का समर्थन करें (Buy Me a Coffee)'; fr='Soutenir le projet (Buy Me a Coffee)'; ar='دعم المشروع (Buy Me a Coffee)'; ru='Поддержать проект (Buy Me a Coffee)' }
+    'diag_title' = @{ en='Diagnostic report - Minecraft Bedrock Free v{0}'; es='Informe de diagnóstico - Minecraft Bedrock Free v{0}'; zh='诊断报告 - Minecraft Bedrock Free v{0}'; hi='डायग्नोस्टिक रिपोर्ट - Minecraft Bedrock Free v{0}'; fr='Rapport de diagnostic - Minecraft Bedrock Free v{0}'; ar='تقرير التشخيص - Minecraft Bedrock Free v{0}'; ru='Диагностический отчёт - Minecraft Bedrock Free v{0}' }
+    'diag_os' = @{ en='OS'; es='Sistema'; zh='系统'; hi='ऑपरेटिंग सिस्टम'; fr='Système'; ar='نظام التشغيل'; ru='Система' }
+    'diag_ps' = @{ en='PowerShell'; es='PowerShell'; zh='PowerShell'; hi='PowerShell'; fr='PowerShell'; ar='PowerShell'; ru='PowerShell' }
+    'diag_admin' = @{ en='Administrator'; es='Administrador'; zh='管理员'; hi='व्यवस्थापक'; fr='Administrateur'; ar='مسؤول'; ru='Администратор' }
+    'diag_yes' = @{ en='yes'; es='sí'; zh='是'; hi='हाँ'; fr='oui'; ar='نعم'; ru='да' }
+    'diag_no' = @{ en='no'; es='no'; zh='否'; hi='नहीं'; fr='non'; ar='لا'; ru='нет' }
+    'diag_content' = @{ en='Game Content folder'; es='Carpeta Content del juego'; zh='游戏 Content 文件夹'; hi='गेम Content फ़ोल्डर'; fr='Dossier Content du jeu'; ar='مجلد Content للعبة'; ru='Папка Content игры' }
+    'diag_source' = @{ en='Install source'; es='Origen de la instalación'; zh='安装来源'; hi='इंस्टॉल स्रोत'; fr='Source d''installation'; ar='مصدر التثبيت'; ru='Источник установки' }
+    'diag_source_store' = @{ en='Microsoft Store (UWP)'; es='Microsoft Store (UWP)'; zh='Microsoft Store (UWP)'; hi='Microsoft Store (UWP)'; fr='Microsoft Store (UWP)'; ar='Microsoft Store (UWP)'; ru='Microsoft Store (UWP)' }
+    'diag_source_gdk' = @{ en='Xbox App (GDK)'; es='Xbox App (GDK)'; zh='Xbox App (GDK)'; hi='Xbox App (GDK)'; fr='Xbox App (GDK)'; ar='Xbox App (GDK)'; ru='Xbox App (GDK)' }
+    'diag_source_unknown' = @{ en='unknown'; es='desconocida'; zh='未知'; hi='अज्ञात'; fr='inconnue'; ar='غير معروفة'; ru='неизвестно' }
+    'diag_game_version' = @{ en='Game version'; es='Versión del juego'; zh='游戏版本'; hi='गेम संस्करण'; fr='Version du jeu'; ar='إصدار اللعبة'; ru='Версия игры' }
+    'diag_game_arch' = @{ en='Game architecture'; es='Arquitectura del juego'; zh='游戏架构'; hi='गेम आर्किटेक्चर'; fr='Architecture du jeu'; ar='بنية اللعبة'; ru='Архитектура игры' }
+    'diag_unlock' = @{ en='Unlock installed'; es='Desbloqueo instalado'; zh='已安装的解锁'; hi='अनलॉक स्थापित'; fr='Déverrouillage installé'; ar='الفتح المثبّت'; ru='Установленная разблокировка' }
+    'diag_unlock_none' = @{ en='not installed (Trial)'; es='no instalado (prueba)'; zh='未安装（试用版）'; hi='स्थापित नहीं (ट्रायल)'; fr='non installé (essai)'; ar='غير مثبّت (نسخة تجريبية)'; ru='не установлена (пробная версия)' }
+    'diag_tested' = @{ en='Game version vs tested versions'; es='Versión del juego vs probadas'; zh='游戏版本 vs 已测试版本'; hi='गेम संस्करण बनाम परीक्षण किए गए संस्करण'; fr='Version du jeu vs versions testées'; ar='إصدار اللعبة مقابل الإصدارات المختبرة'; ru='Версия игры против протестированных версий' }
+    'diag_tested_ok' = @{ en='OK - covered by tested-versions.json'; es='OK - cubierta por tested-versions.json'; zh='OK - 已包含在 tested-versions.json 中'; hi='OK - tested-versions.json द्वारा कवर'; fr='OK - couverte par tested-versions.json'; ar='موافق - مغطّى في tested-versions.json'; ru='OK - покрыта tested-versions.json' }
+    'diag_tested_bad' = @{ en='ATTENTION - not in the tested list'; es='ATENCIÓN - fuera de la lista de probadas'; zh='注意 - 不在已测试列表中'; hi='ध्यान दें - परीक्षण सूची में नहीं'; fr='ATTENTION - hors liste des versions testées'; ar='انتبه - خارج قائمة الإصدارات المختبرة'; ru='ВНИМАНИЕ - нет в списке протестированных' }
+    'diag_tested_unknown' = @{ en='unavailable (offline or no data)'; es='indisponible (sin internet o sin datos)'; zh='不可用（无网络或无数据）'; hi='अनुपलब्ध (इंटरनेट नहीं या कोई डेटा नहीं)'; fr='indisponible (hors ligne ou aucune donnée)'; ar='غير متاح (بدون إنترنت أو بدون بيانات)'; ru='недоступно (нет интернета или данных)' }
+    'diag_av' = @{ en='Defender exclusions (mbu/Minecraft)'; es='Exclusiones de Defender (mbu/Minecraft)'; zh='Defender 排除项（mbu/Minecraft）'; hi='Defender बहिष्करण (mbu/Minecraft)'; fr='Exclusions Defender (mbu/Minecraft)'; ar='استثناءات Defender (mbu/Minecraft)'; ru='Исключения Defender (mbu/Minecraft)' }
+    'diag_av_none' = @{ en='none found'; es='ninguna encontrada'; zh='未找到'; hi='कोई नहीं मिला'; fr='aucune trouvée'; ar='لم يتم العثور على أي منها'; ru='не найдено' }
+    'diag_cache' = @{ en='Offline binary cache'; es='Caché offline del binario'; zh='二进制文件离线缓存'; hi='बाइनरी ऑफ़लाइन कैश'; fr='Cache hors ligne du binaire'; ar='ذاكرة التخزين المؤقت للملف الثنائي دون اتصال'; ru='Офлайн-кэш бинарника' }
+    'diag_cache_ok' = @{ en='present and valid ({0})'; es='presente y válida ({0})'; zh='存在且有效（{0}）'; hi='मौजूद और मान्य ({0})'; fr='présente et valide ({0})'; ar='موجودة وصالحة ({0})'; ru='есть и действителен ({0})' }
+    'diag_cache_bad' = @{ en='present BUT with a different hash than the current binary'; es='presente PERO con hash distinto del binario actual'; zh='存在但与当前二进制文件的哈希不同'; hi='मौजूद लेकिन वर्तमान बाइनरी से भिन्न हैश के साथ'; fr='présente MAIS avec un hash différent du binaire actuel'; ar='موجودة لكن بتجزئة مختلفة عن الملف الثنائي الحالي'; ru='есть, НО с хешем, отличным от текущего бинарника' }
+    'diag_cache_none' = @{ en='missing (created on next install)'; es='ausente (se creará en la próxima instalación)'; zh='缺失（下次安装时创建）'; hi='अनुपस्थित (अगली स्थापना पर बनेगा)'; fr='absente (créée à la prochaine installation)'; ar='غير موجودة (ستُنشأ في التثبيت التالي)'; ru='отсутствует (будет создан при следующей установке)' }
+    'diag_clipboard_ok' = @{ en='Report copied to the clipboard - paste it in the Discord support channel.'; es='Informe copiado al portapapeles - pégalo en el canal de soporte de Discord.'; zh='报告已复制到剪贴板 - 请粘贴到 Discord 支持频道。'; hi='रिपोर्ट क्लिपबोर्ड पर कॉपी हो गई - Discord सहायता चैनल में चिपकाएँ।'; fr='Rapport copié dans le presse-papiers - collez-le dans le canal d''assistance Discord.'; ar='تم نسخ التقرير إلى الحافظة - الصقه في قناة دعم Discord.'; ru='Отчёт скопирован в буфер обмена - вставьте его в канал поддержки Discord.' }
+    'diag_clipboard_fail' = @{ en='Could not copy automatically (copy from the screen above).'; es='No se pudo copiar automáticamente (copia desde la pantalla de arriba).'; zh='无法自动复制（请从上方屏幕复制）。'; hi='स्वचालित रूप से कॉपी नहीं हो सका (ऊपर स्क्रीन से कॉपी करें)।'; fr='Impossible de copier automatiquement (copiez depuis l''écran ci-dessus).'; ar='تعذّر النسخ تلقائيًا (انسخ من الشاشة أعلاه).'; ru='Не удалось скопировать автоматически (скопируйте с экрана выше).' }
 }
 
 function T {
@@ -285,30 +394,107 @@ function Ensure-ContentWritable {
     return $true
 }
 
-function Test-UnlockInstalled {
-    try { $content = Find-MinecraftContent } catch { return $false }
+function Get-InstalledUnlockLabel {
+    # Versao do unlock instalado, via hash -> rotulo. $null se nao instalado,
+    # ou '<hash:12>' se o hash nao for reconhecido (DLL de outro fork?).
+    try { $content = Find-MinecraftContent } catch { return $null }
     $winmm = Join-Path $content 'winmm.dll'
-    if (-not (Test-Path $winmm)) { return $false }
+    if (-not (Test-Path $winmm)) { return $null }
+    $actual = Get-SafeFileHash -Path $winmm
+    if (-not $actual) { return $null }
+    if ($unlockBuildLabels.ContainsKey($actual)) { return $unlockBuildLabels[$actual] }
+    if ($unlockBuildLabelsArm64.ContainsKey($actual)) { return $unlockBuildLabelsArm64[$actual] }
+    return ('<hash:' + $actual.Substring(0, 12) + '>')
+}
+
+function Get-GameVersion {
+    param([string]$Content)
+    if (-not $Content) { try { $Content = Find-MinecraftContent } catch { return $null } }
+    $exe = Join-Path $Content 'Minecraft.Windows.exe'
+    # 1) FileVersion do exe (caminho GDK). Validado em teste real 2026-09-04:
+    #    pacotes Store 1.26.x negam leitura do exe (ACL WindowsApps) E o exe
+    #    nao tem recurso de versao preenchido (vazio ate via imagem mapeada
+    #    do processo rodando) - nessa rota falha sem problema.
+    if (Test-Path $exe) {
+        try {
+            $fv = (Get-Item $exe -ErrorAction Stop).VersionInfo.FileVersion
+            if ($fv) { return [string]$fv }
+        } catch { }
+    }
+    # 2) Versao do PACOTE UWP (identidade Microsoft.MinecraftUWP_1.26.4501.0):
+    #    sempre legivel, nao depende de ACL do exe. E a fonte da verdade na
+    #    Store - mesma chave usada no tested-versions.json.
+    try {
+        $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction Stop | Select-Object -First 1
+        if ($appx -and $appx.Version) { return [string]$appx.Version }
+    } catch { }
+    return $null
+}
+
+function Get-TestedVersionData {
+    # Busca UMA vez por sessao (cache em $Script:TestedVersionData):
+    # hashtable, $false (indisponivel) ou $null (ainda nao tentou).
+    if ($null -ne $Script:TestedVersionData) { return $Script:TestedVersionData }
+    $Script:TestedVersionData = $false
+    try {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        $tmp = Join-Path ([IO.Path]::GetTempPath()) 'mbu-tested-versions.json'
+        Invoke-WebRequest -UseBasicParsing -Uri "$base/tested-versions.json" -OutFile $tmp -TimeoutSec 8
+        $Script:TestedVersionData = Get-Content $tmp -Raw -Encoding UTF8 | ConvertFrom-Json
+        Remove-Item $tmp -Force -ErrorAction SilentlyContinue
+    } catch { }
+    return $Script:TestedVersionData
+}
+
+function Test-GameVersionTested {
+    param([string]$Version)
+    # $true = na lista testada; $false = fora da lista; $null = sem dados
+    # (offline/404): o chamador escolhe o aviso adequado.
+    $data = Get-TestedVersionData
+    if (-not $data -or -not $data.tested) { return $null }
+    return [bool]($data.tested.PSObject.Properties.Name -contains $Version)
+}
+
+function Test-UnlockCache {
+    # Cache do binario x64 instalado e batendo com o hash atual? Caminho do
+    # arquivo ou $null. (Somentes x64: e a unica variante com reinstalacao
+    # offline garantida; arm64 ainda e beta.)
+    $cached = Join-Path $cacheDir 'winmm.dll'
+    if (-not (Test-Path $cached)) { return $null }
+    $h = Get-SafeFileHash -Path $cached
+    if ($h -eq $expectedHash) { return $cached }
+    return $null
+}
+
+function Test-UnlockInstalled {
+    # Retorna hashtable: installed, hash, isArm64, label, version.
+    $info = @{ installed = $false; hash = $null; isArm64 = $false; label = $null; version = $null }
+    try { $content = Find-MinecraftContent } catch { return $info }
+    $winmm = Join-Path $content 'winmm.dll'
+    if (-not (Test-Path $winmm)) { return $info }
     try {
         $actual = Get-SafeFileHash -Path $winmm
-        # Arquitetura do JOGO (nao da sessao PS): decide qual lista de hashes
-        # validos consultar. Se a arquitetura nao puder ser lida, aceita
-        # qualquer hash valido das duas listas (x64 + arm64) para nao falso
-        # "TRIAL" num PC em que o exe esta protegido/ilegivel (GitHub issue #49
-        # tambem cobre leitura do DLL; aqui e leitura do exe para o Machine).
+        $info.hash = $actual
         $machine = Get-PeMachineType -Path (Join-Path $content 'Minecraft.Windows.exe')
-        # Sem chute de arquitetura da SESSAO: se a leitura do PE falhar, o
-        # bloco abaixo aceita hashes das duas listas (x64 e arm64). O fallback
-        # antigo via PROCESSOR_ARCHITECTURE escolheu o DLL errado em PC WoA
-        # com o jogo rodando como x64 emulado.
-        if ($machine) {
-            if ($machine -eq 0xAA64) {
-                return ($knownUnlockHashesArm64 -contains $actual) -or ($expectedHashArm64 -eq $actual)
-            }
-            return ($knownUnlockHashes -contains $actual)
+        if (-not $machine) {
+            $info.installed = ($knownUnlockHashes -contains $actual) -or
+                              ($knownUnlockHashesArm64 -contains $actual) -or
+                              ($expectedHashArm64 -eq $actual)
+            $info.label = Get-InstalledUnlockLabel
+            return $info
         }
-        return (($knownUnlockHashes -contains $actual) -or ($knownUnlockHashesArm64 -contains $actual))
-    } catch { return $false }
+        if ($machine -eq 0xAA64) {
+            $info.isArm64 = $true
+            $info.installed = ($knownUnlockHashesArm64 -contains $actual) -or ($expectedHashArm64 -eq $actual)
+        } else {
+            $info.installed = ($knownUnlockHashes -contains $actual)
+        }
+        if ($info.installed) {
+            $info.label = Get-InstalledUnlockLabel
+            $info.version = Get-GameVersion -Content $content
+        }
+    } catch { }
+    return $info
 }
 
 function Test-IsAdmin {
@@ -376,7 +562,10 @@ function Install-Unlocker {
     try {
         # Exclusao ANTES do download: sem ela, a protecao em tempo real pode
         # bloquear a escrita do winmm.dll no %TEMP% (erro "contains a virus").
-        $excluded = Add-DefenderExclusions -Paths @($tmp, $content)
+        # Cache incluido nas exclusoes: sem isso o Defender quarentena a copia
+        # local logo apos a gravacao (validado em teste real 2026-09-04) e a
+        # reinstalacao offline nunca teria o que usar.
+        $excluded = Add-DefenderExclusions -Paths @($tmp, $content, $cacheDir)
         if ($excluded.Count -gt 0) {
             Write-Host ((T 'av_exclusion_ok') -replace '\{0\}', ($excluded -join ', '))
         } else {
@@ -395,6 +584,17 @@ function Install-Unlocker {
         $isArm = ($machine -eq 0xAA64)
         $archLabel = if ($isArm) { 'ARM64' } else { 'x64' }
         $machineHex = '0x{0:X4}' -f $machine
+        # Aviso proativo de versao do JOGO fora da lista testada (Melhor
+        # esforco: sem dados ou sem versao, nao incomoda).
+        if (-not $isArm) {
+            $gameVer = Get-GameVersion -Content $content
+            if ($gameVer) {
+                $tested = Test-GameVersionTested -Version $gameVer
+                if ($tested -eq $false) {
+                    Write-Host (((T 'tested_warning') -replace '\{0\}', $gameVer)) -ForegroundColor Yellow
+                }
+            }
+        }
         if ($machineReadOk) {
             Write-Host (((T 'arch_line') -replace '\{0\}', $archLabel) -replace '\{1\}', $machineHex)
         } else {
@@ -426,11 +626,20 @@ function Install-Unlocker {
                 # reforca o block-at-first-sight do Defender: remove a marcacao.
                 Unblock-File $dll -ErrorAction SilentlyContinue
             } catch {
-                if ($isArm) {
-                    Write-Host (T 'arm64_no_release') -ForegroundColor Red
-                    Write-Host ((T 'track_releases') -replace '\{0\}', 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases') -ForegroundColor Yellow
+                # Fallback OFFLINE: cache local do binario ja validado (mesma
+                # arquitetura). Sem internet, o instalador morria aqui.
+                $cached = if ($isArm) { $null } else { Test-UnlockCache }
+                if ($cached) {
+                    Copy-Item $cached $dll -Force
+                    Unblock-File $dll -ErrorAction SilentlyContinue
+                    Write-Host ((T 'cache_used') -replace '\{0\}', $cached) -ForegroundColor Yellow
+                } else {
+                    if ($isArm) {
+                        Write-Host (T 'arm64_no_release') -ForegroundColor Red
+                        Write-Host ((T 'track_releases') -replace '\{0\}', 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases') -ForegroundColor Yellow
+                    }
+                    throw
                 }
-                throw
             }
             # Arquivo presente, com tamanho e hash legiveis? Se o AV apagou ou
             # travou o arquivo na escrita, algo aqui falharia com erro cru ou
@@ -520,6 +729,14 @@ function Install-Unlocker {
             }
             throw (T 'err_av_quarantine')
         }
+        # Cache do binario recem-validado pra reinstalacao offline (x64).
+        if (-not $isArm) {
+            try {
+                New-Item -ItemType Directory -Force -Path $cacheDir | Out-Null
+                Copy-Item $winmm (Join-Path $cacheDir 'winmm.dll') -Force
+                Write-Host ((T 'cache_saved') -replace '\{0\}', $cacheDir) -ForegroundColor DarkGray
+            } catch { }
+        }
         Write-Host (T 'install_ok')
         Send-DownloadHit
         Start-Minecraft
@@ -602,15 +819,127 @@ function Start-Minecraft {
     }
 }
 
+function Get-DefenderMbuExclusions {
+    # Exclusoes do Defender relacionadas ao unlocker/ao jogo (best-effort:
+    # pode falhar por permissao - retorna lista vazia e o diagnostico mostra
+    # "indisponivel" ao inves de quebrar).
+    $found = @()
+    try {
+        $pref = Get-MpPreference -ErrorAction Stop
+        $needles = @('\\mbu', 'XboxGames\\Minecraft', 'MinecraftUWP', 'Minecraft.Windows')
+        foreach ($p in @($pref.ExclusionPath)) {
+            if ($p -and ($needles | Where-Object { $p -match $_ })) { $found += $p }
+        }
+        foreach ($p in @($pref.ExclusionProcess)) {
+            if ($p -and ($needles | Where-Object { $p -match $_ })) { $found += "proc: $p" }
+        }
+    } catch { }
+    return $found
+}
+
+function Insert-DiagnosticReport {
+    # Relatorio pronto pro Discord: copia pro clipboard (best-effort) e
+    # imprime na tela. Nada pessoal: so OS, PS, admin, versao/origem/arc do
+    # jogo, estado do unlock, aviso de versao nao testada, exclusoes e cache.
+    Show-Banner
+    Write-Host "  $(T 'diag_title')" -ForegroundColor Cyan
+    Write-Host ''
+    $lines = New-Object System.Collections.Generic.List[string]
+    $lines.Add((T 'diag_title'))
+    try {
+        $os = Get-CimInstance Win32_OperatingSystem -ErrorAction Stop
+        $osLine = "$($os.Caption) build $($os.BuildNumber)"
+    } catch { $osLine = 'Windows (unknown)' }
+    try { $psLine = $PSVersionTable.PSVersion.ToString() } catch { $psLine = '?' }
+    $isAdmin = Test-IsAdmin
+    $yesNo = { param($b) if ($b) { T 'diag_yes' } else { T 'diag_no' } }
+    $lines.Add("$(T 'diag_os'): $osLine")
+    $lines.Add("$(T 'diag_ps'): $psLine")
+    $lines.Add("$(T 'diag_admin'): $(& $yesNo $isAdmin)")
+    Write-Host "  $(T 'diag_os'): $osLine"
+    Write-Host "  $(T 'diag_ps'): $psLine"
+    Write-Host "  $(T 'diag_admin'): $(if ($isAdmin) { T 'diag_yes' } else { T 'diag_no' })"
+    Write-Host ''
+    $gameVer = $null
+    try {
+        $content = Find-MinecraftContent
+        $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction SilentlyContinue | Select-Object -First 1
+        $source = if ($appx -and ($content -eq $appx.InstallLocation)) { T 'diag_source_store' }
+                  elseif ($content -like 'C:\XboxGames*') { T 'diag_source_gdk' }
+                  else { T 'diag_source_unknown' }
+        $lines.Add("$(T 'diag_content'): $content")
+        $lines.Add("$(T 'diag_source'): $source")
+        Write-Host "  $(T 'diag_content'): $content"
+        Write-Host "  $(T 'diag_source'): $source"
+        $machine = Get-PeMachineType -Path (Join-Path $content 'Minecraft.Windows.exe')
+        $arch = if ($machine -eq 0xAA64) { 'ARM64' } elseif ($machine -eq 0x8664) { 'x64' } else { '?' }
+        $gameVer = Get-GameVersion -Content $content
+        if ($gameVer) { $lines.Add("$(T 'diag_game_version'): $gameVer") ; Write-Host "  $(T 'diag_game_version'): $gameVer" }
+        $lines.Add("$(T 'diag_game_arch'): $arch (Machine=$(if ($machine) { '0x{0:X4}' -f $machine } else { 'ilegivel' }))")
+        Write-Host "  $(T 'diag_game_arch'): $arch"
+    } catch {
+        $lines.Add("$(T 'diag_content'): $($_.Exception.Message)")
+        Write-Host "  $(T 'diag_content'): $($_.Exception.Message)" -ForegroundColor Yellow
+    }
+    Write-Host ''
+    $state = Test-UnlockInstalled
+    $unlockLine = if ($state.installed) {
+        if ($state.label) { $state.label } else { "$(T 'diag_yes') ($($state.hash))" }
+    } else { T 'diag_unlock_none' }
+    $lines.Add("$(T 'diag_unlock'): $unlockLine")
+    Write-Host "  $(T 'diag_unlock'): $unlockLine"
+    if ($state.installed -and $state.label -and ($state.label -match '^v') -and ($state.label.TrimStart('v') -ne $Script:Version)) {
+        $lines.Add((T 'state_older_hint') -replace '\{0\}', $state.label -replace '\{1\}', $Script:Version)
+        Write-Host "  $((T 'state_older_hint') -replace '\{0\}', $state.label -replace '\{1\}', $Script:Version)" -ForegroundColor Yellow
+    }
+    if ($state.hash -and -not $state.installed) {
+        $lines.Add("  winmm hash: $($state.hash)")
+        Write-Host "  winmm hash: $($state.hash)" -ForegroundColor Yellow
+    }
+    $tested = if ($gameVer) { Test-GameVersionTested -Version $gameVer } else { $null }
+    $testedLine = if ($null -eq $tested -or -not $gameVer) { T 'diag_tested_unknown' }
+                  elseif ($tested) { T 'diag_tested_ok' }
+                  else { T 'diag_tested_bad' }
+    $lines.Add("$(T 'diag_tested'): $testedLine")
+    Write-Host "  $(T 'diag_tested'): $testedLine"
+    $excl = Get-DefenderMbuExclusions
+    $exclLine = if ($excl.Count -gt 0) { $excl -join '; ' } else { T 'diag_av_none' }
+    $lines.Add("$(T 'diag_av'): $exclLine")
+    Write-Host "  $(T 'diag_av'): $exclLine"
+    $cached = Test-UnlockCache
+    $cacheLine = if ($cached) { (T 'diag_cache_ok') -replace '\{0\}', $cached } elseif (Test-Path (Join-Path $cacheDir 'winmm.dll')) { T 'diag_cache_bad' } else { T 'diag_cache_none' }
+    $lines.Add("$(T 'diag_cache'): $cacheLine")
+    Write-Host "  $(T 'diag_cache'): $cacheLine"
+    Write-Host ''
+    $report = $lines -join "`n"
+    $copied = $false
+    try { Set-Clipboard -Value $report -ErrorAction Stop; $copied = $true } catch { }
+    if ($copied) {
+        Write-Host "  $(T 'diag_clipboard_ok')" -ForegroundColor Green
+    } else {
+        Write-Host "  $(T 'diag_clipboard_fail')" -ForegroundColor Yellow
+    }
+}
+
+# Modo de teste (VM/CI/dot-source): com MBU_NO_LOOP=1 o arquivo apenas define
+# as funcoes e sai, sem entrar no loop interativo do menu.
+if ($env:MBU_NO_LOOP -eq '1') { return }
+
 while ($true) {
     Show-Banner
     $greeting = Get-TimeGreeting
-    $isInstalled = Test-UnlockInstalled
+    $state = Test-UnlockInstalled
+    $isInstalled = $state.installed
 
     Write-Host ''
     if ($isInstalled) {
-        Write-Host "  $greeting! $(T 'state_unlocked')" -ForegroundColor Green
-        Write-Host "  $(T 'state_unlocked_hint')" -ForegroundColor DarkGray
+        $label = if ($state.label) { $state.label } else { $Script:Version }
+        Write-Host "  $greeting! $((T 'state_unlocked_v') -replace '\{0\}', $label)" -ForegroundColor Green
+        if ($state.label -and ($state.label -match '^v') -and ($state.label.TrimStart('v') -ne $Script:Version)) {
+            Write-Host "  $((T 'state_older_hint') -replace '\{0\}', $state.label -replace '\{1\}', $Script:Version)" -ForegroundColor Yellow
+        } else {
+            Write-Host "  $(T 'state_unlocked_hint')" -ForegroundColor DarkGray
+        }
     } else {
         Write-Host "  $greeting! $(T 'state_trial')" -ForegroundColor Yellow
         Write-Host "  $(T 'state_trial_hint')" -ForegroundColor DarkGray
@@ -623,12 +952,20 @@ while ($true) {
     } else {
         Write-Host "    [1] $(T 'menu_1_install')"
     }
+    Write-Host "    [3] $(T 'menu_3_diag')"
+    Write-Host "    [4] $(T 'menu_4_trouble')"
+    Write-Host "    [5] $(T 'menu_5_discord')"
+    Write-Host "    [6] $(T 'menu_6_bmc')"
     Write-Host "    [0] $(T 'menu_0')"
     Write-Host ''
     $choice = Read-Host "  $(T 'choose_option')"
     switch ($choice) {
         '1' { try { if ($isInstalled) { Restore-Original } else { Install-Unlocker } } catch { Write-Host "  $($_.Exception.Message)" -ForegroundColor Red } }
         '2' { try { if ($isInstalled) { Install-Unlocker } } catch { Write-Host "  $($_.Exception.Message)" -ForegroundColor Red } }
+        '3' { try { Insert-DiagnosticReport } catch { Write-Host "  $($_.Exception.Message)" -ForegroundColor Red } }
+        '4' { try { Start-Process $urls['troubleshooting'] } catch { Write-Host "  $($_.Exception.Message)" -ForegroundColor Red } }
+        '5' { try { Start-Process $urls['discord'] } catch { Write-Host "  $($_.Exception.Message)" -ForegroundColor Red } }
+        '6' { try { Start-Process $urls['donate'] } catch { Write-Host "  $($_.Exception.Message)" -ForegroundColor Red } }
         '0' { return }
         default { Write-Host "  $(T 'invalid_option')" -ForegroundColor Yellow }
     }

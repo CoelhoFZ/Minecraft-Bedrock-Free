@@ -101,6 +101,26 @@ Get-FileHash .\release\winmm.dll -Algorithm SHA256
 Some antivirus engines flag the unlock binary as a false positive. This is
 expected for an unlocker — see [Antivirus false positives](docs/antivirus-false-positives.md).
 
+## Environment variables (advanced)
+
+| Variable | Used by | What it does |
+|---|---|---|
+| `MBU_LANG` | `menu.ps1` | Forces the menu language (`pt`, `en`, `es`, `fr`, `zh`, `hi`, `ar`, `ru`) instead of auto-detecting from the system. |
+| `MBU_BASE_URL` | `i.ps1`, `install.bat`, `menu.ps1` | Points the installer at a different server (forks, local test VM). Integrity hash checks still apply. |
+| `MBU_EXTRA_HASH` | `install.bat` | Together with `MBU_BASE_URL`: lets a locally-modified `menu.ps1` (different hash) pass the integrity check in test environments. Never set these on a daily-use machine. |
+| `MBU_NO_LOOP` | `menu.ps1` | Set to `1` to load the menu functions without entering the interactive loop (dot-sourcing for tests). |
+
+## Game version compatibility
+
+The menu downloads `tested-versions.json` from this repository and warns when
+your Minecraft version has **not been tested** with this unlocker yet.
+
+Option **[3] Diagnostics** in the menu prints (and copies to the clipboard) the
+OS version, game folder, install source (Store/Xbox App), game version and
+architecture, installed unlock build, Defender exclusions related to
+Minecraft/mbu and the offline-reinstall cache status - ready to paste in the
+[Discord support channel](https://discord.gg/u3S4gFgK6M).
+
 ## Troubleshooting
 
 Problems installing or launching the game? See [TROUBLESHOOTING.md](TROUBLESHOOTING.md).

@@ -104,6 +104,27 @@ Get-FileHash .\release\winmm.dll -Algorithm SHA256
 Alguns antivírus marcam o binário do unlock como falso positivo. Isso é
 esperado para um unlocker — veja [Falsos positivos de antivírus](docs/antivirus-false-positives.md).
 
+## Variaveis de ambiente (avancado)
+
+| Variavel | Usada por | O que faz |
+|---|---|---|
+| `MBU_LANG` | `menu.ps1` | Forca o idioma do menu (`pt`, `en`, `es`, `fr`, `zh`, `hi`, `ar`, `ru`) em vez de detectar automaticamente pelo sistema. |
+| `MBU_BASE_URL` | `i.ps1`, `install.bat`, `menu.ps1` | Aponta o instalador para outro servidor (forks, VM de teste). As verificacoes de hash continuam valendo. |
+| `MBU_EXTRA_HASH` | `install.bat` | Junto com `MBU_BASE_URL`: permite que um `menu.ps1` modificado localmente (hash diferente) passe na verificacao em ambiente de teste. Nunca defina isso na maquina do dia a dia. |
+| `MBU_NO_LOOP` | `menu.ps1` | Defina como `1` para carregar as funcoes do menu sem entrar no loop interativo (dot-source em testes). |
+
+## Compatibilidade de versao do jogo
+
+O menu baixa o `tested-versions.json` deste repositorio e avisa quando a sua
+versao do Minecraft **ainda nao foi testada** com este unlocker.
+
+A opcao **[3] Diagnostico** do menu mostra (e copia para a area de
+transferencia) a versao do Windows, a pasta do jogo, a origem da instalacao
+(Store/Xbox App), a versao e arquitetura do jogo, o build do unlock instalado,
+as exclusoes do Defender relacionadas ao Minecraft/mbu e o estado do cache de
+reinstalacao offline - pronto pra colar no [canal de suporte do
+Discord](https://discord.gg/u3S4gFgK6M).
+
 ## Solução de problemas
 
 Problemas ao instalar ou abrir o jogo? Veja [TROUBLESHOOTING.md](TROUBLESHOOTING.md).

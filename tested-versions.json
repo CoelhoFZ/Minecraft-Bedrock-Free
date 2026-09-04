@@ -1,0 +1,9 @@
+{
+  "_comment": "Versoes do JOGO com as quais este unlocker foi testado. A chave e a versao do PACOTE (campo Version de Get-AppxPackage Microsoft.MinecraftUWP*, ex.: 1.26.4501.0) - NAO a versao de marketing dos changelogs. O menu.ps1 baixa este arquivo UMA vez por sessao e avisa quando a versao do jogo do usuario NAO esta aqui. Mantenha em sincronia a cada release do jogo: adicione a versao so depois de testar o unlock nela (instalou, jogo abriu, unlock funcionou). Remove aqui => o menu comeca a avisar que a versao nao foi testada.",
+  "schema": 1,
+  "updated": "2026-09-04",
+  "unlocker": "4.5.0",
+  "tested": {
+    "1.26.4501.0": { "status": "ok", "since": "4.5.0", "arch": ["x64"] }
+  }
+}
