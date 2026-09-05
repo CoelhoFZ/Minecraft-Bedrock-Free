@@ -3,18 +3,31 @@
 $ErrorActionPreference = 'Stop'
 
 function Find-MinecraftContent {
+    # Mesma ordem do menu.ps1 (v4.6): o pacote REGISTRADO e a fonte da verdade,
+    # C:\XboxGames e so fallback. Se o jogo estiver rodando, o processo diz onde
+    # o winmm.dll realmente e carregado.
     $candidates = @()
-    $candidates += 'C:\XboxGames\Minecraft for Windows\Content'
     try {
-        $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction Stop |
+        $proc = Get-Process Minecraft.Windows -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($proc -and $proc.Path) {
+            $candidates += (Split-Path $proc.Path -Parent)
+        }
+    } catch { }
+    try {
+        $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -AllUsers -ErrorAction SilentlyContinue |
             Select-Object -First 1
+        if (-not $appx) {
+            $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction SilentlyContinue |
+                Select-Object -First 1
+        }
         if ($appx -and $appx.InstallLocation) {
             $candidates += $appx.InstallLocation
             $candidates += (Join-Path $appx.InstallLocation 'Content')
         }
     } catch { }
+    $candidates += 'C:\XboxGames\Minecraft for Windows\Content'
     foreach ($c in $candidates) {
-        if ((Test-Path $c) -and (Test-Path (Join-Path $c 'Minecraft.Windows.exe'))) {
+        if ($c -and (Test-Path $c) -and (Test-Path (Join-Path $c 'Minecraft.Windows.exe'))) {
             return $c
         }
     }

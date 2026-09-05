@@ -13,6 +13,35 @@ field), the installed unlock build, Defender exclusions related to
 Minecraft/mbu and the offline cache status. When asking for help on Discord,
 paste that report - it answers the first ten questions support would ask.
 
+## "'xxx' is not recognized as an internal or external command" errors from a .bat file
+
+If you ran a `.bat` file and cmd printed a long list of errors like
+
+```
+'r' is not recognized as an internal or external command, ...
+'t-Bedrock-Free' is not recognized as an internal or external command, ...
+'<text in Arabic, Hindi, Russian or other scripts>' is not recognized ...
+```
+
+followed by a banner warning about short links and "Press any key to continue",
+**that file is not from this project**. Every official `install.bat` this project
+ever published is plain ASCII and has no text in other scripts, so it can never
+produce errors like those. The garble appears when a rewritten copy of the
+installer (usually spread through YouTube, TikTok, Telegram, WhatsApp groups or
+short links) embeds translated text saved in an encoding cmd.exe cannot parse.
+Some of those copies even include the warning banner of this project to look
+official. That is exactly what the warning describes.
+
+How to recover:
+
+1. Do not run that file again and do not trust wherever it came from.
+2. Delete it and use one of the two official install methods only:
+   - `irm https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/i.ps1 | iex` in PowerShell, or
+   - the official `install.bat` from the repository page or from the
+     [Releases](https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases) page.
+3. The official bootstrap file is `i.ps1`. There is no `e.ps1` in this
+   repository, so any guide telling you to run `e.ps1` is outdated or fake.
+
 ## "Bad Image" error (status 0xc0e90007) for WINMM.dll when launching Minecraft
 
 ```
@@ -49,6 +78,28 @@ almost always happens *after* a successful install, for one of two reasons:
 
 If you no longer have the original DLL, reinstalling the game from the Store
 restores it; then run the installer again.
+
+**Still crashing and the error path does not match the installer output?** Since
+the game moved to the Xbox App layout (files under
+`C:\Program Files\WindowsApps\Microsoft.MinecraftUWP_<version>_x64__8wekyb3d8bbwe`),
+some machines keep a stale second copy of the game executable under
+`C:\XboxGames\Minecraft for Windows\Content` (leftover from the migration).
+If the crash message names a `WINMM.dll` under
+`C:\Program Files\WindowsApps\...` but the installer said it used
+`C:\XboxGames\...`, the unlock went to the copy the game does not run from and
+the game is loading an old or broken `winmm.dll` from the package folder. On
+those machines:
+
+1. Run the installer menu and pick **[3] Diagnostics**. It now lists every game
+   folder candidate it finds, marking the one it uses. When the registered
+   package folder (WindowsApps) differs from `C:\XboxGames`, that is the case
+   below.
+2. Close Minecraft. Delete the stale copy:
+   `rmdir /s /q "C:\XboxGames\Minecraft for Windows"` (only when the game
+   actually runs from the WindowsApps package, which the diagnostics confirm).
+   This is a leftover folder, the installed game itself is not there.
+3. Run the installer again. It now targets the registered package folder and
+   replaces the broken `winmm.dll` with a verified copy.
 
 ## "Access to the path '...winmm.dll' is denied" during install
 

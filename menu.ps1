@@ -10,7 +10,7 @@
 #   python3 -c "import hashlib; print(hashlib.sha256(open('menu.ps1','rb').read().replace(b'\r', b'')).hexdigest())"
 # e cole o resultado no i.ps1 ($menuHash) e no install.bat ($menuHashPin).
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.5.0'
+$Script:Version = '4.6.0'
 # Base URL sobrescrevivel (forks/testes em VM): mesma variavel que o i.ps1 ja
 # respeita. Afeta menu, binario e tested-versions.json.
 $base = if ($env:MBU_BASE_URL) { $env:MBU_BASE_URL.TrimEnd('/') } else {
@@ -51,10 +51,10 @@ $knownUnlockHashesArm64 = @(
 # mais antiga que o proprio menu. Manter em sincronia com as listas acima
 # (hash atual rotula com a versao do menu, abaixo).
 $unlockBuildLabels = @{
-    # Binario atual: segue o MESMO hash desde a v4.4.2 (a 4.5.0 e release de
-    # scripts, sem rebuild). Rotular com a versao do MENU evita falso aviso
+    # Binario atual: segue o MESMO hash desde a v4.4.2 (4.5.0 e 4.6.0 foram
+    # releases de scripts, sem rebuild). Rotular com a versao do MENU evita falso aviso
     # de "unlock mais antigo". Ao rebuildar: mover este hash p/ historico.
-    'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.5.0'
+    'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.6.0'
     'f7b1408c36590abbfcb5310cf98c1efb1fa16f3a54a9387df56b1441de90335b' = 'v4.4.1'
     '86689c9724be7f391ba9bd1f4ef8dddaa73baec0b76b9c73bebef89f37b76e97' = 'v4.3.0'
 }
@@ -351,26 +351,56 @@ function Get-TimeGreeting {
     else { return T 'greet_evening' }
 }
 
+function Get-MinecraftCandidates {
+    # Ordem importa (corrigido na v4.6.0, descoberto com o pacote 1.26.x): o pacote REGISTRADO e a
+    # fonte da verdade, e dele que o menu Iniciar e o loader do jogo carregam o
+    # winmm.dll. Apos a migracao UWP->GDK pode sobrar um Minecraft.Windows.exe
+    # velho em C:\XboxGames\Minecraft for Windows\Content. Instalar nessa copia
+    # nao desbloqueia o jogo real (que roda do WindowsApps) e o winmm.dll que o
+    # jogo carrega pode ser uma sobra corrompida de instalacao antiga (crash
+    # Bad Image 0xc0e90007). Pacote registrado primeiro, C:\XboxGames so como
+    # fallback quando o pacote nao esta registrado ou sumiu do disco.
+    $list = New-Object System.Collections.Generic.List[string]
+    try {
+        $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -AllUsers -ErrorAction SilentlyContinue | Select-Object -First 1
+        if (-not $appx) {
+            $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction SilentlyContinue | Select-Object -First 1
+        }
+        if ($appx -and $appx.InstallLocation) {
+            $list.Add($appx.InstallLocation)
+            $sub = Join-Path $appx.InstallLocation 'Content'
+            if ($sub -ne $appx.InstallLocation) { $list.Add($sub) }
+        }
+    } catch { }
+    $list.Add('C:\XboxGames\Minecraft for Windows\Content')
+    return $list
+}
+
 function Find-MinecraftContent {
-    # Xbox App (GDK/MSIXVC): instala em C:\XboxGames\Minecraft for Windows\Content.
-    $xbox = 'C:\XboxGames\Minecraft for Windows\Content'
-    if ((Test-Path $xbox) -and (Test-Path (Join-Path $xbox 'Minecraft.Windows.exe'))) {
-        return $xbox
-    }
-    # Microsoft Store (UWP): instala em C:\Program Files\WindowsApps\Microsoft.MinecraftUWP_*.
-    # O InstallLocation do pacote vale para a Store e tambem para outros drives.
-    $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction SilentlyContinue | Select-Object -First 1
-    if ($appx -and $appx.InstallLocation) {
-        # GDK (Xbox App) fora do drive canonico pode resolver o InstallLocation
-        # para a RAIZ do jogo, com o exe dentro de \Content (mesmo layout que o
-        # uninstall.ps1 ja cobre). Tenta as duas formas antes de desistir.
-        foreach ($c in @($appx.InstallLocation, (Join-Path $appx.InstallLocation 'Content'))) {
-            if (Test-Path (Join-Path $c 'Minecraft.Windows.exe')) {
-                return $c
+    # Jogo RODANDO diz onde o winmm.dll e carregado de verdade: vale mais que
+    # qualquer heuristica de caminho.
+    try {
+        $proc = Get-Process Minecraft.Windows -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($proc -and $proc.Path) {
+            $dir = Split-Path $proc.Path -Parent
+            if ((Test-Path $dir) -and (Test-Path (Join-Path $dir 'Minecraft.Windows.exe'))) {
+                return $dir
             }
         }
-        throw (T 'err_package_incomplete')
+    } catch { }
+    foreach ($c in Get-MinecraftCandidates) {
+        if ((Test-Path $c) -and (Test-Path (Join-Path $c 'Minecraft.Windows.exe'))) {
+            return $c
+        }
     }
+    # Sem exe em nenhum candidato: distingue "pacote registrado sem arquivos"
+    # de "Minecraft nao instalado".
+    $hasAppx = $false
+    try {
+        $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction SilentlyContinue | Select-Object -First 1
+        $hasAppx = [bool]($appx -and $appx.InstallLocation)
+    } catch { }
+    if ($hasAppx) { throw (T 'err_package_incomplete') }
     throw (T 'err_content_not_found')
 }
 
@@ -565,7 +595,16 @@ function Install-Unlocker {
         # Cache incluido nas exclusoes: sem isso o Defender quarentena a copia
         # local logo apos a gravacao (validado em teste real 2026-09-04) e a
         # reinstalacao offline nunca teria o que usar.
-        $excluded = Add-DefenderExclusions -Paths @($tmp, $content, $cacheDir)
+        # Exclui tambem outras raizes com exe (ex.: copia antiga em C:\XboxGames
+        # ao lado do pacote registrado no WindowsApps): o Defender pode atacar o
+        # winmm.dll em qualquer uma delas, nao so na pasta que o instalador usa.
+        $extraExcl = @()
+        foreach ($cand in Get-MinecraftCandidates) {
+            if ($cand -and ($cand -ne $content) -and (Test-Path $cand) -and (Test-Path (Join-Path $cand 'Minecraft.Windows.exe'))) {
+                $extraExcl += $cand
+            }
+        }
+        $excluded = Add-DefenderExclusions -Paths (@($tmp, $content, $cacheDir) + $extraExcl)
         if ($excluded.Count -gt 0) {
             Write-Host ((T 'av_exclusion_ok') -replace '\{0\}', ($excluded -join ', '))
         } else {
@@ -877,6 +916,20 @@ function Insert-DiagnosticReport {
         if ($gameVer) { $lines.Add("$(T 'diag_game_version'): $gameVer") ; Write-Host "  $(T 'diag_game_version'): $gameVer" }
         $lines.Add("$(T 'diag_game_arch'): $arch (Machine=$(if ($machine) { '0x{0:X4}' -f $machine } else { 'ilegivel' }))")
         Write-Host "  $(T 'diag_game_arch'): $arch"
+        # Todas as raizes com exe (copia antiga em C:\XboxGames + pacote
+        # registrado): expoe o caso em que o jogo carrega o winmm.dll de uma
+        # pasta diferente da que o instalador usaria (crash Bad Image com o
+        # unlock verificado na copia errada).
+        foreach ($cand in Get-MinecraftCandidates) {
+            if (-not (Test-Path $cand)) { continue }
+            if (-not (Test-Path (Join-Path $cand 'Minecraft.Windows.exe'))) { continue }
+            $cwm = Join-Path $cand 'winmm.dll'
+            $cstate = if (Test-Path $cwm) { 'winmm.dll presente' } else { 'sem winmm.dll' }
+            $cmark = if ($cand -eq $content) { '  <- pasta usada' } else { '' }
+            $cl = "[candidato] $cand  ($cstate)$cmark"
+            $lines.Add($cl)
+            Write-Host "  $cl"
+        }
     } catch {
         $lines.Add("$(T 'diag_content'): $($_.Exception.Message)")
         Write-Host "  $(T 'diag_content'): $($_.Exception.Message)" -ForegroundColor Yellow
