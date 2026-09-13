@@ -1,7 +1,5 @@
-# Normalize text files
 * text=auto
 
-# Documentation and source
 *.md text eol=lf
 *.html text eol=lf
 *.cs text eol=lf
@@ -10,14 +8,12 @@
 *.yaml text eol=lf
 *.json text eol=lf
 
-# Windows scripts/resources
 *.ps1 text eol=crlf
 *.bat text eol=crlf
 *.cmd text eol=crlf
 *.rc text eol=crlf
 *.manifest text eol=crlf
 
-# Binary files
 *.dll binary
 *.exe binary
 *.pdb binary
@@ -33,6 +29,5 @@
 *.jar binary
 *.rar binary
 
-# GitHub Linguist
 *.ps1 linguist-language=PowerShell
 .history/** linguist-excluded=true
