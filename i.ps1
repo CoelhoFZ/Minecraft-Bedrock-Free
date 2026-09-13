@@ -184,6 +184,86 @@ $Script:Msg = @{
         ar='جارٍ طلب إذن المسؤول (UAC)...'
         ru='Запрос разрешения администратора (UAC)...'
     }
+    'err_launch_title' = @{
+        pt='ERRO: o instalador nao conseguiu abrir com permissao de administrador.'
+        en='ERROR: the installer could not open with administrator permission.'
+        es='ERROR: el instalador no pudo abrirse con permiso de administrador.'
+        fr='ERREUR : l''installateur n''a pas pu s''ouvrir avec les droits d''administrateur.'
+        zh='错误：安装程序无法以管理员权限打开。'
+        hi='त्रुटि: इंस्टॉलर व्यवस्थापक अनुमति के साथ नहीं खुल सका।'
+        ar='خطأ: تعذّر فتح المثبّت بصلاحيات المسؤول.'
+        ru='ОШИБКА: установщик не смог открыться с правами администратора.'
+    }
+    'err_launch_hint' = @{
+        pt='Rode o comando abaixo em um PowerShell aberto como administrador:'
+        en='Run the command below in a PowerShell window opened as administrator:'
+        es='Ejecuta el comando de abajo en un PowerShell abierto como administrador:'
+        fr='Lancez la commande ci-dessous dans un PowerShell ouvert en administrateur :'
+        zh='请在以管理员身份打开的 PowerShell 中运行下面的命令：'
+        hi='कृपया नीचे दिया गया कमांड व्यवस्थापक के रूप में खोले गए PowerShell में चलाएँ:'
+        ar='شغّل الأمر أدناه في PowerShell مفتوح كمسؤول:'
+        ru='Запустите команду ниже в PowerShell, открытом от имени администратора:'
+    }
+    'err_child_fail' = @{
+        pt='O instalador foi interrompido por um erro acima. Envie esta imagem para o desenvolvedor.'
+        en='The installer stopped because of the error above. Send this picture to the developer.'
+        es='El instalador se detuvo por el error de arriba. Envia esta imagen al desarrollador.'
+        fr='L''installateur s''est arrete a cause de l''erreur ci-dessus. Envoyez cette image au developpeur.'
+        zh='安装程序因上面的错误而停止。请把这张图片发送给开发者。'
+        hi='ऊपर दी गई त्रुटि के कारण इंस्टॉलर रुक गया। यह तस्वीर डेवलपर को भेजें।'
+        ar='توقف المثبّت بسبب الخطأ أعلاه. أرسل هذه الصورة إلى المطور.'
+        ru='Установщик остановился из-за ошибки выше. Отправьте это изображение разработчику.'
+    }
+    'err_child_never_started' = @{
+        pt='A janela do instalador nao abriu depois do UAC. Isso costuma ser antivirus ou politica do Windows bloqueando o instalador.'
+        en='The installer window did not open after the UAC prompt. This is usually an antivirus or a Windows policy blocking the installer.'
+        es='La ventana del instalador no se abrio despues del UAC. Normalmente es un antivirus o una politica de Windows bloqueando el instalador.'
+        fr='La fenetre de l''installateur ne s''est pas ouverte apres l''UAC. C''est souvent un antivirus ou une strategie Windows qui bloque l''installateur.'
+        zh='UAC 之后安装程序窗口没有打开。通常是杀毒软件或 Windows 策略阻止了安装程序。'
+        hi='UAC के बाद इंस्टॉलर विंडो नहीं खुली। यह आमतौर पर एंटीवायरस या Windows नीति के कारण होता है जो इंस्टॉलर को रोकती है।'
+        ar='لم تُفتح نافذة المثبّت بعد UAC. السبب عادةً برنامج مكافحة فيروسات أو سياسة Windows تمنع المثبّت.'
+        ru='Окно установщика не открылось после запроса UAC. Обычно это антивирус или политика Windows, блокирующая установщик.'
+    }
+    'report_ask' = @{
+        pt='Deseja enviar o relatorio para o desenvolvedor para ajuda-lo a corrigir o problema? (S para sim, N para nao)'
+        en='Do you want to send the report to the developer to help fix the problem? (Y for yes, N for no)'
+        es='¿Desea enviar el informe al desarrollador para ayudar a corregir el problema? (S para sí, N para no)'
+        fr='Voulez-vous envoyer le rapport au développeur pour aider à corriger le problème ? (O pour oui, N pour non)'
+        zh='是否将报告发送给开发者以帮助修复问题？(S=发送，N=不发送)'
+        hi='क्या आप समस्या ठीक करने में मदद के लिए रिपोर्ट डेवलपर को भेजना चाहते हैं? (S=हाँ, N=नहीं)'
+        ar='هل تريد إرسال التقرير إلى المطور للمساعدة في إصلاح المشكلة؟ (S=نعم، N=لا)'
+        ru='Отправить отчёт разработчику, чтобы помочь исправить проблему? (S=да, N=нет)'
+    }
+    'report_sent' = @{
+        pt='Relatorio enviado ao desenvolvedor. Obrigado!'
+        en='Report sent to the developer. Thank you!'
+        es='Informe enviado al desarrollador. ¡Gracias!'
+        fr='Rapport envoyé au développeur. Merci !'
+        zh='报告已发送给开发者。谢谢！'
+        hi='रिपोर्ट डेवलपर को भेज दी गई। धन्यवाद!'
+        ar='تم إرسال التقرير إلى المطور. شكرًا!'
+        ru='Отчёт отправлен разработчику. Спасибо!'
+    }
+    'report_not_sent' = @{
+        pt='Ok, relatorio nao enviado.'
+        en='OK, the report was not sent.'
+        es='De acuerdo, el informe no se envió.'
+        fr='D''accord, le rapport n''a pas été envoyé.'
+        zh='好的，报告未发送。'
+        hi='ठीक है, रिपोर्ट नहीं भेजी गई।'
+        ar='حسنًا، لم يتم إرسال التقرير.'
+        ru='Хорошо, отчёт не отправлен.'
+    }
+    'report_send_fail' = @{
+        pt='Nao foi possivel enviar o relatorio automaticamente.'
+        en='Could not send the report automatically.'
+        es='No se pudo enviar el informe automáticamente.'
+        fr='Impossible d''envoyer le rapport automatiquement.'
+        zh='无法自动发送报告。'
+        hi='रिपोर्ट स्वचालित रूप से नहीं भेजी जा सकी।'
+        ar='تعذّر إرسال التقرير تلقائيًا.'
+        ru='Не удалось отправить отчёт автоматически.'
+    }
 }
 function L {
     param([string]$Key)
@@ -252,6 +332,16 @@ function Get-MbuTempDir {
     }
 }
 $tempDir = Get-MbuTempDir
+$logPath = Join-Path $tempDir 'mbu-bootstrap.log'
+$runId = [guid]::NewGuid().ToString('N').Substring(0, 8)
+function Add-MbuLog {
+    param([string]$Line)
+    try {
+        $stamp = [DateTime]::Now.ToString('yyyy-MM-dd HH:mm:ss')
+        [IO.File]::AppendAllText($logPath, ($stamp + ' run=' + $runId + ' ' + $Line + [Environment]::NewLine))
+    } catch { }
+}
+Add-MbuLog ("stage=start temp=$tempDir env=$env:TEMP tmp=$env:TMP")
 
 $menu = Join-Path $tempDir 'mbu-menu.ps1'
 $downloaded = $false
@@ -260,6 +350,9 @@ for ($attempt = 1; $attempt -le 3; $attempt++) {
     try {
         Invoke-WebRequest -UseBasicParsing -Uri "$base/menu.ps1" -OutFile $menu -TimeoutSec 30
         $downloaded = $true
+        try {
+            Add-MbuLog ("stage=download ok bytes=" + (New-Object System.IO.FileInfo -ArgumentList $menu).Length)
+        } catch { }
         break
     } catch {
         $lastDownloadErr = $_.Exception.Message
@@ -285,7 +378,7 @@ if (-not $downloaded) {
     Read-Host (L 'press_enter_close')
     exit 1
 }
-$menuHash = 'cf625e86a540f59268cad101917e0881f00cde7acbfeef8fbd8fd3350f4585ed'
+$menuHash = '90eba1beb140716a7061d1cd270d3eba6c963e8bdc99ceab4fea22eecffd3115'
 $menuBytes = [IO.File]::ReadAllBytes($menu)
 $clean = New-Object System.Collections.Generic.List[byte]
 foreach ($b in $menuBytes) {
@@ -297,6 +390,7 @@ $menuBytes = $clean.ToArray()
 $tmpHash = [System.Security.Cryptography.SHA256]::Create()
 $menuActual = [BitConverter]::ToString($tmpHash.ComputeHash($menuBytes)).Replace('-','').ToLowerInvariant()
 if ($menuActual -ne $menuHash) {
+    Add-MbuLog ("stage=hash-fail expected=$menuHash actual=$menuActual")
     Write-Host ''
     Write-Host (L 'err_menu_hash') -ForegroundColor Red
     Write-Host ((L 'err_expected') -replace '\{0\}', $menuHash)
@@ -307,25 +401,151 @@ if ($menuActual -ne $menuHash) {
     exit 1
 }
 
-$launcher = Join-Path $tempDir 'mbu-launch.bat'
-[System.IO.File]::WriteAllLines($launcher, @(
-    '@echo off',
-    'title Minecraft Bedrock Free',
-    'color 07',
-    'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0mbu-menu.ps1"',
-    'del "%~f0" >nul 2>&1'
-), [System.Text.Encoding]::ASCII)
+Add-MbuLog 'stage=hash ok'
 
+$menuText = [IO.File]::ReadAllText($menu)
+$versionLabel = 'unknown'
+try {
+    if ($menuText -match "Script:Version = '([^']+)'") {
+        $versionLabel = $Matches[1]
+    }
+} catch { }
+$reportEndpoint = if ($env:MBU_REPORT_URL) {
+    $env:MBU_REPORT_URL.TrimEnd('/')
+} else {
+    'https://mbu-error-worker.xgobg2020.workers.dev/report'
+}
+$psExe = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
+if (-not (Test-Path -LiteralPath $psExe)) {
+    $psExe = 'powershell.exe'
+}
 $principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
 $isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+Add-MbuLog ("stage=admin isAdmin=$isAdmin version=$versionLabel menu=$menu")
 
-try {
-    if ($isAdmin) {
-        Start-Process -FilePath $launcher
-    } else {
-        Write-Host (L 'uac_request')
-        Start-Process -FilePath $launcher -Verb RunAs
+function Get-MbuLogTail {
+    try {
+        $lines = [IO.File]::ReadAllLines($logPath)
+        if ($lines.Count -gt 20) {
+            $lines = $lines[($lines.Count - 20)..($lines.Count - 1)]
+        }
+        return ($lines -join [Environment]::NewLine)
+    } catch {
+        return ''
     }
-} finally {
-    exit
+}
+
+function Send-MbuBootstrapReport {
+    param([string]$Message)
+    try {
+        $answer = Read-Host ("  " + (L 'report_ask'))
+        if ($answer -notmatch '^[syo]') {
+            Write-Host ("  " + (L 'report_not_sent')) -ForegroundColor DarkGray
+            return
+        }
+        $os = 'Windows (unknown)'
+        try {
+            $c = Get-CimInstance Win32_OperatingSystem -ErrorAction Stop
+            $os = "$($c.Caption) build $($c.BuildNumber)"
+        } catch { }
+        $diag = @(
+            'stage=bootstrap'
+            ("version=$versionLabel")
+            ("admin=$isAdmin")
+            ("temp=$tempDir")
+            ("error=" + $Message)
+            (Get-MbuLogTail)
+        ) -join [Environment]::NewLine
+        $body = @{
+            v       = $versionLabel
+            os      = $os
+            lang    = $Script:MbuLang
+            trigger = 'launch_error'
+            reason  = $Message
+            report  = $diag
+        } | ConvertTo-Json -Compress
+        Invoke-RestMethod -Uri $reportEndpoint -Method Post -ContentType 'application/json' -Body $body -TimeoutSec 10 | Out-Null
+        Write-Host ("  " + (L 'report_sent')) -ForegroundColor Green
+    } catch {
+        Write-Host ("  " + (L 'report_send_fail')) -ForegroundColor Yellow
+    }
+}
+
+function Show-MbuLaunchFailure {
+    param([string]$Message)
+    Add-MbuLog ("stage=launch-fail reason=" + $Message)
+    Write-Host ''
+    Write-Host (L 'err_launch_title') -ForegroundColor Red
+    if ($Message) {
+        Write-Host ("  " + $Message) -ForegroundColor Yellow
+    }
+    Write-Host (L 'err_launch_hint') -ForegroundColor Yellow
+    Write-Host ("  irm $base/menu.ps1 | iex") -ForegroundColor Cyan
+    Write-Host ("  " + $logPath) -ForegroundColor DarkGray
+    Send-MbuBootstrapReport -Message $Message
+    Read-Host (L 'press_enter_close')
+    exit 1
+}
+
+if ($isAdmin) {
+    Add-MbuLog 'stage=launch-in-place'
+    try {
+        iex $menuText
+    } catch {
+        Show-MbuLaunchFailure -Message $_.Exception.Message
+    }
+} else {
+    Write-Host (L 'uac_request')
+    $menuLit = "'" + $menu.Replace("'", "''") + "'"
+    $logLit = "'" + $logPath.Replace("'", "''") + "'"
+    $hintLit = "'" + (L 'err_child_fail').Replace("'", "''") + "'"
+    $enterLit = "'" + (L 'press_enter_close').Replace("'", "''") + "'"
+    $childLines = @(
+        ('$host.UI.RawUI.WindowTitle = ''Minecraft Bedrock Free''')
+        ('$p = ' + $menuLit)
+        ('[IO.File]::AppendAllText(' + $logLit + ', ((Get-Date).ToString("yyyy-MM-dd HH:mm:ss") + " run=' + $runId + ' stage=child-started pid=" + $PID + [Environment]::NewLine))')
+        ('try {')
+        ('    iex ([IO.File]::ReadAllText($p))')
+        ('} catch {')
+        ('    [IO.File]::AppendAllText(' + $logLit + ', ((Get-Date).ToString("yyyy-MM-dd HH:mm:ss") + " run=' + $runId + ' stage=child-fail reason=" + $_.Exception.Message + [Environment]::NewLine))')
+        ('    Write-Host ""')
+        ('    Write-Host ("  " + $_.Exception.Message) -ForegroundColor Red')
+        ('    Write-Host ("  " + ' + $hintLit + ') -ForegroundColor Yellow')
+        ('    Read-Host ("  " + ' + $enterLit + ')')
+        ('}')
+    )
+    $childText = $childLines -join [Environment]::NewLine
+    $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($childText))
+    Add-MbuLog 'stage=launch-elevate'
+    try {
+        Start-Process -FilePath $psExe -Verb RunAs -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', $encoded
+        $started = $null
+        $attempt = 0
+        while ($attempt -lt 12) {
+            $attempt = $attempt + 1
+            Start-Sleep -Milliseconds 500
+            $logText = ''
+            try {
+                $logText = [IO.File]::ReadAllText($logPath)
+            } catch { }
+            if (-not $logText) {
+                break
+            }
+            if ($logText -match ('run=' + $runId + ' stage=child-started')) {
+                $started = $true
+                break
+            }
+            $started = $false
+        }
+        if ($started -eq $true) {
+            Add-MbuLog 'stage=launch-ok'
+            exit 0
+        }
+        if ($started -eq $null) {
+            exit 0
+        }
+        Show-MbuLaunchFailure -Message (L 'err_child_never_started')
+    } catch {
+        Show-MbuLaunchFailure -Message $_.Exception.Message
+    }
 }

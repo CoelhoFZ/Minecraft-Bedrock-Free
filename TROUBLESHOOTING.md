@@ -95,6 +95,57 @@ there to stop a `menu.ps1` that does not match the bootstrap.
 
 This failure happens before the menu starts, so no automatic report is sent.
 
+## The window closes right after the UAC prompt (v4.9.15+)
+
+Symptom: you run the one-liner (or `install.bat`), the download progress
+appears, the UAC prompt shows up, you accept it, and then the window closes
+without the menu and without any message.
+
+Until v4.9.14 the installer opened the menu by writing a small `.bat` helper
+inside `%TEMP%` and launching that helper elevated. A file created seconds
+before, in the temporary folder, started with administrator rights is exactly
+what antivirus suites, the Windows Defender attack surface reduction rules and
+Smart App Control tend to block, and that block is silent. From v4.9.14 the same
+launch path was also used by `install.bat`, so both official entries could fail
+the same way.
+
+Since v4.9.15 the launch works differently:
+
+- If the window that started the installer is already elevated (`install.bat`,
+  or a PowerShell opened as administrator), the menu runs in that same window.
+  No new process and no helper file.
+- Otherwise `powershell.exe` itself is elevated, not a helper script, and it
+  runs the `menu.ps1` that was already verified by hash. If that elevated
+  process fails or never starts, the original window stays open and prints the
+  real error.
+- The bootstrap writes a small log next to the downloaded menu, in `%TEMP%`,
+  called `mbu-bootstrap.log`. It records each step, including the failure.
+
+If you see `ERROR: the installer could not open with administrator permission`,
+do this:
+
+1. Open PowerShell **as administrator** (Start menu, right click on PowerShell,
+   Run as administrator).
+2. Run:
+
+   ```powershell
+   irm https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/menu.ps1 | iex
+   ```
+
+   This opens the menu directly in the elevated window, with no second process
+   involved.
+3. If the menu opens now, add an exclusion for the temporary folder in your
+   antivirus, or review the Defender rules
+   ([antivirus false positives](docs/antivirus-false-positives.md)), and use the
+   normal installer again.
+4. If it still closes, `%TEMP%\mbu-bootstrap.log` records the last step that
+   ran. Send that file to the developer together with the picture of the window.
+
+The bootstrap can also report the failure by itself. When the launch fails it
+asks the same question as the menu (send the report to the developer) and sends
+the bootstrap stage log if you confirm. This failure happens before the menu
+runs, so before v4.9.15 there was no automatic report for it at all.
+
 ## "An object at the specified path does not exist: C:\Users\NAME~1" (temporary folder)
 
 Seen on Windows with a **space in the user name** (for example `PC XEON`).
