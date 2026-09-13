@@ -49,6 +49,12 @@ Fake "unlocker fix" installers are being distributed in Discord chats:
   changes. Up to v4.9.13 `install.bat` carried its own pin and refused to run a menu from a
   different release (fail-closed); the assets of those releases were refreshed with the
   bootstrap, so the files served by the Releases page keep working.
+- Since **v4.9.15** the launch step changed (same pin rule, only the way the verified menu is
+  started): when the session is already elevated (`install.bat`, or a PowerShell opened as
+  administrator) the menu runs in that same window, and otherwise `powershell.exe` is elevated to
+  run the menu text that was already verified by hash. The elevated window writes a
+  `stage=child-started` marker to `%TEMP%\mbu-bootstrap.log`, and when that marker does not
+  arrive the original window stays open with the real error instead of closing silently.
 - The binary is pinned too: the menu only accepts the exact SHA-256 of `release/winmm.dll`
   published in `SHA256SUMS.txt` (previous builds are recognized as "already unlocked" so users
   who installed an older build keep working).
