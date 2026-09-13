@@ -39,15 +39,21 @@ Fake "unlocker fix" installers are being distributed in Discord chats:
 
 ## Supported versions
 
-- **v4.5.0+** bootstraps (`i.ps1` and `install.bat`) verify the SHA-256 of the downloaded
-  `menu.ps1` against a hash pinned in the file itself and abort (fail-closed) when it does not
-  match. The hash is computed over the content **normalized to LF** (every byte `0x0D` removed,
-  the UTF-8 BOM kept), so it does not depend on CRLF vs LF.
+- **v4.5.0+** bootstraps verify the SHA-256 of the downloaded `menu.ps1` against a hash pinned
+  in the bootstrap and abort (fail-closed) when it does not match. The hash is computed over the
+  content **normalized to LF** (every byte `0x0D` removed, the UTF-8 BOM kept), so it does not
+  depend on CRLF vs LF.
+- Since **v4.9.14** the pinned hash lives in `i.ps1` only, and `install.bat` is a thin bootstrap:
+  it downloads `i.ps1` from the `main` branch and runs it, exactly like the PowerShell one-liner.
+  It carries no hash of its own, so a saved `install.bat` does not go stale when `menu.ps1`
+  changes. Up to v4.9.13 `install.bat` carried its own pin and refused to run a menu from a
+  different release (fail-closed); the assets of those releases were refreshed with the
+  bootstrap, so the files served by the Releases page keep working.
 - The binary is pinned too: the menu only accepts the exact SHA-256 of `release/winmm.dll`
   published in `SHA256SUMS.txt` (previous builds are recognized as "already unlocked" so users
   who installed an older build keep working).
 - There is **no RSA signature and no `scripts\sign-release.ps1`** in this project (older drafts
-  of this document mentioned one - it never shipped). Verification today is the two hash pins
+  of this document mentioned one - it never shipped). Verification today is the menu hash pin
   above plus `SHA256SUMS.txt`.
 - Older entry points such as `install.ps1` or `bootstrap-*.ps1` do not exist in this
   repository. The only two supported install methods are
@@ -75,7 +81,8 @@ never increments.
 1. Make your changes (typically `menu.ps1`).
 2. Compute the normalized-LF hash of `menu.ps1`
    (`python3 -c "print(__import__('hashlib').sha256(open('menu.ps1','rb').read().replace(b'\r', b'')).hexdigest())"`)
-   and put it in **both** `$menuHash` (`i.ps1`) and `$menuHashPin` (`install.bat`).
+   and put it in `$menuHash` (`i.ps1`). `install.bat` does not carry a hash anymore: it only
+   downloads `i.ps1` from the `main` branch and runs it, so there is nothing to update there.
 3. `install.bat` must stay **pure ASCII**. The cmd.exe batch parser breaks command lines when a
    `.bat` contains non-ASCII bytes (proved on Windows 11 x64: cmd prints "not recognized as an
    internal command" for line fragments, `%errorlevel%` becomes 9009 and the installer never

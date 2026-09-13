@@ -57,16 +57,25 @@ How to recover:
 3. The official bootstrap file is `i.ps1`. There is no `e.ps1` in this
    repository, so any guide telling you to run `e.ps1` is outdated or fake.
 
-## "ERRO: o hash do menu.ps1 baixado nao confere com o esperado" (hash mismatch from install.bat)
+## "ERRO: o hash do menu.ps1 baixado nao confere com o esperado" (hash mismatch, installer from an old release)
 
-The `install.bat` you ran carries the fingerprint of the `menu.ps1` that was
-current when that release was built, and it downloads `menu.ps1` from the `main`
-branch of this repository. Every later release that changed `menu.ps1` turns an
-older `install.bat` into a refusal: it stops instead of running a menu it was
-not built with. The copy can be official and still fail - an outdated download
-is enough (the Releases page lists old versions side by side).
+This message comes from an `install.bat` of **v4.9.13 or older**. Those versions
+carried the fingerprint of the `menu.ps1` that was current when that release was
+built, and they download `menu.ps1` from the `main` branch of this repository.
+Every later release that changed `menu.ps1` turned an older `install.bat` into a
+refusal: it stopped instead of running a menu it was not built with. The copy
+could be official and still fail - an outdated download was enough (the Releases
+page lists old versions side by side).
 
-How to recover:
+Since **v4.9.14** the official `install.bat` is a thin bootstrap: it does not
+carry a fingerprint anymore, it always fetches the current bootstrap (`i.ps1`)
+from the `main` branch and lets it download and verify the current `menu.ps1`.
+That is how the PowerShell one-liner has always worked. The releases that still
+had the old file were also refreshed with this bootstrap, so the links on the
+Releases page (including old versions) now serve a file that keeps working.
+
+If you still hit this message, your copy is an old `install.bat` that was saved
+somewhere before that. How to recover:
 
 1. Get the current `install.bat` (this link always serves the newest release):
 
@@ -82,7 +91,7 @@ How to recover:
    run it again. Right after an update the raw file server can still serve the
    previous `menu.ps1` for a few minutes, and the check fails until it refreshes.
 3. If the file did not come from this repository, do not run it. The check is
-there to stop a `menu.ps1` that does not match the installer.
+there to stop a `menu.ps1` that does not match the bootstrap.
 
 This failure happens before the menu starts, so no automatic report is sent.
 

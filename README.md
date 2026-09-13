@@ -101,7 +101,6 @@ expected for an unlocker. See [Antivirus false positives](docs/antivirus-false-p
 |---|---|---|
 | `MBU_LANG` | `menu.ps1` | Forces the menu language (`pt`, `en`, `es`, `fr`, `zh`, `hi`, `ar`, `ru`) instead of auto-detecting from the system. |
 | `MBU_BASE_URL` | `i.ps1`, `install.bat`, `menu.ps1` | Points the installer at a different server (forks, local test VM). Integrity hash checks still apply. |
-| `MBU_EXTRA_HASH` | `install.bat` | Together with `MBU_BASE_URL`: lets a locally-modified `menu.ps1` (different hash) pass the integrity check in test environments. Never set these on a daily-use machine. |
 | `MBU_REPORT_URL` | `menu.ps1` | Overrides the failure-report endpoint (Cloudflare Worker), for pointing tests at a local mock. Never set on a daily-use machine. |
 | `MBU_NO_LOOP` | `menu.ps1` | Set to `1` to load the menu functions without entering the interactive loop (dot-sourcing for tests). |
 
