@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.11'
+$Script:Version = '4.9.12'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -18,7 +18,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.11'
+    '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.12'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
     'f7b1408c36590abbfcb5310cf98c1efb1fa16f3a54a9387df56b1441de90335b' = 'v4.4.1'
     '86689c9724be7f391ba9bd1f4ef8dddaa73baec0b76b9c73bebef89f37b76e97' = 'v4.3.0'
@@ -105,6 +105,9 @@ $Script:TestedVersionData = $null
 $Script:AclDiag = $null
 $Script:SwapPrevDll = $null
 $Script:SwapDiag = @()
+$Script:GateDiag = @()
+$Script:CrashDiag = New-Object System.Collections.Generic.List[string]
+$Script:LaunchDiag = $null
 $Script:DefenderExclAttempted = @()
 $Script:DefenderExclEffective = @()
 $Script:ThirdPartyAv = @()
@@ -408,6 +411,14 @@ $Script:PT = @{
     'report_trigger_start_failed'  = 'O Minecraft nao abriu apos a instalacao.'
     'report_trigger_game_crashed'  = 'O Minecraft abriu e fechou logo em seguida.'
     'corrupt_winmm_found'   = 'Foi detectado um winmm.dll corrompido ou incompativel no jogo (possivel causa do erro Bad Image 0xc0e90007).'
+    'gate_unknown_ver'      = 'Nao foi possivel determinar a versao do Minecraft instalado, entao nao da para confirmar que este unlocker funciona nela.'
+    'gate_list_unavailable' = 'Nao foi possivel baixar a lista de versoes testadas (sem internet), entao nao da para confirmar que a versao {0} funciona com este unlocker.'
+    'gate_ask'              = 'Continuar a instalacao mesmo assim? (S para sim, N para nao)'
+    'gate_decline_hint'     = 'Instalacao cancelada. Atualize o Minecraft pela Microsoft Store e rode o instalador de novo.'
+    'crash_offer'           = 'O Minecraft fechou logo depois de abrir.'
+    'crash_ask'             = 'Remover o unlock agora e deixar o jogo como estava antes? (S para sim, N para nao)'
+    'crash_kept'            = 'Unlock mantido. Se o jogo continuar fechando, use a opcao [1] do menu para remover o unlock.'
+    'crash_removed'         = 'Unlock removido. Abra o Minecraft para confirmar que voltou a funcionar.'
     'report_ask'            = 'Deseja enviar o relatorio para o desenvolvedor para ajuda-lo a corrigir o problema? (S para sim, N para nao)'
     'report_sent'           = 'Relatorio enviado ao desenvolvedor. Obrigado!'
     'report_not_sent'       = 'Ok, relatorio nao enviado.'
@@ -1643,6 +1654,78 @@ $Script:I18N = @{
         ar='تم فتح Minecraft وإغلاقه فورًا.'
         ru='Minecraft открылся и сразу закрылся.'
     }
+    'gate_unknown_ver' = @{
+        en='The installed Minecraft version could not be determined, so there is no way to confirm that this unlocker works on it.'
+        es='No se pudo determinar la version de Minecraft instalada, asi que no se puede confirmar que este unlocker funcione en ella.'
+        fr='La version de Minecraft installee n''a pas pu etre determinee, donc impossible de confirmer que cet unlocker fonctionne dessus.'
+        zh='无法确定已安装的 Minecraft 版本，因此无法确认此解锁器是否适用于它。'
+        hi='इंस्टॉल किए गए Minecraft का संस्करण निर्धारित नहीं हो सका, इसलिए यह पुष्टि नहीं हो सकती कि यह अनलॉकर उस पर काम करता है।'
+        ar='تعذر تحديد إصدار Minecraft المثبت، لذا لا يمكن التأكد من أن هذا الأنلوكر يعمل عليه.'
+        ru='Не удалось определить установленную версию Minecraft, поэтому нельзя подтвердить, что этот анлокер на ней работает.'
+    }
+    'gate_list_unavailable' = @{
+        en='The tested versions list could not be downloaded (no internet), so there is no way to confirm that version {0} works with this unlocker.'
+        es='No se pudo descargar la lista de versiones probadas (sin internet), asi que no se puede confirmar que la version {0} funcione con este unlocker.'
+        fr='La liste des versions testees n''a pas pu etre telechargee (pas d''internet), donc impossible de confirmer que la version {0} fonctionne avec cet unlocker.'
+        zh='无法下载已测试版本列表（无网络），因此无法确认版本 {0} 是否适用于此解锁器。'
+        hi='परीक्षित संस्करणों की सूची डाउनलोड नहीं हो सकी (इंटरनेट नहीं), इसलिए यह पुष्टि नहीं हो सकती कि संस्करण {0} इस अनलॉकर के साथ काम करता है।'
+        ar='تعذر تنزيل قائمة الإصدارات المختبرة (لا إنترنت)، لذا لا يمكن التأكد من أن الإصدار {0} يعمل مع هذا الأنلوكر.'
+        ru='Не удалось скачать список протестированных версий (нет интернета), поэтому нельзя подтвердить, что версия {0} работает с этим анлокером.'
+    }
+    'gate_ask' = @{
+        en='Continue the installation anyway? (Y for yes, N for no)'
+        es='¿Continuar la instalacion de todos modos? (S para si, N para no)'
+        fr='Continuer l''installation quand meme ? (O pour oui, N pour non)'
+        zh='仍要继续安装吗？（Y 为是，N 为否）'
+        hi='फिर भी इंस्टॉल करना जारी रखें? (Y हाँ, N नहीं)'
+        ar='هل تريد متابعة التثبيت رغم ذلك؟ (Y نعم، N لا)'
+        ru='Продолжить установку в любом случае? (Y да, N нет)'
+    }
+    'gate_decline_hint' = @{
+        en='Installation cancelled. Update Minecraft from the Microsoft Store and run the installer again.'
+        es='Instalacion cancelada. Actualiza Minecraft desde la Microsoft Store y ejecuta el instalador otra vez.'
+        fr='Installation annulee. Mettez Minecraft a jour depuis le Microsoft Store et relancez l''installateur.'
+        zh='安装已取消。请从 Microsoft Store 更新 Minecraft，然后再次运行安装程序。'
+        hi='इंस्टॉलेशन रद्द कर दिया गया। Minecraft को Microsoft Store से अपडेट करें और इंस्टॉलर फिर से चलाएं।'
+        ar='تم إلغاء التثبيت. حدّث Minecraft من Microsoft Store وشغّل المثبّت مرة أخرى.'
+        ru='Установка отменена. Обновите Minecraft из Microsoft Store и запустите установщик заново.'
+    }
+    'crash_offer' = @{
+        en='Minecraft closed right after opening.'
+        es='Minecraft se cerro justo despues de abrir.'
+        fr='Minecraft s''est ferme juste apres l''ouverture.'
+        zh='Minecraft 打开后立即关闭。'
+        hi='Minecraft खुलने के तुरंत बाद बंद हो गया।'
+        ar='تم إغلاق Minecraft مباشرة بعد الفتح.'
+        ru='Minecraft закрылся сразу после запуска.'
+    }
+    'crash_ask' = @{
+        en='Remove the unlock now and leave the game as it was before? (Y for yes, N for no)'
+        es='¿Quitar el unlock ahora y dejar el juego como estaba antes? (S para si, N para no)'
+        fr='Retirer l''unlock maintenant et laisser le jeu comme avant ? (O pour oui, N pour non)'
+        zh='现在移除解锁并将游戏恢复到之前的状态吗？（Y 为是，N 为否）'
+        hi='अभी अनलॉक हटाकर गेम को पहले जैसा कर दें? (Y हाँ, N नहीं)'
+        ar='إزالة الأنلوك الآن وإعادة اللعبة كما كانت؟ (Y نعم، N لا)'
+        ru='Удалить анлок сейчас и вернуть игру в прежнее состояние? (Y да, N нет)'
+    }
+    'crash_kept' = @{
+        en='Unlock kept. If the game keeps closing, use menu option [1] to remove the unlock.'
+        es='Unlock conservado. Si el juego sigue cerrándose, usa la opcion [1] del menu para quitarlo.'
+        fr='Unlock conserve. Si le jeu continue de se fermer, utilisez l''option [1] du menu pour le retirer.'
+        zh='已保留解锁。如果游戏仍关闭，请使用菜单选项 [1] 移除解锁。'
+        hi='अनलॉक बनाए रखा गया। अगर गेम बंद होता रहे तो मेनू विकल्प [1] से अनलॉक हटाएं।'
+        ar='تم الإبقاء على الأنلوك. إذا استمر اللعبة في الإغلاق فاستخدم الخيار [1] في القائمة لإزالته.'
+        ru='Анлок оставлен. Если игра продолжит закрываться, используйте пункт [1] меню, чтобы удалить анлок.'
+    }
+    'crash_removed' = @{
+        en='Unlock removed. Open Minecraft to confirm that it works again.'
+        es='Unlock quitado. Abre Minecraft para confirmar que volvio a funcionar.'
+        fr='Unlock retire. Ouvrez Minecraft pour confirmer qu''il fonctionne a nouveau.'
+        zh='已移除解锁。请打开 Minecraft 确认其已恢复正常。'
+        hi='अनलॉक हटा दिया गया। पुष्टि के लिए Minecraft खोलें कि यह फिर से चल रहा है।'
+        ar='تمت إزالة الأنلوك. افتح Minecraft للتأكد من أنه يعمل مرة أخرى.'
+        ru='Анлок удалён. Откройте Minecraft и убедитесь, что он снова работает.'
+    }
     'corrupt_winmm_found' = @{
         en='A corrupted or incompatible winmm.dll was detected in the game (possible cause of the Bad Image 0xc0e90007 error).'
         es='Se detectó un winmm.dll corrupto o incompatible en el juego (posible causa del error Bad Image 0xc0e90007).'
@@ -2001,6 +2084,51 @@ function Test-GameVersionTested {
         return $null
     }
     return [bool]($data.tested.PSObject.Properties.Name -contains $Version)
+}
+
+function Test-InstallGate {
+    param([string]$Content)
+    $Script:GateDiag = New-Object System.Collections.Generic.List[string]
+    if ((Get-PeMachineType -Path (Join-Path $Content 'Minecraft.Windows.exe')) -eq 0xAA64) {
+        $Script:GateDiag.Add('arch=arm64 result=skipped')
+        return $true
+    }
+    $ver = Get-GameVersion -Content $Content
+    if (-not $ver) {
+        $Script:GateDiag.Add('version=unknown')
+        Write-Host ''
+        Write-Host ("  " + (T 'gate_unknown_ver')) -ForegroundColor Red
+        $ans = Read-Host ("  " + (T 'gate_ask'))
+        if ($ans -notmatch '^[syo]') {
+            $Script:GateDiag.Add('result=aborted-unknown-version')
+            Write-Host ("  " + (T 'gate_decline_hint')) -ForegroundColor DarkGray
+            return $false
+        }
+        $Script:GateDiag.Add('result=continued-unknown-version')
+        return $true
+    }
+    $tested = Test-GameVersionTested -Version $ver
+    if ($null -eq $tested) {
+        $Script:GateDiag.Add("version=$ver")
+        Write-Host ''
+        Write-Host ("  " + ((T 'gate_list_unavailable') -replace '\{0\}', $ver)) -ForegroundColor Red
+        $ans = Read-Host ("  " + (T 'gate_ask'))
+        if ($ans -notmatch '^[syo]') {
+            $Script:GateDiag.Add('result=aborted-list-unavailable')
+            Write-Host ("  " + (T 'gate_decline_hint')) -ForegroundColor DarkGray
+            return $false
+        }
+        $Script:GateDiag.Add('result=continued-list-unavailable')
+        return $true
+    }
+    if (-not $tested) {
+        $Script:GateDiag.Add("version=$ver result=blocked-untested")
+        Write-Host ((T 'gate_untested') -replace '\{0\}', $ver) -ForegroundColor Red
+        Write-Host (T 'gate_untested_hint') -ForegroundColor Yellow
+        return $false
+    }
+    $Script:GateDiag.Add("version=$ver result=tested")
+    return $true
 }
 
 function Test-UnlockCache {
@@ -2417,14 +2545,8 @@ function Install-Unlocker {
     $content = Find-MinecraftContent
     Write-Host ((T 'install_content_dir') -replace '\{0\}', $content)
 
-    $gateMachine = Get-PeMachineType -Path (Join-Path $content 'Minecraft.Windows.exe')
-    if ($gateMachine -ne 0xAA64) {
-        $gateVer = Get-GameVersion -Content $content
-        if ($gateVer -and (Test-GameVersionTested -Version $gateVer) -eq $false) {
-            Write-Host ((T 'gate_untested') -replace '\{0\}', $gateVer) -ForegroundColor Red
-            Write-Host (T 'gate_untested_hint') -ForegroundColor Yellow
-            return
-        }
+    if (-not (Test-InstallGate -Content $content)) {
+        return
     }
 
     if ((Get-PeMachineType -Path (Join-Path $content 'Minecraft.Windows.exe')) -eq 0xAA64) {
@@ -2659,6 +2781,7 @@ function Install-Unlocker {
             Write-Host (T 'sac_skip_launch') -ForegroundColor Yellow
             return
         }
+        $launchAt = Get-Date
         $mc = Start-Minecraft
         if (-not $mc.opened) {
             $sfReason = Get-WinmmCorruptHint -Content $content
@@ -2674,13 +2797,8 @@ function Install-Unlocker {
                 return
             }
         } catch { }
-        if (Test-PostLaunchCrash -MinecraftProcess $mc.proc) {
-            $gcReason = Get-CrashDetailInfo -MinecraftProcess $mc.proc
-            $gcHint = Get-WinmmCorruptHint -Content $content
-            if ($gcHint) {
-                $gcReason = $gcReason + ' | ' + $gcHint
-            }
-            Send-MbuFailureReport -Trigger 'game_crashed' -Reason $gcReason
+        if (Test-PostLaunchCrash -MinecraftProcess $mc.proc -LaunchAt $launchAt) {
+            Send-PostLaunchCrashReport -MinecraftProcess $mc.proc -LaunchAt $launchAt -Content $content
         }
     } finally {
         Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
@@ -2737,6 +2855,7 @@ function Remove-MbuLocalTraces {
 }
 
 function Restore-Original {
+    param([switch]$NoLaunch)
     $Script:LastOpErrorRecord = $null
     $content = Find-MinecraftContent
     Close-Minecraft
@@ -2775,7 +2894,9 @@ function Restore-Original {
 
     Remove-MbuLocalTraces -Content $content
     Write-Host (T 'unlock_removed')
-    Start-Minecraft
+    if (-not $NoLaunch) {
+        Start-Minecraft
+    }
 }
 
 function Send-DownloadHit {
@@ -2819,6 +2940,13 @@ function Start-Minecraft {
                 $opened = $true
             }
         } catch { }
+    }
+    $Script:LaunchDiag = if ($isStore) {
+        'store content=' + $content
+    } elseif ($opened) {
+        'exe content=' + $content
+    } else {
+        'failed content=' + $content
     }
     if ($opened) {
         Write-Host (T 'mc_started')
@@ -2882,6 +3010,21 @@ function Get-DiagReportText {
     try {
         if ($Script:SwapDiag -and $Script:SwapDiag.Count -gt 0) {
             $lines.Add('[swap] ' + (@($Script:SwapDiag | Select-Object -Unique) -join ' | '))
+        }
+    } catch { }
+    try {
+        if ($Script:GateDiag -and $Script:GateDiag.Count -gt 0) {
+            $lines.Add('[gate] ' + (@($Script:GateDiag | Select-Object -Unique) -join ' | '))
+        }
+    } catch { }
+    try {
+        if ($Script:LaunchDiag) {
+            $lines.Add('[launch] ' + $Script:LaunchDiag)
+        }
+    } catch { }
+    try {
+        if ($Script:CrashDiag -and $Script:CrashDiag.Count -gt 0) {
+            $lines.Add('[crash] ' + (@($Script:CrashDiag | Select-Object -Unique) -join ' | '))
         }
     } catch { }
     try {
@@ -3276,29 +3419,53 @@ function Get-DiagReportText {
     return ($lines -join "`n")
 }
 
-function Test-WindowsCrashEvent {
+function Get-WindowsCrashEvent {
+    param([Nullable[datetime]]$Since)
     try {
-        $since = (Get-Date).AddMinutes(-2)
-        $hit = Get-WinEvent -FilterHashtable @{
-            LogName = 'Application'
-            StartTime = $since
-        } -ErrorAction SilentlyContinue |
-            Where-Object {
-            $_.ProviderName -in @('Application Error', 'Windows Error Reporting') -and ($_.Message -match 'Minecraft.Windows')
-        } |
-            Select-Object -First 1
-        return ($null -ne $hit)
+        if (-not $Since) {
+            $Since = (Get-Date).AddMinutes(-2)
+        }
+        return (Get-WinEvent -FilterHashtable @{
+                LogName = 'Application'
+                StartTime = $Since
+            } -ErrorAction SilentlyContinue |
+                Where-Object {
+                $_.ProviderName -in @('Application Error', 'Windows Error Reporting') -and ($_.Message -match 'Minecraft.Windows')
+            } |
+                Select-Object -First 1)
     } catch {
-        return $false
+        return $null
     }
 }
 
+function Test-WindowsCrashEvent {
+    param([Nullable[datetime]]$Since)
+    return ($null -ne (Get-WindowsCrashEvent -Since $Since))
+}
+
+function Get-CrashElapsed {
+    param([Nullable[datetime]]$Since)
+    try {
+        if ($Since) {
+            return [int](((Get-Date) - $Since).TotalSeconds)
+        }
+    } catch { }
+    return '?'
+}
+
 function Test-PostLaunchCrash {
-    param($MinecraftProcess)
+    param($MinecraftProcess, [Nullable[datetime]]$LaunchAt)
     $gdk = $null -ne $MinecraftProcess
     $everSeen = $false
+    $seenAt = $null
+    $waitStart = 30
+    $aliveAfter = 15
+    if ($gdk) {
+        $waitStart = 20
+        $aliveAfter = 0
+    }
     try {
-        $deadline = (Get-Date).AddSeconds(20)
+        $deadline = (Get-Date).AddSeconds($waitStart)
     } catch {
         return $false
     }
@@ -3307,29 +3474,57 @@ function Test-PostLaunchCrash {
             try {
                 $MinecraftProcess.Refresh()
                 if ($MinecraftProcess.HasExited) {
-                    return ($MinecraftProcess.ExitCode -ne 0)
+                    $code = 0
+                    try {
+                        $code = [uint32]$MinecraftProcess.ExitCode
+                    } catch { }
+                    $Script:CrashDiag.Add('evidence=process-exit code=0x{0:X8}' -f $code)
+                    return ($code -ne 0)
                 }
             } catch {
                 return $false
             }
-        } elseif (Get-Process Minecraft.Windows -ErrorAction SilentlyContinue) {
-            $everSeen = $true
-        } elseif ($everSeen) {
-            return (Test-WindowsCrashEvent)
+        } else {
+            $live = @(Get-Process Minecraft.Windows -ErrorAction SilentlyContinue | Select-Object -First 1)
+            if ($live.Count -gt 0) {
+                if (-not $everSeen) {
+                    try {
+                        $seenPath = [string]$live[0].Path
+                        if ($seenPath) {
+                            $Script:CrashDiag.Add('running=' + $seenPath)
+                        }
+                    } catch { }
+                    $everSeen = $true
+                    $seenAt = Get-Date
+                } elseif ($seenAt -and ($aliveAfter -gt 0) -and (((Get-Date) - $seenAt).TotalSeconds -ge $aliveAfter)) {
+                    $Script:CrashDiag.Add('evidence=none process-still-running')
+                    return $false
+                }
+            } elseif ($everSeen) {
+                $Script:CrashDiag.Add('evidence=wer elapsed=' + (Get-CrashElapsed -Since $LaunchAt) + 's')
+                return (Test-WindowsCrashEvent -Since $LaunchAt)
+            }
         }
         Start-Sleep -Seconds 1
     }
     if ($gdk) {
+        $Script:CrashDiag.Add('evidence=none process-still-running')
         return $false
     }
     if (Get-Process Minecraft.Windows -ErrorAction SilentlyContinue) {
+        $Script:CrashDiag.Add('evidence=none process-still-running')
         return $false
     }
-    return (Test-WindowsCrashEvent)
+    if (-not $everSeen) {
+        $Script:CrashDiag.Add('evidence=none process-never-seen wait=' + $waitStart + 's')
+        return $false
+    }
+    $Script:CrashDiag.Add('evidence=wer elapsed=' + (Get-CrashElapsed -Since $LaunchAt) + 's')
+    return (Test-WindowsCrashEvent -Since $LaunchAt)
 }
 
 function Get-CrashDetailInfo {
-    param($MinecraftProcess)
+    param($MinecraftProcess, [Nullable[datetime]]$LaunchAt)
     try {
         if ($null -ne $MinecraftProcess) {
             $MinecraftProcess.Refresh()
@@ -3342,15 +3537,10 @@ function Get-CrashDetailInfo {
         }
     } catch { }
     try {
-        $since = (Get-Date).AddMinutes(-5)
-        $evt = Get-WinEvent -FilterHashtable @{
-            LogName = 'Application'
-            StartTime = $since
-        } -ErrorAction SilentlyContinue |
-            Where-Object {
-            $_.ProviderName -in @('Application Error', 'Windows Error Reporting') -and ($_.Message -match 'Minecraft.Windows')
-        } |
-            Select-Object -First 1
+        if (-not $LaunchAt) {
+            $LaunchAt = (Get-Date).AddMinutes(-5)
+        }
+        $evt = Get-WindowsCrashEvent -Since $LaunchAt
         if ($evt) {
             $msg = ($evt.Message -replace '\s+', ' ').Trim()
             if ($msg.Length -gt 400) {
@@ -3360,6 +3550,29 @@ function Get-CrashDetailInfo {
         }
     } catch { }
     return ''
+}
+
+function Send-PostLaunchCrashReport {
+    param($MinecraftProcess, [Nullable[datetime]]$LaunchAt, [string]$Content)
+    $gcReason = Get-CrashDetailInfo -MinecraftProcess $MinecraftProcess -LaunchAt $LaunchAt
+    $gcHint = Get-WinmmCorruptHint -Content $Content
+    if ($gcHint) {
+        $gcReason = $gcReason + ' | ' + $gcHint
+    }
+    Send-MbuFailureReport -Trigger 'game_crashed' -Reason $gcReason
+    Write-Host ''
+    Write-Host ("  " + (T 'crash_offer')) -ForegroundColor Yellow
+    $crashAns = Read-Host ("  " + (T 'crash_ask'))
+    if ($crashAns -match '^[syo]') {
+        try {
+            Restore-Original -NoLaunch
+            Write-Host ("  " + (T 'crash_removed')) -ForegroundColor Green
+        } catch {
+            Write-Host ("  " + $_.Exception.Message) -ForegroundColor Red
+        }
+    } else {
+        Write-Host ("  " + (T 'crash_kept')) -ForegroundColor DarkGray
+    }
 }
 
 function Test-PriorUnlockEvidence {
