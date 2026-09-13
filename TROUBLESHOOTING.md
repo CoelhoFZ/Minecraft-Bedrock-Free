@@ -45,17 +45,46 @@ those localized messages inside the .bat file itself and therefore produced the
 same symptom - an old copy downloaded from this repository (or from an old
 release) can fail with those errors. Since v4.9.6 the file is pure ASCII again.
 If you see this with a copy that came from here, re-download `install.bat` from
-the [Releases](https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases) page.
+the [newest release](https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/install.bat).
 
 How to recover:
 
 1. Do not run that file again and do not trust wherever it came from.
 2. Delete it and use one of the two official install methods only:
    - `irm https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/i.ps1 | iex` in PowerShell, or
-   - the official `install.bat` from the repository page or from the
-     [Releases](https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases) page.
+   - the official `install.bat` from the
+     [newest release](https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/install.bat).
 3. The official bootstrap file is `i.ps1`. There is no `e.ps1` in this
    repository, so any guide telling you to run `e.ps1` is outdated or fake.
+
+## "ERRO: o hash do menu.ps1 baixado nao confere com o esperado" (hash mismatch from install.bat)
+
+The `install.bat` you ran carries the fingerprint of the `menu.ps1` that was
+current when that release was built, and it downloads `menu.ps1` from the `main`
+branch of this repository. Every later release that changed `menu.ps1` turns an
+older `install.bat` into a refusal: it stops instead of running a menu it was
+not built with. The copy can be official and still fail - an outdated download
+is enough (the Releases page lists old versions side by side).
+
+How to recover:
+
+1. Get the current `install.bat` (this link always serves the newest release):
+
+   <https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/install.bat>
+
+   or run in PowerShell (it always downloads the current menu):
+
+   ```powershell
+   irm https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/i.ps1 | iex
+   ```
+
+2. If you already downloaded the newest `install.bat`, wait a few minutes and
+   run it again. Right after an update the raw file server can still serve the
+   previous `menu.ps1` for a few minutes, and the check fails until it refreshes.
+3. If the file did not come from this repository, do not run it. The check is
+there to stop a `menu.ps1` that does not match the installer.
+
+This failure happens before the menu starts, so no automatic report is sent.
 
 ## "An object at the specified path does not exist: C:\Users\NAME~1" (temporary folder)
 
