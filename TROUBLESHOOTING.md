@@ -117,7 +117,9 @@ Since v4.9.15 the launch works differently:
 - Otherwise `powershell.exe` itself is elevated, not a helper script, and it
   runs the `menu.ps1` that was already verified by hash. If that elevated
   process fails or never starts, the original window stays open and prints the
-  real error.
+  real error. Since v4.9.16 that elevated process is started by `cmd.exe`, so
+  the new window keeps the default black console background instead of the blue
+  background Windows stores for `powershell.exe`.
 - The bootstrap writes a small log next to the downloaded menu, in `%TEMP%`,
   called `mbu-bootstrap.log`. It records each step, including the failure.
 

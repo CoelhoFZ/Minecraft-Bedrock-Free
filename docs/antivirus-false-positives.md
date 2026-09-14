@@ -127,4 +127,32 @@ The DLL it needs is no longer a valid file. To fix it:
 2. Run the installer again. It writes a verified copy and checks the hash
    again after copying.
 
+### If Defender blocks the command you typed instead of a file
+
+This one is not about the binary. If you start the installer by wrapping the
+official one-liner inside another PowerShell command, for example from a
+Command Prompt window:
+
+```
+powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/i.ps1 | iex"
+```
+
+Windows Defender can flag that **command line** as `Trojan:Win32/Commando.A!ml`
+and terminate the process before the installer runs. The detection names the
+`CmdLine` of `powershell.exe` as the affected resource, and the protection
+history shows the remediation applied to the process, not to a file. Downloading
+a script and running it in the same line is the pattern that heuristic reacts
+to, so the block is about the command, not about the files of this project.
+
+Use one of the two official entries directly, with no wrapper around it:
+
+- In PowerShell:
+  `irm https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/i.ps1 | iex`
+- The `install.bat` published on the
+  [release page](https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest)
+
+If the notification appears again, choose "Allow on device" in the Defender
+notification, or add the exclusion described above. After the installer runs,
+`%TEMP%\mbu-bootstrap.log` records each step of the launch.
+
 See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for these and other problems.

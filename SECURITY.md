@@ -55,6 +55,11 @@ Fake "unlocker fix" installers are being distributed in Discord chats:
   run the menu text that was already verified by hash. The elevated window writes a
   `stage=child-started` marker to `%TEMP%\mbu-bootstrap.log`, and when that marker does not
   arrive the original window stays open with the real error instead of closing silently.
+- Since **v4.9.16** the elevated process is created by `cmd.exe`
+  (`cmd.exe /d /c powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand ...`), so the
+  new window uses the default console colors instead of the colors saved for `powershell.exe`,
+  and a window that is already elevated sets its own title and background before the menu runs.
+  The pin rule, the encoded menu text and the `stage=child-started` marker are unchanged.
 - The binary is pinned too: the menu only accepts the exact SHA-256 of `release/winmm.dll`
   published in `SHA256SUMS.txt` (previous builds are recognized as "already unlocked" so users
   who installed an older build keep working).
