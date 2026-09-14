@@ -468,6 +468,23 @@ Compare against the hash published in
 [`SHA256SUMS.txt`](https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/blob/main/SHA256SUMS.txt).
 If it does not match, the file was modified. Reinstall.
 
+## "Minecraft Launcher package found, but the game files are missing" (v4.9.20+)
+
+On some machines the game is registered by the official Minecraft Launcher while
+the game files are not there yet. The package points to
+`%APPDATA%\.minecraft_bedrock\versions\<id>` and that folder has no
+`Minecraft.Windows.exe`. The installer finds the package, sees that the game
+executable is missing and stops with this message. Right above it the installer
+lists the folders it checked, so you can compare that list with where your game
+really is installed.
+
+**How to fix:** open the launcher you installed the game with, let it finish the
+installation (or use its verify/repair option), start the game once and close it,
+then run the installer again. If your copy comes from the Microsoft Store or the
+Xbox App, install it from there instead. The old wording for this case was only
+"Minecraft package found but the game executable is missing", which sent users to
+a full reinstall that was usually not necessary.
+
 ## FAQ
 
 ### How do I remove the unlock without the menu?

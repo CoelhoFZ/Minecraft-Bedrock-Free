@@ -378,7 +378,7 @@ if (-not $downloaded) {
     Read-Host (L 'press_enter_close')
     exit 1
 }
-$menuHash = '189a9716413e95609df419a54df06c29f421159bfeb08a682bdc3c9767342837'
+$menuHash = '68148b7d8857f1a10053dd02bd66a30a8114f9d7f3f842cdb1f86fb4aa3270ad'
 $menuBytes = [IO.File]::ReadAllBytes($menu)
 $clean = New-Object System.Collections.Generic.List[byte]
 foreach ($b in $menuBytes) {
@@ -464,7 +464,7 @@ function Send-MbuBootstrapReport {
             reason  = $Message
             report  = $diag
         } | ConvertTo-Json -Compress
-        Invoke-RestMethod -Uri $reportEndpoint -Method Post -ContentType 'application/json' -Body $body -TimeoutSec 10 | Out-Null
+        Invoke-RestMethod -Uri $reportEndpoint -Method Post -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($body)) -TimeoutSec 10 | Out-Null
         Write-Host ("  " + (L 'report_sent')) -ForegroundColor Green
     } catch {
         Write-Host ("  " + (L 'report_send_fail')) -ForegroundColor Yellow

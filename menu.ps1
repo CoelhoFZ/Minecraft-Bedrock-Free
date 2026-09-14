@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.19'
+$Script:Version = '4.9.20'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -18,7 +18,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.19'
+    '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.20'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
     'f7b1408c36590abbfcb5310cf98c1efb1fa16f3a54a9387df56b1441de90335b' = 'v4.4.1'
     '86689c9724be7f391ba9bd1f4ef8dddaa73baec0b76b9c73bebef89f37b76e97' = 'v4.3.0'
@@ -341,6 +341,8 @@ $Script:PT = @{
     'banner_build_note'  = 'Suporte apenas ao build OFICIAL (Store/Xbox App) na versao ATUAL. Launchers de terceiros e versoes antigas NAO sao suportados.'
     'err_content_not_found' = 'Content do Minecraft nao encontrado. Instale o Minecraft pelo Xbox App ou pela Microsoft Store e tente de novo.'
     'err_package_incomplete' = 'Pacote do Minecraft encontrado, mas o executavel esta faltando. Reinstale o Minecraft e tente de novo.'
+    'err_package_launcher' = 'Pacote do Minecraft Launcher encontrado, mas os arquivos do jogo estao faltando. Abra o Minecraft Launcher, deixe ele terminar ou verificar a instalacao, e rode o instalador de novo.'
+    'probe_list'         = 'Pastas verificadas: {0}'
     'closing_mc'         = 'Fechando Minecraft...'
     'downloading_bin'    = 'Baixando o binario (winmm.dll)...'
     'retry_download'     = 'Falha temporaria de rede no download (ex.: 503 do servidor). Tentando novamente ({0}/{1})...'
@@ -652,6 +654,24 @@ $Script:I18N = @{
         fr='Le package Minecraft est présent, mais l''exécutable du jeu est manquant. Réinstallez Minecraft et réessayez.'
         ar='تم العثور على حزمة Minecraft، لكن ملف تشغيل اللعبة مفقود. أعد تثبيت Minecraft وحاول مرة أخرى.'
         ru='Пакет Minecraft найден, но исполняемый файл игры отсутствует. Переустановите Minecraft и попробуйте снова.'
+    }
+    'err_package_launcher' = @{
+        en='Minecraft Launcher package found, but the game files are missing. Open the Minecraft Launcher, let it finish or verify the installation, then run this installer again.'
+        zh='找到了 Minecraft Launcher 包，但游戏文件缺失。请打开 Minecraft Launcher，让它完成或验证安装，然后重新运行安装程序。'
+        hi='Minecraft Launcher का पैकेज मिला, लेकिन गेम फ़ाइलें मौजूद नहीं हैं। Minecraft Launcher खोलें, उसे इंस्टॉलेशन पूरा करने या जाँचने दें, फिर यह इंस्टॉलर दोबारा चलाएँ।'
+        es='Se encontró el paquete del Minecraft Launcher, pero faltan los archivos del juego. Abre el Minecraft Launcher, deja que termine o verifique la instalación y vuelve a ejecutar este instalador.'
+        fr='Le package du Minecraft Launcher est présent, mais les fichiers du jeu sont manquants. Ouvrez le Minecraft Launcher, laissez-le terminer ou vérifier l''installation, puis relancez cet installateur.'
+        ar='تم العثور على حزمة Minecraft Launcher، لكن ملفات اللعبة مفقودة. افتح Minecraft Launcher واتركه يكمل التثبيت أو يتحقق منه، ثم شغّل هذا المثبّت مرة أخرى.'
+        ru='Найден пакет Minecraft Launcher, но файлы игры отсутствуют. Откройте Minecraft Launcher, дождитесь завершения или проверки установки и снова запустите этот установщик.'
+    }
+    'probe_list' = @{
+        en='Folders checked: {0}'
+        zh='已检查的文件夹：{0}'
+        hi='जाँचे गए फ़ोल्डर: {0}'
+        es='Carpetas verificadas: {0}'
+        fr='Dossiers vérifiés : {0}'
+        ar='المجلدات التي تم فحصها: {0}'
+        ru='Проверенные папки: {0}'
     }
     'closing_mc' = @{
         en='Closing Minecraft...'
@@ -1940,6 +1960,14 @@ function Get-MinecraftCandidates {
     return $list
 }
 
+function Test-LauncherPayloadPath {
+    param([string]$Path)
+    if (-not $Path) {
+        return $false
+    }
+    return ($Path -like '*\.minecraft_bedrock\*')
+}
+
 function Find-MinecraftContent {
     try {
         $proc = Get-Process Minecraft.Windows -ErrorAction SilentlyContinue | Select-Object -First 1
@@ -1955,11 +1983,28 @@ function Find-MinecraftContent {
             return $c
         }
     }
+    $seen = New-Object System.Collections.Generic.List[string]
+    foreach ($c in Get-MinecraftCandidates) {
+        if ($c -and (Test-Path -LiteralPath $c)) {
+            $seen.Add($c)
+        }
+    }
+    if ($seen.Count -gt 0) {
+        Write-Host ''
+        Write-Host (('  ' + (T 'probe_list')) -replace '\{0\}', ($seen -join ' | ')) -ForegroundColor DarkGray
+    }
     $hasAppx = $false
+    $appxLoc = ''
     try {
         $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction SilentlyContinue | Select-Object -First 1
-        $hasAppx = [bool]($appx -and $appx.InstallLocation)
+        if ($appx -and $appx.InstallLocation) {
+            $hasAppx = $true
+            $appxLoc = [string]$appx.InstallLocation
+        }
     } catch { }
+    if ($hasAppx -and (Test-LauncherPayloadPath -Path $appxLoc)) {
+        throw (T 'err_package_launcher')
+    }
     if ($hasAppx) {
         throw (T 'err_package_incomplete')
     }
@@ -3852,7 +3897,7 @@ function Send-MbuFailureReport {
             reason  = $Reason
             report  = $report
         } | ConvertTo-Json -Compress
-        Invoke-RestMethod -Uri $reportEndpoint -Method Post -ContentType 'application/json' -Body $body -TimeoutSec 10 | Out-Null
+        Invoke-RestMethod -Uri $reportEndpoint -Method Post -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes($body)) -TimeoutSec 10 | Out-Null
         Write-Host ("  " + (T 'report_sent')) -ForegroundColor Green
     } catch {
         Write-Host ("  " + (T 'report_send_fail')) -ForegroundColor Yellow
