@@ -378,7 +378,7 @@ if (-not $downloaded) {
     Read-Host (L 'press_enter_close')
     exit 1
 }
-$menuHash = '62177f0375bf540c150637a78e5917a5e42ec99d020a8afc0f4cc0daa8015f39'
+$menuHash = '189a9716413e95609df419a54df06c29f421159bfeb08a682bdc3c9767342837'
 $menuBytes = [IO.File]::ReadAllBytes($menu)
 $clean = New-Object System.Collections.Generic.List[byte]
 foreach ($b in $menuBytes) {
@@ -439,7 +439,7 @@ function Send-MbuBootstrapReport {
     param([string]$Message)
     try {
         $answer = Read-Host ("  " + (L 'report_ask'))
-        if ($answer -notmatch '^[syo]') {
+        if (([string]$answer) -notmatch '^[syo]') {
             Write-Host ("  " + (L 'report_not_sent')) -ForegroundColor DarkGray
             return
         }

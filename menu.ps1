@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.18'
+$Script:Version = '4.9.19'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -18,7 +18,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.18'
+    '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.19'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
     'f7b1408c36590abbfcb5310cf98c1efb1fa16f3a54a9387df56b1441de90335b' = 'v4.4.1'
     '86689c9724be7f391ba9bd1f4ef8dddaa73baec0b76b9c73bebef89f37b76e97' = 'v4.3.0'
@@ -141,6 +141,67 @@ function Get-PeMachineType {
         }
     } catch {
         return 0
+    }
+}
+
+function Get-GameMachineType {
+    param([string]$Content)
+    $machine = 0
+    try {
+        $machine = Get-PeMachineType -Path (Join-Path $Content 'Minecraft.Windows.exe')
+    } catch { }
+    if ($machine -ne 0) {
+        return @{
+            machine = $machine
+            source = 'pe'
+        }
+    }
+    if ($Content -match '_arm64__') {
+        return @{
+            machine = 0xAA64
+            source = 'path'
+        }
+    }
+    if ($Content -match '_x64__') {
+        return @{
+            machine = 0x8664
+            source = 'path'
+        }
+    }
+    if ($Content -match '_x86__') {
+        return @{
+            machine = 0x014C
+            source = 'path'
+        }
+    }
+    try {
+        $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction Stop | Select-Object -First 1
+        if ($appx -and $appx.Architecture) {
+            switch ([string]$appx.Architecture) {
+                'X64' {
+                    return @{
+                        machine = 0x8664
+                        source = 'appx'
+                    }
+                }
+                'Arm64' {
+                    return @{
+                        machine = 0xAA64
+                        source = 'appx'
+                    }
+                }
+                'X86' {
+                    return @{
+                        machine = 0x014C
+                        source = 'appx'
+                    }
+                }
+            }
+        }
+    } catch { }
+    return @{
+        machine = 0x8664
+        source = 'assumed'
     }
 }
 
@@ -317,8 +378,8 @@ $Script:PT = @{
     'choose_option'      = 'Escolha uma opcao'
     'invalid_option'     = 'Opcao invalida.'
     'press_enter'        = 'Pressione ENTER para continuar'
-    'arch_line'          = 'Build do jogo detectado: {0} (Machine={1})'
-    'arch_unknown'       = 'Nao foi possivel ler o build do jogo no executavel, assumindo x64.'
+    'arch_line'          = 'Arquitetura do jogo detectada: {0} (Machine={1})'
+    'arch_unknown'       = 'Nao foi possivel detectar a arquitetura do jogo, assumindo x64.'
     'arm64_detected'     = '[ARM64] PC Windows on ARM detectado: usando o unlocker nativo ARM64 (BETA).'
     'arm64_no_release'   = '[ARM64] O build ARM64 ainda nao foi publicado nesta release.'
     'arm64_hash_skipped' = '[ARM64] Verificacao de hash indisponivel nesta fase beta.'
@@ -422,6 +483,9 @@ $Script:PT = @{
     'report_send_fail'      = 'Nao foi possivel enviar o relatorio automaticamente.'
     'report_av_removed'     = 'O winmm.dll foi removido ou corrompido logo apos a instalacao (antivirus?).'
     'report_checking'       = 'Verificando se o Minecraft abriu corretamente...'
+    'launch_ok'             = 'Minecraft aberto e rodando normalmente.'
+    'launch_unconfirmed'    = 'Nao consegui confirmar que o jogo abriu. Verifique a janela do Minecraft.'
+    'gate_tested_ok'        = 'Versao do jogo: {0} (testada)'
 }
 
 $Script:I18N = @{
@@ -815,22 +879,22 @@ $Script:I18N = @{
         ru='Нажмите Enter для продолжения...'
     }
     'arch_line' = @{
-        en='Detected game build: {0} (Machine={1})'
-        zh='检测到的游戏构建：{0}（Machine={1}）'
-        hi='गेम बिल्ड पहचाना गया: {0} (Machine={1})'
-        es='Build del juego detectado: {0} (Machine={1})'
-        fr='Build du jeu détecté : {0} (Machine={1})'
-        ar='إصدار اللعبة المكتشف: {0} (Machine={1})'
-        ru='Обнаружена сборка игры: {0} (Machine={1})'
+        en='Detected game architecture: {0} (Machine={1})'
+        zh='检测到的游戏架构：{0}（Machine={1}）'
+        hi='गेम आर्किटेक्चर पहचाना गया: {0} (Machine={1})'
+        es='Arquitectura del juego detectada: {0} (Machine={1})'
+        fr='Architecture du jeu détectée : {0} (Machine={1})'
+        ar='تم اكتشاف معمارية اللعبة: {0} (Machine={1})'
+        ru='Обнаружена архитектура игры: {0} (Machine={1})'
     }
     'arch_unknown' = @{
-        en='Could not read the game build from the executable, assuming x64.'
-        zh='无法从可执行文件读取游戏构建，将按 x64 处理。'
-        hi='एक्ज़ीक्यूटेबल से गेम बिल्ड नहीं पढ़ा जा सका, x64 मान लिया जा रहा है।'
-        es='No se pudo leer la build del juego desde el ejecutable, se asume x64.'
-        fr='Impossible de lire la build du jeu depuis l''exécutable, x64 supposé.'
-        ar='تعذر قراءة إصدار اللعبة من الملف التنفيذي، سيتم افتراض x64.'
-        ru='Не удалось прочитать сборку игры из исполняемого файла, используется x64.'
+        en='Could not detect the game architecture, assuming x64.'
+        zh='无法检测到游戏架构，将按 x64 处理。'
+        hi='गेम आर्किटेक्चर का पता नहीं चला, x64 मान लिया जा रहा है।'
+        es='No se pudo detectar la arquitectura del juego, se asume x64.'
+        fr='Impossible de détecter l''architecture du jeu, x64 supposé.'
+        ar='تعذر اكتشاف معمارية اللعبة، سيتم افتراض x64.'
+        ru='Не удалось определить архитектуру игры, используется x64.'
     }
     'arm64_detected' = @{
         en='[ARM64] Windows on ARM PC detected: using the native ARM64 unlocker (BETA).'
@@ -1759,6 +1823,33 @@ $Script:I18N = @{
         ar='جارٍ التحقق من فتح Minecraft بشكل صحيح...'
         ru='Проверяем, что Minecraft открылся корректно...'
     }
+    'launch_ok' = @{
+        en='Minecraft opened and is running normally.'
+        es='Minecraft se abrió y está funcionando correctamente.'
+        fr='Minecraft s''est ouvert et fonctionne normalement.'
+        zh='Minecraft 已打开并正常运行。'
+        hi='Minecraft खुल गया और सामान्य रूप से चल रहा है।'
+        ar='تم فتح Minecraft وهو يعمل بشكل طبيعي.'
+        ru='Minecraft открылся и работает нормально.'
+    }
+    'launch_unconfirmed' = @{
+        en='Could not confirm that the game opened. Check the Minecraft window.'
+        es='No se pudo confirmar que el juego se abrió. Revisa la ventana de Minecraft.'
+        fr='Impossible de confirmer que le jeu s''est ouvert. Vérifiez la fenêtre de Minecraft.'
+        zh='无法确认游戏是否已打开。请检查 Minecraft 窗口。'
+        hi='यह पुष्टि नहीं हो सकी कि गेम खुला। Minecraft विंडो देखें।'
+        ar='تعذر تأكيد فتح اللعبة. تحقق من نافذة Minecraft.'
+        ru='Не удалось подтвердить, что игра открылась. Проверьте окно Minecraft.'
+    }
+    'gate_tested_ok' = @{
+        en='Game version: {0} (tested)'
+        es='Versión del juego: {0} (probada)'
+        fr='Version du jeu : {0} (testée)'
+        zh='游戏版本：{0}（已测试）'
+        hi='गेम संस्करण: {0} (परीक्षित)'
+        ar='إصدار اللعبة: {0} (تم اختباره)'
+        ru='Версия игры: {0} (протестирована)'
+    }
 }
 
 function T {
@@ -2077,7 +2168,7 @@ function Test-GameVersionTested {
 function Test-InstallGate {
     param([string]$Content)
     $Script:GateDiag = New-Object System.Collections.Generic.List[string]
-    if ((Get-PeMachineType -Path (Join-Path $Content 'Minecraft.Windows.exe')) -eq 0xAA64) {
+    if ((Get-GameMachineType -Content $Content).machine -eq 0xAA64) {
         $Script:GateDiag.Add('arch=arm64 result=skipped')
         return $true
     }
@@ -2087,7 +2178,7 @@ function Test-InstallGate {
         Write-Host ''
         Write-Host ("  " + (T 'gate_unknown_ver')) -ForegroundColor Red
         $ans = Read-Host ("  " + (T 'gate_ask'))
-        if ($ans -notmatch '^[syo]') {
+        if (([string]$ans) -notmatch '^[syo]') {
             $Script:GateDiag.Add('result=aborted-unknown-version')
             Write-Host ("  " + (T 'gate_decline_hint')) -ForegroundColor DarkGray
             return $false
@@ -2101,7 +2192,7 @@ function Test-InstallGate {
         Write-Host ''
         Write-Host ("  " + ((T 'gate_list_unavailable') -replace '\{0\}', $ver)) -ForegroundColor Red
         $ans = Read-Host ("  " + (T 'gate_ask'))
-        if ($ans -notmatch '^[syo]') {
+        if (([string]$ans) -notmatch '^[syo]') {
             $Script:GateDiag.Add('result=aborted-list-unavailable')
             Write-Host ("  " + (T 'gate_decline_hint')) -ForegroundColor DarkGray
             return $false
@@ -2116,6 +2207,7 @@ function Test-InstallGate {
         return $false
     }
     $Script:GateDiag.Add("version=$ver result=tested")
+    Write-Host (("  " + (T 'gate_tested_ok')) -replace '\{0\}', $ver) -ForegroundColor Green
     return $true
 }
 
@@ -2151,8 +2243,9 @@ function Test-UnlockInstalled {
     try {
         $actual = Get-SafeFileHash -Path $winmm
         $info.hash = $actual
-        $machine = Get-PeMachineType -Path (Join-Path $content 'Minecraft.Windows.exe')
-        if (-not $machine) {
+        $machineInfo = Get-GameMachineType -Content $content
+        $machine = $machineInfo.machine
+        if ($machineInfo.source -eq 'assumed') {
             $info.installed = ($knownUnlockHashes -contains $actual) -or
                               ($knownUnlockHashesArm64 -contains $actual) -or
                               ($expectedHash -eq $actual) -or
@@ -2537,7 +2630,7 @@ function Install-Unlocker {
         return
     }
 
-    if ((Get-PeMachineType -Path (Join-Path $content 'Minecraft.Windows.exe')) -eq 0xAA64) {
+    if ((Get-GameMachineType -Content $content).machine -eq 0xAA64) {
         $armPublicado = $true
         try {
             Invoke-WebRequest -UseBasicParsing -Method Head -Uri "$base/release/winmm-arm64.dll" -TimeoutSec 10 | Out-Null
@@ -2580,11 +2673,9 @@ function Install-Unlocker {
         } else {
             Write-Host ((T 'av_exclusion_fail') -replace '\{0\}', "$tmp`n$content") -ForegroundColor Yellow
         }
-        $machine = Get-PeMachineType -Path (Join-Path $content 'Minecraft.Windows.exe')
-        $machineReadOk = ($machine -ne 0)
-        if (-not $machineReadOk) {
-            $machine = 0x8664
-        }
+        $machineInfo = Get-GameMachineType -Content $content
+        $machine = $machineInfo.machine
+        $machineReadOk = ($machineInfo.source -ne 'assumed')
         $isArm = ($machine -eq 0xAA64)
         $archLabel = if ($machine -eq 0xAA64) {
             'ARM64'
@@ -2785,8 +2876,13 @@ function Install-Unlocker {
                 return
             }
         } catch { }
-        if (Test-PostLaunchCrash -MinecraftProcess $mc.proc -LaunchAt $launchAt) {
+        $postLaunch = Test-PostLaunchCrash -MinecraftProcess $mc.proc -LaunchAt $launchAt
+        if ($postLaunch.crashed) {
             Send-PostLaunchCrashReport -MinecraftProcess $mc.proc -LaunchAt $launchAt -Content $content
+        } elseif ($postLaunch.verdict -eq 'running') {
+            Write-Host (T 'launch_ok') -ForegroundColor Green
+        } else {
+            Write-Host ("  " + (T 'launch_unconfirmed')) -ForegroundColor Yellow
         }
     } finally {
         Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
@@ -3184,7 +3280,7 @@ function Get-DiagReportText {
         if ($appx -and $appx.PackageFullName) {
             $lines.Add("$(T 'diag_pkg'): $($appx.PackageFullName) | Arch=$($appx.Architecture) | v$($appx.Version)")
         }
-        $machine = Get-PeMachineType -Path (Join-Path $content 'Minecraft.Windows.exe')
+        $machine = (Get-GameMachineType -Content $content).machine
         $arch = if ($machine -eq 0xAA64) {
             'ARM64'
         } elseif ($machine -eq 0x8664) {
@@ -3455,7 +3551,10 @@ function Test-PostLaunchCrash {
     try {
         $deadline = (Get-Date).AddSeconds($waitStart)
     } catch {
-        return $false
+        return @{
+            crashed = $false
+            verdict = 'unknown'
+        }
     }
     while ((Get-Date) -lt $deadline) {
         if ($gdk) {
@@ -3464,13 +3563,23 @@ function Test-PostLaunchCrash {
                 if ($MinecraftProcess.HasExited) {
                     $code = 0
                     try {
-                        $code = [uint32]$MinecraftProcess.ExitCode
+                        $code = [int64]$MinecraftProcess.ExitCode
                     } catch { }
-                    $Script:CrashDiag.Add('evidence=process-exit code=0x{0:X8}' -f $code)
-                    return ($code -ne 0)
+                    $Script:CrashDiag.Add('evidence=process-exit code=0x{0:X8}' -f ([int64]$code -band 0xFFFFFFFFL))
+                    $verdict = 'closed'
+                    if ($code -ne 0) {
+                        $verdict = 'crash'
+                    }
+                    return @{
+                        crashed = ($code -ne 0)
+                        verdict = $verdict
+                    }
                 }
             } catch {
-                return $false
+                return @{
+                    crashed = $false
+                    verdict = 'unknown'
+                }
             }
         } else {
             $live = @(Get-Process Minecraft.Windows -ErrorAction SilentlyContinue | Select-Object -First 1)
@@ -3486,29 +3595,57 @@ function Test-PostLaunchCrash {
                     $seenAt = Get-Date
                 } elseif ($seenAt -and ($aliveAfter -gt 0) -and (((Get-Date) - $seenAt).TotalSeconds -ge $aliveAfter)) {
                     $Script:CrashDiag.Add('evidence=none process-still-running')
-                    return $false
+                    return @{
+                        crashed = $false
+                        verdict = 'running'
+                    }
                 }
             } elseif ($everSeen) {
                 $Script:CrashDiag.Add('evidence=wer elapsed=' + (Get-CrashElapsed -Since $LaunchAt) + 's')
-                return (Test-WindowsCrashEvent -Since $LaunchAt)
+                $crashed = Test-WindowsCrashEvent -Since $LaunchAt
+                $verdict = 'closed'
+                if ($crashed) {
+                    $verdict = 'crash'
+                }
+                return @{
+                    crashed = $crashed
+                    verdict = $verdict
+                }
             }
         }
         Start-Sleep -Seconds 1
     }
     if ($gdk) {
         $Script:CrashDiag.Add('evidence=none process-still-running')
-        return $false
+        return @{
+            crashed = $false
+            verdict = 'running'
+        }
     }
     if (Get-Process Minecraft.Windows -ErrorAction SilentlyContinue) {
         $Script:CrashDiag.Add('evidence=none process-still-running')
-        return $false
+        return @{
+            crashed = $false
+            verdict = 'running'
+        }
     }
     if (-not $everSeen) {
         $Script:CrashDiag.Add('evidence=none process-never-seen wait=' + $waitStart + 's')
-        return $false
+        return @{
+            crashed = $false
+            verdict = 'never-seen'
+        }
     }
     $Script:CrashDiag.Add('evidence=wer elapsed=' + (Get-CrashElapsed -Since $LaunchAt) + 's')
-    return (Test-WindowsCrashEvent -Since $LaunchAt)
+    $crashed = Test-WindowsCrashEvent -Since $LaunchAt
+    $verdict = 'closed'
+    if ($crashed) {
+        $verdict = 'crash'
+    }
+    return @{
+        crashed = $crashed
+        verdict = $verdict
+    }
 }
 
 function Get-CrashDetailInfo {
@@ -3517,9 +3654,12 @@ function Get-CrashDetailInfo {
         if ($null -ne $MinecraftProcess) {
             $MinecraftProcess.Refresh()
             if ($MinecraftProcess.HasExited) {
-                $code = [uint32]$MinecraftProcess.ExitCode
+                $code = 0
+                try {
+                    $code = [int64]$MinecraftProcess.ExitCode
+                } catch { }
                 if ($code) {
-                    return ('exit code: 0x{0:X8}' -f $code)
+                    return ('exit code: 0x{0:X8}' -f ([int64]$code -band 0xFFFFFFFFL))
                 }
             }
         }
@@ -3636,7 +3776,7 @@ function Get-WinmmCorruptHint {
         if (-not $w.peValid) {
             $parts += ('winmm.dll not a valid PE (size ' + $w.size + ' B) - truncated/corrupt?')
         } else {
-            $gm = Get-PeMachineType -Path (Join-Path $Content 'Minecraft.Windows.exe')
+            $gm = (Get-GameMachineType -Content $Content).machine
             if ($gm -and $w.peMachine -and ($gm -ne $w.peMachine)) {
                 $parts += ('PE arch ' + $w.peLabel + ' but game PE arch differs')
             }
@@ -3694,7 +3834,7 @@ function Send-MbuFailureReport {
             Write-Host ("  " + (T ('report_trigger_' + $Trigger))) -ForegroundColor Yellow
         }
         $answer = Read-Host ("  " + (T 'report_ask'))
-        if ($answer -notmatch '^[syo]') {
+        if (([string]$answer) -notmatch '^[syo]') {
             Write-Host ("  " + (T 'report_not_sent')) -ForegroundColor DarkGray
             return
         }
