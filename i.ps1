@@ -378,7 +378,7 @@ if (-not $downloaded) {
     Read-Host (L 'press_enter_close')
     exit 1
 }
-$menuHash = '90eba1beb140716a7061d1cd270d3eba6c963e8bdc99ceab4fea22eecffd3115'
+$menuHash = 'd948d6186923fe76da0c4c60a3ac1206c53b5059643fc9162ceccd9fe55749dd'
 $menuBytes = [IO.File]::ReadAllBytes($menu)
 $clean = New-Object System.Collections.Generic.List[byte]
 foreach ($b in $menuBytes) {
@@ -487,8 +487,38 @@ function Show-MbuLaunchFailure {
     exit 1
 }
 
+function Set-MbuConsoleLook {
+    $before = 'unknown'
+    try {
+        $before = [string]$Host.UI.RawUI.BackgroundColor
+    } catch { }
+    $painted = $false
+    try {
+        $rawUi = $Host.UI.RawUI
+        if ($rawUi) {
+            $rawUi.WindowTitle = 'Minecraft Bedrock Free'
+        }
+    } catch { }
+    try {
+        $rawUi = $Host.UI.RawUI
+        if ($rawUi) {
+            $rawUi.BackgroundColor = 'Black'
+            $painted = $true
+        }
+    } catch { }
+    try {
+        Clear-Host
+    } catch { }
+    if ($painted) {
+        Add-MbuLog ('stage=console-black from=' + $before)
+    } else {
+        Add-MbuLog ('stage=console-kept from=' + $before)
+    }
+}
+
 if ($isAdmin) {
     Add-MbuLog 'stage=launch-in-place'
+    Set-MbuConsoleLook
     try {
         iex $menuText
     } catch {
@@ -502,6 +532,9 @@ if ($isAdmin) {
     $enterLit = "'" + (L 'press_enter_close').Replace("'", "''") + "'"
     $childLines = @(
         ('$host.UI.RawUI.WindowTitle = ''Minecraft Bedrock Free''')
+        ('try { [IO.File]::AppendAllText(' + $logLit + ', ((Get-Date).ToString("yyyy-MM-dd HH:mm:ss") + " run=' + $runId + ' stage=child-console from=" + [string]$host.UI.RawUI.BackgroundColor + [Environment]::NewLine)) } catch { }')
+        ('try { $host.UI.RawUI.BackgroundColor = ''Black'' } catch { }')
+        ('try { Clear-Host } catch { }')
         ('$p = ' + $menuLit)
         ('[IO.File]::AppendAllText(' + $logLit + ', ((Get-Date).ToString("yyyy-MM-dd HH:mm:ss") + " run=' + $runId + ' stage=child-started pid=" + $PID + [Environment]::NewLine))')
         ('try {')
@@ -516,9 +549,17 @@ if ($isAdmin) {
     )
     $childText = $childLines -join [Environment]::NewLine
     $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($childText))
-    Add-MbuLog 'stage=launch-elevate'
+    $cmdExe = Join-Path $env:SystemRoot 'System32\cmd.exe'
+    if (-not (Test-Path -LiteralPath $cmdExe)) {
+        $cmdExe = 'cmd.exe'
+    }
+    $psHost = $psExe
+    if ($psHost -match '\s') {
+        $psHost = 'powershell.exe'
+    }
+    Add-MbuLog 'stage=launch-elevate host=cmd'
     try {
-        Start-Process -FilePath $psExe -Verb RunAs -ArgumentList '-NoProfile', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', $encoded
+        Start-Process -FilePath $cmdExe -Verb RunAs -ArgumentList ('/d /c ' + $psHost + ' -NoProfile -ExecutionPolicy Bypass -EncodedCommand ' + $encoded)
         $started = $null
         $attempt = 0
         while ($attempt -lt 12) {
