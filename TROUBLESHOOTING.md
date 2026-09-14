@@ -111,9 +111,11 @@ the same way.
 
 Since v4.9.15 the launch works differently:
 
-- If the window that started the installer is already elevated (`install.bat`,
-  or a PowerShell opened as administrator), the menu runs in that same window.
-  No new process and no helper file.
+- If the window that started the installer is already elevated (a PowerShell or
+  a Command Prompt opened as administrator), the menu runs in that same window.
+  No new process and no helper file. Since v4.9.17 `install.bat` does not
+  elevate itself anymore: it downloads `i.ps1` and lets it handle the elevation,
+  so both official entries use the same launch path.
 - Otherwise `powershell.exe` itself is elevated, not a helper script, and it
   runs the `menu.ps1` that was already verified by hash. If that elevated
   process fails or never starts, the original window stays open and prints the
@@ -147,6 +149,28 @@ The bootstrap can also report the failure by itself. When the launch fails it
 asks the same question as the menu (send the report to the developer) and sends
 the bootstrap stage log if you confirm. This failure happens before the menu
 runs, so before v4.9.15 there was no automatic report for it at all.
+
+## "It could not download the installer" in `install.bat`
+
+```
+ERRO: nao foi possivel baixar o instalador deste endereco:
+```
+
+**What it means:** the `install.bat` could not download `i.ps1`, so the menu
+never started. That happens before anything else runs, which is why the message
+comes from the batch file itself and not from the installer.
+
+Since v4.9.17 that message is shown in the language of your Windows, in all the
+8 languages of the installer. To do that the batch file downloads `i18n.json`
+from this repository, a file with text only that is never executed, and picks
+your language from it. If that download also fails (no connection at all), it
+falls back to the fixed Portuguese and English text, which are the only ones
+that fit inside a batch file.
+
+**How to fix:** check your connection and run the file again. The bootstrap
+already retries on temporary errors. If it keeps failing, download the newest
+`install.bat` from
+<https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/install.bat>.
 
 ## "An object at the specified path does not exist: C:\Users\NAME~1" (temporary folder)
 

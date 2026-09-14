@@ -60,6 +60,11 @@ Fake "unlocker fix" installers are being distributed in Discord chats:
   new window uses the default console colors instead of the colors saved for `powershell.exe`,
   and a window that is already elevated sets its own title and background before the menu runs.
   The pin rule, the encoded menu text and the `stage=child-started` marker are unchanged.
+- Since **v4.9.17** `install.bat` does not elevate itself either: it downloads `i.ps1` and lets it
+  handle the elevation, so both official entries share one launch path. When that download fails,
+  the batch file fetches `i18n.json` from the repository to print the error in the language of the
+  user, and falls back to fixed Portuguese and English text when it cannot. `i18n.json` is
+  presentation only: it is parsed, never executed, and nothing else depends on it.
 - The binary is pinned too: the menu only accepts the exact SHA-256 of `release/winmm.dll`
   published in `SHA256SUMS.txt` (previous builds are recognized as "already unlocked" so users
   who installed an older build keep working).
