@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.17'
+$Script:Version = '4.9.18'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -18,7 +18,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.17'
+    '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.18'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
     'f7b1408c36590abbfcb5310cf98c1efb1fa16f3a54a9387df56b1441de90335b' = 'v4.4.1'
     '86689c9724be7f391ba9bd1f4ef8dddaa73baec0b76b9c73bebef89f37b76e97' = 'v4.3.0'
@@ -306,7 +306,6 @@ $Script:PT = @{
     'nothing_to_restore' = 'O desbloqueio nao esta instalado (nada a restaurar).'
     'mc_started'         = 'Minecraft iniciado.'
     'mc_start_failed'    = 'Nao foi possivel iniciar o Minecraft automaticamente. Abra pelo menu Iniciar.'
-    'state_unlocked'     = 'O Minecraft ja esta DESBLOQUEADO.'
     'state_unlocked_hint'= 'Se quiser, escolha [1] para remover o desbloqueio e voltar a Trial.'
     'state_trial'        = 'O Minecraft esta na versao TRIAL.'
     'state_trial_hint'   = 'Escolha [1] para desbloquear o jogo completo.'
@@ -326,7 +325,6 @@ $Script:PT = @{
     'track_releases'     = 'Acompanhe novos releases em {0}'
     'state_unlocked_v'   = 'O Minecraft ja esta DESBLOQUEADO ({0}).'
     'state_older_hint'   = 'O unlock instalado ({0}) e mais antigo que este menu ({1}) - use [2] para atualizar.'
-    'tested_warning'     = 'Aviso: a versao do jogo {0} ainda NAO foi testada com este unlocker. Se algo falhar, reporte no Discord.'
     'gate_untested'      = 'Instalacao BLOQUEADA: a versao do jogo {0} nao foi testada com este unlocker e provavelmente nao funcionaria.'
     'gate_untested_hint' = 'Atualize o Minecraft pela Microsoft Store para a versao suportada e rode o instalador de novo.'
     'cache_used'         = 'Sem internet: usando copia local validada do binario ({0}).'
@@ -399,7 +397,6 @@ $Script:PT = @{
     'diag_cfa_on'           = 'LIGADO (bloqueia escrita de apps nao confiaveis)'
     'diag_cfa_off'          = 'desligado'
     'diag_cfa_unavail'      = 'indisponivel'
-    'diag_acl_deny_removed' = 'deny ACEs removidos'
     'diag_search'           = 'Estado da busca por Content do Minecraft'
     'diag_search_pkg'       = 'Pacote Microsoft.MinecraftUWP'
     'diag_search_noappx'    = 'nenhum pacote registrado'
@@ -718,15 +715,6 @@ $Script:I18N = @{
         ar='تعذّر تشغيل Minecraft تلقائيًا. افتحه من قائمة ابدأ.'
         ru='Не удалось запустить Minecraft автоматически. Откройте его из меню «Пуск».'
     }
-    'state_unlocked' = @{
-        en='Minecraft is already UNLOCKED.'
-        zh='Minecraft 已经解锁。'
-        hi='Minecraft पहले से अनलॉक है।'
-        es='Minecraft ya está DESBLOQUEADO.'
-        fr='Minecraft est déjà DÉBLOQUÉ.'
-        ar='Minecraft مفتوح بالفعل.'
-        ru='Minecraft уже РАЗБЛОКИРОВАН.'
-    }
     'state_unlocked_hint' = @{
         en='If you want, choose [1] to remove the unlock and go back to Trial.'
         zh='如果需要，请选择 [1] 移除解锁并恢复到试用版。'
@@ -897,15 +885,6 @@ $Script:I18N = @{
         fr='Le déverrouillage installé ({0}) est plus ancien que ce menu ({1}) - utilisez [2] pour mettre à jour.'
         ar='الفتح المثبّت ({0}) أقدم من هذه القائمة ({1}) - استخدم [2] للتحديث.'
         ru='Установленная разблокировка ({0}) старее этого меню ({1}) - используйте [2] для обновления.'
-    }
-    'tested_warning' = @{
-        en='Warning: game version {0} has NOT been tested with this unlocker yet. If anything fails, please report it on Discord.'
-        es='Aviso: la versión del juego {0} aún NO ha sido probada con este unlocker. Si algo falla, repórtalo en Discord.'
-        zh='警告：游戏版本 {0} 尚未经过此解锁器测试。如有问题，请在 Discord 上报告。'
-        hi='चेतावनी: गेम संस्करण {0} का अभी इस अनलॉकर से परीक्षण नहीं हुआ है। यदि कुछ विफल हो तो Discord पर रिपोर्ट करें।'
-        fr='Avertissement : la version {0} du jeu n''a pas encore été testée avec ce déverrouilleur. En cas de problème, signalez-le sur Discord.'
-        ar='تحذير: إصدار اللعبة {0} لم يُختبر بعد مع هذا الفاتح. إذا حدثت أي مشكلة، يُرجى الإبلاغ عنها على Discord.'
-        ru='Внимание: версия игры {0} ещё не протестирована с этим анлокером. Если что-то не работает, сообщите об этом в Discord.'
     }
     'gate_untested' = @{
         en='Installation BLOCKED: game version {0} has not been tested with this unlocker and would probably not work.'
@@ -1554,15 +1533,6 @@ $Script:I18N = @{
         hi='अनुपलब्ध'
         ar='غير متاح'
         ru='недоступно'
-    }
-    'diag_acl_deny_removed' = @{
-        en='deny ACEs removed'
-        es='ACEs de denegacion eliminados'
-        fr='ACE de refus supprimes'
-        zh='已移除拒绝 ACE'
-        hi='अस्वीकृत ACE हटाए गए'
-        ar='تمت إزالة إدخالات رفض ACE'
-        ru='запрещающие ACE удалены'
     }
     'diag_search' = @{
         en='Minecraft Content search state'
