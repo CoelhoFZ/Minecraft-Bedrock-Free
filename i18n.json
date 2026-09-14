@@ -1,0 +1,46 @@
+{
+  "_comment": "Mensagens do bootstrap (install.bat) nas 8 linguas. O install.bat baixa este arquivo SOMENTE quando o download do i.ps1 falha, para mostrar o erro no idioma do usuario. Se este arquivo tambem nao puder ser baixado, o install.bat cai nas mensagens fixas PT e EN, que sao as unicas que cabem nele (batch nao aceita texto fora de ASCII). Mantenha as chaves iguais em todas as linguas.",
+  "schema": 1,
+  "bootstrap": {
+    "pt": {
+      "download_failed": "ERRO: nao foi possivel baixar o instalador deste endereco:",
+      "latest_hint": "Verifique sua conexao com a internet e rode este arquivo de novo. Se o erro continuar, baixe o install.bat da versao mais recente neste link:",
+      "press_enter": "Pressione ENTER para fechar"
+    },
+    "en": {
+      "download_failed": "ERROR: could not download the installer from this address:",
+      "latest_hint": "Check your internet connection and run this file again. If it keeps failing, download the newest install.bat from the link below:",
+      "press_enter": "Press ENTER to close"
+    },
+    "es": {
+      "download_failed": "ERROR: no se pudo descargar el instalador desde esta direccion:",
+      "latest_hint": "Verifica tu conexion a internet y vuelve a ejecutar este archivo. Si el error continua, descarga el install.bat mas reciente en este enlace:",
+      "press_enter": "Pulsa ENTER para cerrar"
+    },
+    "fr": {
+      "download_failed": "ERREUR : impossible de telecharger l'installateur depuis cette adresse :",
+      "latest_hint": "Verifiez votre connexion internet et relancez ce fichier. Si l'erreur persiste, telechargez le install.bat le plus recent via ce lien :",
+      "press_enter": "Appuyez sur ENTER pour fermer"
+    },
+    "zh": {
+      "download_failed": "错误：无法从以下地址下载安装程序：",
+      "latest_hint": "请检查网络连接后重新运行此文件。如果仍然出错，请通过下面的链接下载最新的 install.bat：",
+      "press_enter": "按 ENTER 键关闭"
+    },
+    "hi": {
+      "download_failed": "त्रुटि: इस पते से इंस्टॉलर डाउनलोड नहीं हो सका:",
+      "latest_hint": "कृपया अपना इंटरनेट कनेक्शन जाँचें और यह फ़ाइल फिर से चलाएँ। यदि त्रुटि बनी रहे, तो नीचे दिए लिंक से नवीनतम install.bat डाउनलोड करें:",
+      "press_enter": "बंद करने के लिए ENTER दबाएँ"
+    },
+    "ar": {
+      "download_failed": "خطأ: تعذّر تنزيل المثبّت من هذا العنوان:",
+      "latest_hint": "تحقق من اتصالك بالإنترنت وشغّل هذا الملف مرة أخرى. إذا استمر الخطأ، نزّل أحدث install.bat من الرابط أدناه:",
+      "press_enter": "اضغط ENTER للإغلاق"
+    },
+    "ru": {
+      "download_failed": "ОШИБКА: не удалось скачать установщик с этого адреса:",
+      "latest_hint": "Проверьте подключение к интернету и запустите этот файл снова. Если ошибка повторяется, скачайте самый новый install.bat по ссылке ниже:",
+      "press_enter": "Нажмите ENTER для закрытия"
+    }
+  }
+}
