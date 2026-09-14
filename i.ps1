@@ -378,7 +378,7 @@ if (-not $downloaded) {
     Read-Host (L 'press_enter_close')
     exit 1
 }
-$menuHash = 'd948d6186923fe76da0c4c60a3ac1206c53b5059643fc9162ceccd9fe55749dd'
+$menuHash = '8296274b13556746ec1904f728918c3952e5e5c4b345ffdedd668237098789cc'
 $menuBytes = [IO.File]::ReadAllBytes($menu)
 $clean = New-Object System.Collections.Generic.List[byte]
 foreach ($b in $menuBytes) {
@@ -487,6 +487,23 @@ function Show-MbuLaunchFailure {
     exit 1
 }
 
+function Set-MbuConsoleWidth {
+    $target = 132
+    try {
+        $rawUi = $Host.UI.RawUI
+        if ($rawUi) {
+            $buf = $rawUi.BufferSize
+            if ($buf.Width -lt $target) {
+                $rawUi.BufferSize = New-Object System.Management.Automation.Host.Size($target, $buf.Height)
+            }
+            $win = $rawUi.WindowSize
+            if ($win.Width -ne $target) {
+                $rawUi.WindowSize = New-Object System.Management.Automation.Host.Size($target, $win.Height)
+            }
+        }
+    } catch { }
+}
+
 function Set-MbuConsoleLook {
     $before = 'unknown'
     try {
@@ -506,6 +523,7 @@ function Set-MbuConsoleLook {
             $painted = $true
         }
     } catch { }
+    Set-MbuConsoleWidth
     try {
         Clear-Host
     } catch { }
@@ -534,6 +552,13 @@ if ($isAdmin) {
         ('$host.UI.RawUI.WindowTitle = ''Minecraft Bedrock Free''')
         ('try { [IO.File]::AppendAllText(' + $logLit + ', ((Get-Date).ToString("yyyy-MM-dd HH:mm:ss") + " run=' + $runId + ' stage=child-console from=" + [string]$host.UI.RawUI.BackgroundColor + [Environment]::NewLine)) } catch { }')
         ('try { $host.UI.RawUI.BackgroundColor = ''Black'' } catch { }')
+        ('try {')
+        ('  $target = 132')
+        ('  $b = $host.UI.RawUI.BufferSize')
+        ('  if ($b.Width -lt $target) { $host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size($target, $b.Height) }')
+        ('  $w = $host.UI.RawUI.WindowSize')
+        ('  if ($w.Width -ne $target) { $host.UI.RawUI.WindowSize = New-Object System.Management.Automation.Host.Size($target, $w.Height) }')
+        ('} catch { }')
         ('try { Clear-Host } catch { }')
         ('$p = ' + $menuLit)
         ('[IO.File]::AppendAllText(' + $logLit + ', ((Get-Date).ToString("yyyy-MM-dd HH:mm:ss") + " run=' + $runId + ' stage=child-started pid=" + $PID + [Environment]::NewLine))')
