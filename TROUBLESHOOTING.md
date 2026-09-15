@@ -275,6 +275,37 @@ those machines:
 3. Run the installer again. It now targets the registered package folder and
    replaces the broken `winmm.dll` with a verified copy.
 
+## Minecraft closes right after launch with exit code 0x80070424 (v4.9.22+)
+
+```
+exit code: 0x80070424
+```
+
+**What it means:** `0x80070424` is the Windows error *"the specified service
+does not exist"* (`HRESULT_FROM_WIN32(1060)`). Minecraft on Windows needs the
+**Gaming Services** component to start, and this code means that component is
+missing or damaged. It is **not** the unlock: a broken `winmm.dll` gives the
+*Bad Image* error `0xc0e90007` instead (previous section).
+
+**How to fix:**
+
+1. Open the **Microsoft Store**, search for **Gaming Services**, open its page
+   and install it again (the button says *Install* or *Reinstall*). On a machine
+   with the Xbox App you can also run the **Gaming Services Repair Tool**.
+2. If that does not help, remove the package and install it again from the
+   Store. In a PowerShell window opened as administrator:
+
+   ```powershell
+   Get-AppxPackage Microsoft.GamingServices | Remove-AppxPackage -AllUsers
+   ```
+3. Restart the PC, open Minecraft once, close it, then run the installer again.
+
+Since v4.9.22 the menu shows this explanation on screen in your language when the
+game exits with this code, and the failure report marks it as
+`0x80070424: Gaming Services missing/corrupt`, so it can be told apart from an
+unlock problem. If you send the report, the `[pkg]` line also tells whether the
+game package is registered in Windows and which folder is being used.
+
 ## "Access to the path '...winmm.dll.new' is denied" during install
 
 ```

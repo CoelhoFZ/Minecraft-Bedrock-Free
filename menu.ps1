@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.21'
+$Script:Version = '4.9.22'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -18,7 +18,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.21'
+    '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.22'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
     'f7b1408c36590abbfcb5310cf98c1efb1fa16f3a54a9387df56b1441de90335b' = 'v4.4.1'
     '86689c9724be7f391ba9bd1f4ef8dddaa73baec0b76b9c73bebef89f37b76e97' = 'v4.3.0'
@@ -476,6 +476,7 @@ $Script:PT = @{
     'gate_ask'              = 'Continuar a instalacao mesmo assim? (S para sim, N para nao)'
     'gate_decline_hint'     = 'Instalacao cancelada. Atualize o Minecraft pela Microsoft Store e rode o instalador de novo.'
     'crash_offer'           = 'O Minecraft fechou logo depois de abrir.'
+    'crash_hint_gaming_services' = 'O Minecraft nao abriu porque falta no Windows um componente que ele usa (o Gaming Services) ou ele esta danificado, e nao por causa do unlock. Abra a Microsoft Store, reinstale o Gaming Services e rode o instalador de novo.'
     'crash_ask'             = 'Remover o unlock agora e deixar o jogo como estava antes? (S para sim, N para nao)'
     'crash_kept'            = 'Unlock mantido. Se o jogo continuar fechando, use a opcao [1] do menu para remover o unlock.'
     'crash_removed'         = 'Unlock removido. Abra o Minecraft para confirmar que voltou a funcionar.'
@@ -1743,6 +1744,15 @@ $Script:I18N = @{
         hi='इंस्टॉलेशन रद्द कर दिया गया। Minecraft को Microsoft Store से अपडेट करें और इंस्टॉलर फिर से चलाएं।'
         ar='تم إلغاء التثبيت. حدّث Minecraft من Microsoft Store وشغّل المثبّت مرة أخرى.'
         ru='Установка отменена. Обновите Minecraft из Microsoft Store и запустите установщик заново.'
+    }
+    'crash_hint_gaming_services' = @{
+        en='Minecraft did not open because a Windows component it needs (Gaming Services) is missing or damaged, not because of the unlock. Open the Microsoft Store, reinstall Gaming Services and run the installer again.'
+        es='Minecraft no se abrio porque falta en Windows un componente que necesita (Gaming Services) o esta danado, y no por el unlock. Abre la Microsoft Store, reinstala Gaming Services y ejecuta el instalador otra vez.'
+        fr='Minecraft ne s''est pas ouvert parce qu''un composant Windows dont il a besoin (Gaming Services) est absent ou endommage, et non a cause de l''unlock. Ouvrez le Microsoft Store, reinstallez Gaming Services et relancez l''installateur.'
+        zh='Minecraft 未能打开，是因为它需要的 Windows 组件 Gaming Services 缺失或损坏，而不是因为解锁。请打开 Microsoft Store 重新安装 Gaming Services，然后再次运行安装程序。'
+        hi='Minecraft नहीं खुला क्योंकि Windows का एक आवश्यक घटक (Gaming Services) गायब या क्षतिग्रस्त है, अनलॉक की वजह से नहीं। Microsoft Store खोलें, Gaming Services फिर से इंस्टॉल करें और इंस्टॉलर दोबारा चलाएँ।'
+        ar='لم يُفتح Minecraft لأن أحد مكوّنات Windows التي يحتاجها (Gaming Services) مفقود أو تالف، وليس بسبب الأنلوك. افتح Microsoft Store وأعد تثبيت Gaming Services ثم شغّل المثبّت مرة أخرى.'
+        ru='Minecraft не запустился, потому что в Windows отсутствует или повреждён нужный ему компонент Gaming Services, а не из-за анлока. Откройте Microsoft Store, переустановите Gaming Services и запустите установщик заново.'
     }
     'crash_offer' = @{
         en='Minecraft closed right after opening.'
@@ -3071,11 +3081,11 @@ function Start-Minecraft {
         } catch { }
     }
     $Script:LaunchDiag = if ($isStore) {
-        'store content=' + $content
+        'mode=store content=' + $content
     } elseif ($opened) {
-        'exe content=' + $content
+        'mode=exe content=' + $content
     } else {
-        'failed content=' + $content
+        'mode=failed content=' + $content
     }
     if ($opened) {
         Write-Host (T 'mc_started')
@@ -3146,6 +3156,16 @@ function Get-DiagReportText {
             $lines.Add('[gate] ' + (@($Script:GateDiag | Select-Object -Unique) -join ' | '))
         }
     } catch { }
+    try {
+        $appxPkg = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($appxPkg) {
+            $lines.Add('[pkg] registered=yes version=' + $appxPkg.Version + ' loc=' + $appxPkg.InstallLocation)
+        } else {
+            $lines.Add('[pkg] registered=no')
+        }
+    } catch {
+        $lines.Add('[pkg] query-failed')
+    }
     try {
         if ($Script:LaunchDiag) {
             $lines.Add('[launch] ' + $Script:LaunchDiag)
@@ -3725,6 +3745,38 @@ function Get-CrashDetailInfo {
     return ''
 }
 
+function Get-CrashExitCode {
+    param($MinecraftProcess)
+    try {
+        if ($null -eq $MinecraftProcess) {
+            return [int64]0
+        }
+        $MinecraftProcess.Refresh()
+        if (-not $MinecraftProcess.HasExited) {
+            return [int64]0
+        }
+        try {
+            return ([int64]$MinecraftProcess.ExitCode -band 0xFFFFFFFFL)
+        } catch {
+            return [int64]0
+        }
+    } catch {
+        return [int64]0
+    }
+}
+
+function Get-CrashCodeHint {
+    param([int64]$Code)
+    $code32 = $Code -band 0xFFFFFFFFL
+    if ($code32 -eq ([int64]0x80070424 -band 0xFFFFFFFFL)) {
+        return @{
+            key = 'crash_hint_gaming_services'
+            tag = '0x80070424: Gaming Services missing/corrupt'
+        }
+    }
+    return $null
+}
+
 function Send-PostLaunchCrashReport {
     param($MinecraftProcess, [Nullable[datetime]]$LaunchAt, [string]$Content)
     $gcReason = Get-CrashDetailInfo -MinecraftProcess $MinecraftProcess -LaunchAt $LaunchAt
@@ -3732,9 +3784,17 @@ function Send-PostLaunchCrashReport {
     if ($gcHint) {
         $gcReason = $gcReason + ' | ' + $gcHint
     }
+    $hint = Get-CrashCodeHint -Code (Get-CrashExitCode -MinecraftProcess $MinecraftProcess)
+    if ($hint) {
+        $gcReason = $gcReason + ' | ' + $hint.tag
+    }
     Send-MbuFailureReport -Trigger 'game_crashed' -Reason $gcReason
     Write-Host ''
-    Write-Host ("  " + (T 'crash_offer')) -ForegroundColor Yellow
+    if ($hint) {
+        Write-Host ("  " + (T $hint.key)) -ForegroundColor Yellow
+    } else {
+        Write-Host ("  " + (T 'crash_offer')) -ForegroundColor Yellow
+    }
     $crashAns = Read-Host ("  " + (T 'crash_ask'))
     if ($crashAns -match '^[syo]') {
         try {
