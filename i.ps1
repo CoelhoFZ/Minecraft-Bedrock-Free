@@ -224,6 +224,26 @@ $Script:Msg = @{
         ar='لم تُفتح نافذة المثبّت بعد UAC. السبب عادةً برنامج مكافحة فيروسات أو سياسة Windows تمنع المثبّت.'
         ru='Окно установщика не открылось после запроса UAC. Обычно это антивирус или политика Windows, блокирующая установщик.'
     }
+    'err_elev_denied' = @{
+        pt='O Windows recusou a permissao de administrador para esta conta. Se voce nao esta em uma conta de administrador deste PC, entre com uma e rode o instalador de novo. Se a janela do UAC nem chega a aparecer, a elevacao esta bloqueada por politica do Windows.'
+        en='Windows refused administrator permission for this account. If you are not using an administrator account on this PC, sign in with one and run the installer again. If the UAC window never appears, elevation is blocked by a Windows policy.'
+        es='Windows negó el permiso de administrador para esta cuenta. Si no estás usando una cuenta de administrador en este PC, inicia sesión con una y vuelve a ejecutar el instalador. Si la ventana de UAC no aparece, la elevación está bloqueada por una política de Windows.'
+        fr='Windows a refusé la permission d''administrateur pour ce compte. Si vous n''utilisez pas un compte administrateur sur ce PC, connectez-vous avec un et relancez l''installateur. Si la fenêtre UAC n''apparaît pas, l''élévation est bloquée par une stratégie Windows.'
+        zh='Windows 拒绝为此帐户授予管理员权限。如果此电脑上使用的不是管理员帐户，请用管理员帐户登录后重新运行安装程序。如果 UAC 窗口始终不出现，说明提升权限被 Windows 策略阻止。'
+        hi='Windows ने इस खाते को व्यवस्थापक अनुमति देने से मना किया। यदि आप इस PC पर व्यवस्थापक खाते का उपयोग नहीं कर रहे हैं, तो उससे साइन इन करें और इंस्टॉलर फिर से चलाएँ। यदि UAC विंडो नहीं दिखती, तो Windows नीति ने अनुमति बढ़ाना रोक दिया है।'
+        ar='رفض Windows منح صلاحيات المسؤول لهذا الحساب. إذا كنت لا تستخدم حساب مسؤول على هذا الجهاز، فسجّل الدخول بحساب مسؤول وشغّل المثبّت مرة أخرى. إذا لم تظهر نافذة UAC، فإن رفع الصلاحيات محظور بسياسة Windows.'
+        ru='Windows отклонил предоставление прав администратора для этой учетной записи. Если вы не используете учетную запись администратора на этом компьютере, войдите под ней и запустите установщик снова. Если окно UAC не появляется, повышение прав блокируется политикой Windows.'
+    }
+    'err_elev_cancelled' = @{
+        pt='Voce cancelou o pedido de administrador. Rode o instalador de novo e aceite a janela do UAC.'
+        en='You cancelled the administrator request. Run the installer again and accept the UAC window.'
+        es='Cancelaste la solicitud de administrador. Vuelve a ejecutar el instalador y acepta la ventana de UAC.'
+        fr='Vous avez annulé la demande d''administrateur. Relancez l''installateur et acceptez la fenêtre UAC.'
+        zh='你取消了管理员请求。请重新运行安装程序并接受 UAC 窗口。'
+        hi='आपने व्यवस्थापक अनुरोध रद्द किया। इंस्टॉलर फिर से चलाएँ और UAC विंडो स्वीकार करें।'
+        ar='لقد ألغيت طلب المسؤول. شغّل المثبّت مرة أخرى واقبل نافذة UAC.'
+        ru='Вы отменили запрос прав администратора. Запустите установщик снова и подтвердите окно UAC.'
+    }
     'report_ask' = @{
         pt='Deseja enviar o relatorio para o desenvolvedor para ajuda-lo a corrigir o problema? (S para sim, N para nao)'
         en='Do you want to send the report to the developer to help fix the problem? (Y for yes, N for no)'
@@ -378,7 +398,7 @@ if (-not $downloaded) {
     Read-Host (L 'press_enter_close')
     exit 1
 }
-$menuHash = '68148b7d8857f1a10053dd02bd66a30a8114f9d7f3f842cdb1f86fb4aa3270ad'
+$menuHash = '28ce5cb6d6e328ceb0f0f28b329cf3c199afa6bd12e0a24c9501166ca42e9978'
 $menuBytes = [IO.File]::ReadAllBytes($menu)
 $clean = New-Object System.Collections.Generic.List[byte]
 foreach ($b in $menuBytes) {
@@ -419,9 +439,50 @@ $psExe = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.e
 if (-not (Test-Path -LiteralPath $psExe)) {
     $psExe = 'powershell.exe'
 }
+function Get-MbuWin32Text {
+    param([int]$Code)
+    try {
+        return [string](New-Object System.ComponentModel.Win32Exception($Code)).Message
+    } catch {
+        return ''
+    }
+}
+
+function Get-MbuElevationFailureKind {
+    param([string]$Message)
+    if (-not $Message) {
+        return 'unknown'
+    }
+    $cancelled = Get-MbuWin32Text 1223
+    if ($cancelled -and $Message.Contains($cancelled)) {
+        return 'cancelled'
+    }
+    $denied = Get-MbuWin32Text 5
+    if ($denied -and $Message.Contains($denied)) {
+        return 'denied'
+    }
+    return 'unknown'
+}
+
+function Get-MbuInAdministrators {
+    try {
+        $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+        $target = New-Object Security.Principal.SecurityIdentifier('S-1-5-32-544')
+        foreach ($group in $identity.Groups) {
+            try {
+                if ($group.Value -eq $target.Value) {
+                    return $true
+                }
+            } catch { }
+        }
+    } catch { }
+    return $false
+}
+
 $principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
 $isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-Add-MbuLog ("stage=admin isAdmin=$isAdmin version=$versionLabel menu=$menu")
+$inAdminGroup = Get-MbuInAdministrators
+Add-MbuLog ("stage=admin isAdmin=$isAdmin inAdminGroup=$inAdminGroup version=$versionLabel menu=$menu")
 
 function Get-MbuLogTail {
     try {
@@ -472,17 +533,24 @@ function Send-MbuBootstrapReport {
 }
 
 function Show-MbuLaunchFailure {
-    param([string]$Message)
-    Add-MbuLog ("stage=launch-fail reason=" + $Message)
+    param([string]$Message, [string]$Kind)
+    if (-not $Kind) {
+        $Kind = 'unknown'
+    }
+    Add-MbuLog ("stage=launch-fail kind=" + $Kind + " inAdminGroup=" + $inAdminGroup + " reason=" + $Message)
     Write-Host ''
     Write-Host (L 'err_launch_title') -ForegroundColor Red
-    if ($Message) {
+    if ($Kind -eq 'denied') {
+        Write-Host (L 'err_elev_denied') -ForegroundColor Yellow
+    } elseif ($Kind -eq 'cancelled') {
+        Write-Host (L 'err_elev_cancelled') -ForegroundColor Yellow
+    } elseif ($Message) {
         Write-Host ("  " + $Message) -ForegroundColor Yellow
     }
     Write-Host (L 'err_launch_hint') -ForegroundColor Yellow
     Write-Host ("  irm $base/menu.ps1 | iex") -ForegroundColor Cyan
     Write-Host ("  " + $logPath) -ForegroundColor DarkGray
-    Send-MbuBootstrapReport -Message $Message
+    Send-MbuBootstrapReport -Message ($Kind + ': ' + $Message)
     Read-Host (L 'press_enter_close')
     exit 1
 }
@@ -610,8 +678,9 @@ if ($isAdmin) {
         if ($started -eq $null) {
             exit 0
         }
-        Show-MbuLaunchFailure -Message (L 'err_child_never_started')
+        Show-MbuLaunchFailure -Message (L 'err_child_never_started') -Kind 'child-never-started'
     } catch {
-        Show-MbuLaunchFailure -Message $_.Exception.Message
+        $elevationError = [string]$_.Exception.Message
+        Show-MbuLaunchFailure -Message $elevationError -Kind (Get-MbuElevationFailureKind $elevationError)
     }
 }

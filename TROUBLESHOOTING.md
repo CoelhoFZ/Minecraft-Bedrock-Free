@@ -485,6 +485,35 @@ Xbox App, install it from there instead. The old wording for this case was only
 "Minecraft package found but the game executable is missing", which sent users to
 a full reinstall that was usually not necessary.
 
+## "Windows refused administrator permission for this account" (v4.9.21+)
+
+This message appears when Windows itself refuses the elevation request, before
+the UAC window is even shown. The installer needs administrator rights to write
+the game files, so it cannot continue without them. Until v4.9.20 this case
+printed only the raw Windows error text (`This command cannot be run due to the
+error: Access is denied`), which told the user nothing.
+
+Two causes are common:
+
+1. The account you are using is not an administrator on this PC, so the request
+   would need the user name and password of an administrator account.
+2. The elevation prompt is blocked by a Windows policy, or by the family and
+   parental controls of a child account, so the request is denied without
+   asking anything.
+
+**How to fix:** sign in with an administrator account and run the installer
+again, or ask the administrator of the PC to run the command below in a
+PowerShell window opened as administrator:
+
+```powershell
+irm https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/menu.ps1 | iex
+```
+
+You can check your account type in Windows Settings, Accounts, Your info, where
+it says "Standard user" or "Administrator". If the message says that you
+cancelled the administrator request, the request reached the UAC window and was
+declined: run the installer again and accept that window.
+
 ## FAQ
 
 ### How do I remove the unlock without the menu?
