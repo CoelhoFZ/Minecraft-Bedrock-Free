@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.22'
+$Script:Version = '4.9.23'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -18,7 +18,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.22'
+    '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.23'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
     'f7b1408c36590abbfcb5310cf98c1efb1fa16f3a54a9387df56b1441de90335b' = 'v4.4.1'
     '86689c9724be7f391ba9bd1f4ef8dddaa73baec0b76b9c73bebef89f37b76e97' = 'v4.3.0'
@@ -388,8 +388,9 @@ $Script:PT = @{
     'track_releases'     = 'Acompanhe novos releases em {0}'
     'state_unlocked_v'   = 'O Minecraft ja esta DESBLOQUEADO ({0}).'
     'state_older_hint'   = 'O unlock instalado ({0}) e mais antigo que este menu ({1}) - use [2] para atualizar.'
-    'gate_untested'      = 'Instalacao BLOQUEADA: a versao do jogo {0} nao foi testada com este unlocker e provavelmente nao funcionaria.'
+    'gate_untested'      = 'Instalacao BLOQUEADA: a versao do jogo {0} e mais antiga que o minimo suportado ({1}) e provavelmente nao funcionaria.'
     'gate_untested_hint' = 'Atualize o Minecraft pela Microsoft Store para a versao suportada e rode o instalador de novo.'
+    'gate_supported_ok'  = 'Versao do jogo: {0} (suportada)'
     'cache_used'         = 'Sem internet: usando copia local validada do binario ({0}).'
     'cache_saved'        = 'Copia local salva para reinstalacao offline: {0}'
     'menu_4_trouble'     = 'Abrir guia de problemas (web)'
@@ -410,9 +411,10 @@ $Script:PT = @{
     'diag_game_arch'     = 'Arquitetura do jogo'
     'diag_unlock'        = 'Unlock instalado'
     'diag_unlock_none'   = 'nao instalado (Trial)'
-    'diag_tested'        = 'Versao do jogo vs versoes testadas'
-    'diag_tested_ok'     = 'OK - coberta por tested-versions.json'
-    'diag_tested_bad'    = 'ATENCAO - fora da lista de testadas'
+    'diag_tested'        = 'Suporte a versao do jogo'
+    'diag_tested_ok'     = 'OK - build verificada (tested-versions.json)'
+    'diag_tested_newer'  = 'OK - mais nova que a build verificada'
+    'diag_tested_bad'    = 'BLOQUEADA - abaixo do minimo suportado'
     'diag_tested_unknown'= 'indisponivel (sem internet ou sem dados)'
     'diag_av'            = 'Exclusoes do Defender (mbu/Minecraft)'
     'diag_av_none'       = 'nenhuma encontrada'
@@ -972,13 +974,22 @@ $Script:I18N = @{
         ru='Установленная разблокировка ({0}) старее этого меню ({1}) - используйте [2] для обновления.'
     }
     'gate_untested' = @{
-        en='Installation BLOCKED: game version {0} has not been tested with this unlocker and would probably not work.'
-        es='Instalación BLOQUEADA: la versión del juego {0} no ha sido probada con este unlocker y probablemente no funcionaría.'
-        zh='安装已阻止：游戏版本 {0} 尚未经过此解锁器测试，很可能无法工作。'
-        hi='इंस्टॉलेशन अवरुद्ध: गेम संस्करण {0} इस अनलॉकर के साथ परीक्षित नहीं है और संभवतः काम नहीं करेगा।'
-        fr='Installation BLOQUÉE : la version {0} du jeu n''a pas été testée avec ce déverrouilleur et ne fonctionnerait probablement pas.'
-        ar='تم حظر التثبيت: إصدار اللعبة {0} لم يُختبر مع هذا الفاتح وربما لن يعمل.'
-        ru='Установка ЗАБЛОКИРОВАНА: версия игры {0} не тестировалась с этим анлокером и, скорее всего, не будет работать.'
+        en='Installation BLOCKED: game version {0} is older than the minimum supported version ({1}) and would probably not work.'
+        es='Instalación BLOQUEADA: la versión del juego {0} es más antigua que la versión mínima compatible ({1}) y probablemente no funcionaría.'
+        zh='安装已阻止：游戏版本 {0} 早于最低支持的版本（{1}），很可能无法工作。'
+        hi='इंस्टॉलेशन अवरुद्ध: गेम संस्करण {0} न्यूनतम समर्थित संस्करण ({1}) से पुराना है और संभवतः काम नहीं करेगा।'
+        fr='Installation BLOQUÉE : la version {0} du jeu est plus ancienne que la version minimale prise en charge ({1}) et ne fonctionnerait probablement pas.'
+        ar='تم حظر التثبيت: إصدار اللعبة {0} أقدم من الحد الأدنى للإصدار المدعوم ({1}) وربما لن يعمل.'
+        ru='Установка ЗАБЛОКИРОВАНА: версия игры {0} старее минимальной поддерживаемой версии ({1}) и, скорее всего, не будет работать.'
+    }
+    'gate_supported_ok' = @{
+        en='Game version: {0} (supported)'
+        es='Versión del juego: {0} (compatible)'
+        zh='游戏版本：{0}（受支持）'
+        hi='गेम संस्करण: {0} (समर्थित)'
+        fr='Version du jeu : {0} (prise en charge)'
+        ar='إصدار اللعبة: {0} (مدعوم)'
+        ru='Версия игры: {0} (поддерживается)'
     }
     'gate_untested_hint' = @{
         en='Update Minecraft from the Microsoft Store to the supported version and run the installer again.'
@@ -1170,31 +1181,40 @@ $Script:I18N = @{
         ru='не установлена (пробная версия)'
     }
     'diag_tested' = @{
-        en='Game version vs tested versions'
-        es='Versión del juego vs probadas'
-        zh='游戏版本 vs 已测试版本'
-        hi='गेम संस्करण बनाम परीक्षण किए गए संस्करण'
-        fr='Version du jeu vs versions testées'
-        ar='إصدار اللعبة مقابل الإصدارات المختبرة'
-        ru='Версия игры против протестированных версий'
+        en='Game version support'
+        es='Compatibilidad de la versión'
+        zh='游戏版本支持情况'
+        hi='गेम संस्करण समर्थन'
+        fr='Prise en charge de la version du jeu'
+        ar='دعم إصدار اللعبة'
+        ru='Поддержка версии игры'
     }
     'diag_tested_ok' = @{
-        en='OK - covered by tested-versions.json'
-        es='OK - cubierta por tested-versions.json'
-        zh='OK - 已包含在 tested-versions.json 中'
-        hi='OK - tested-versions.json द्वारा कवर'
-        fr='OK - couverte par tested-versions.json'
-        ar='موافق - مغطّى في tested-versions.json'
-        ru='OK - покрыта tested-versions.json'
+        en='OK - verified build (tested-versions.json)'
+        es='OK - compilación verificada (tested-versions.json)'
+        zh='OK - 已验证的版本（tested-versions.json）'
+        hi='OK - सत्यापित बिल्ड (tested-versions.json)'
+        fr='OK - version vérifiée (tested-versions.json)'
+        ar='موافق - إصدار موثّق (tested-versions.json)'
+        ru='OK - проверенная сборка (tested-versions.json)'
+    }
+    'diag_tested_newer' = @{
+        en='OK - newer than the verified build'
+        es='OK - más nueva que la compilación verificada'
+        zh='OK - 比已验证版本更新'
+        hi='OK - सत्यापित बिल्ड से नया'
+        fr='OK - plus récente que la version vérifiée'
+        ar='موافق - أحدث من الإصدار الموثّق'
+        ru='OK - новее проверенной сборки'
     }
     'diag_tested_bad' = @{
-        en='ATTENTION - not in the tested list'
-        es='ATENCIÓN - fuera de la lista de probadas'
-        zh='注意 - 不在已测试列表中'
-        hi='ध्यान दें - परीक्षण सूची में नहीं'
-        fr='ATTENTION - hors liste des versions testées'
-        ar='انتبه - خارج قائمة الإصدارات المختبرة'
-        ru='ВНИМАНИЕ - нет в списке протестированных'
+        en='BLOCKED - older than the minimum supported'
+        es='BLOQUEADA - más antigua que el mínimo compatible'
+        zh='已阻止 - 早于最低支持的版本'
+        hi='अवरुद्ध - न्यूनतम समर्थित से पुराना'
+        fr='BLOQUÉE - plus ancienne que le minimum pris en charge'
+        ar='محظور - أقدم من الحد الأدنى المدعوم'
+        ru='ЗАБЛОКИРОВАНА - старее минимальной поддерживаемой'
     }
     'diag_tested_unknown' = @{
         en='unavailable (offline or no data)'
@@ -2220,6 +2240,47 @@ function Test-GameVersionTested {
     return [bool]($data.tested.PSObject.Properties.Name -contains $Version)
 }
 
+function Get-VersionNumbers {
+    param([string]$Version)
+    if (-not $Version) { return $null }
+    $nums = @(0, 0, 0, 0)
+    $parts = ([string]$Version).Split('.')
+    for ($i = 0; $i -lt $parts.Count -and $i -lt 4; $i++) {
+        $n = 0
+        if (-not [int]::TryParse($parts[$i], [ref]$n)) { return $null }
+        $nums[$i] = $n
+    }
+    return ,$nums
+}
+
+function Compare-GameVersion {
+    param([string]$Version, [string]$Other)
+    $a = Get-VersionNumbers -Version $Version
+    $b = Get-VersionNumbers -Version $Other
+    if (-not $a -or -not $b) { return $null }
+    for ($i = 0; $i -lt 4; $i++) {
+        if ($a[$i] -lt $b[$i]) { return -1 }
+        if ($a[$i] -gt $b[$i]) { return 1 }
+    }
+    return 0
+}
+
+function Get-SupportedFloorVersion {
+    $data = Get-TestedVersionData
+    if (-not $data) { return $null }
+    $prop = $data.PSObject.Properties['min_supported']
+    if ($prop -and $prop.Value) { return [string]$prop.Value }
+    $floor = $null
+    if ($data.tested) {
+        foreach ($k in @($data.tested.PSObject.Properties.Name)) {
+            $cmp = if ($floor) { Compare-GameVersion -Version $k -Other $floor } else { -1 }
+            if ($null -eq $cmp) { $cmp = -1 }
+            if ($cmp -lt 0) { $floor = $k }
+        }
+    }
+    return $floor
+}
+
 function Test-InstallGate {
     param([string]$Content)
     $Script:GateDiag = New-Object System.Collections.Generic.List[string]
@@ -2228,7 +2289,7 @@ function Test-InstallGate {
         return $true
     }
     $ver = Get-GameVersion -Content $Content
-    if (-not $ver) {
+    if (-not (Get-VersionNumbers -Version $ver)) {
         $Script:GateDiag.Add('version=unknown')
         Write-Host ''
         Write-Host ("  " + (T 'gate_unknown_ver')) -ForegroundColor Red
@@ -2241,9 +2302,9 @@ function Test-InstallGate {
         $Script:GateDiag.Add('result=continued-unknown-version')
         return $true
     }
-    $tested = Test-GameVersionTested -Version $ver
-    if ($null -eq $tested) {
-        $Script:GateDiag.Add("version=$ver")
+    $floor = Get-SupportedFloorVersion
+    if (-not $floor -or -not (Get-VersionNumbers -Version $floor)) {
+        $Script:GateDiag.Add("version=$ver min=unavailable")
         Write-Host ''
         Write-Host ("  " + ((T 'gate_list_unavailable') -replace '\{0\}', $ver)) -ForegroundColor Red
         $ans = Read-Host ("  " + (T 'gate_ask'))
@@ -2255,14 +2316,20 @@ function Test-InstallGate {
         $Script:GateDiag.Add('result=continued-list-unavailable')
         return $true
     }
-    if (-not $tested) {
-        $Script:GateDiag.Add("version=$ver result=blocked-untested")
-        Write-Host ((T 'gate_untested') -replace '\{0\}', $ver) -ForegroundColor Red
+    $cmp = Compare-GameVersion -Version $ver -Other $floor
+    if ($null -ne $cmp -and $cmp -lt 0) {
+        $Script:GateDiag.Add("version=$ver result=blocked-older-than-min min=$floor")
+        Write-Host (((T 'gate_untested') -replace '\{0\}', $ver) -replace '\{1\}', $floor) -ForegroundColor Red
         Write-Host (T 'gate_untested_hint') -ForegroundColor Yellow
         return $false
     }
-    $Script:GateDiag.Add("version=$ver result=tested")
-    Write-Host (("  " + (T 'gate_tested_ok')) -replace '\{0\}', $ver) -ForegroundColor Green
+    if (Test-GameVersionTested -Version $ver) {
+        $Script:GateDiag.Add("version=$ver result=tested min=$floor")
+        Write-Host (("  " + (T 'gate_tested_ok')) -replace '\{0\}', $ver) -ForegroundColor Green
+        return $true
+    }
+    $Script:GateDiag.Add("version=$ver result=supported-untested min=$floor")
+    Write-Host (("  " + (T 'gate_supported_ok')) -replace '\{0\}', $ver) -ForegroundColor Green
     return $true
 }
 
@@ -3458,11 +3525,20 @@ function Get-DiagReportText {
     } else {
         $null
     }
-    $testedLine = if ($null -eq $tested -or -not $gameVer) {
+    $floorVer = Get-SupportedFloorVersion
+    $cmpFloor = if ($gameVer -and $floorVer) {
+        Compare-GameVersion -Version $gameVer -Other $floorVer
+    } else {
+        $null
+    }
+    $testedLine = if ($null -eq $tested -or $null -eq $cmpFloor) {
         T 'diag_tested_unknown'
     }
                   elseif ($tested) {
         T 'diag_tested_ok'
+    }
+                  elseif ($cmpFloor -ge 0) {
+        T 'diag_tested_newer'
     }
                   else {
         T 'diag_tested_bad'

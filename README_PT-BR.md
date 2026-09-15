@@ -24,9 +24,10 @@ Windows 10/11.
   **Microsoft Store** ou do **Xbox App** do Minecraft Bedrock para Windows.
   NÃO funciona com launchers de terceiros nem seletor de versão (eles não usam
   a API de licença GDK que o unlock intercepta).
-- **Apenas a versão atual.** Compilado e testado contra a versão mais recente.
-  A Microsoft não permite instalar versões antigas, e este projeto não fornece
-  nenhuma.
+- **Build 1.26 ou mais novo.** Funciona com qualquer build do Minecraft for
+  Windows a partir da 1.26, inclusive uma build mais nova que a desta release.
+  Builds mais antigas são recusadas. A Microsoft não permite instalar versões
+  antigas, e este projeto não fornece nenhuma.
 > **Windows on ARM:** esta release distribui apenas o build x64. O build nativo
 > ARM64 esta sendo recompilado e voltara em uma release futura. Reporte
 > problemas com o prefixo `[ARM64]` se estiver em ARM.
@@ -110,15 +111,15 @@ esperado para um unlocker. Veja [Falsos positivos de antivírus](docs/antivirus-
 
 ## Compatibilidade de versao do jogo
 
-O menu baixa o `tested-versions.json` deste repositorio e **bloqueia a
-instalacao** quando a sua versao do Minecraft **ainda nao foi testada** com
-este unlocker. Atualize o jogo pela Microsoft Store para a versao atual e
-rode o instalador de novo.
-Se o seu jogo estiver **mais novo** que a lista testada (a Store atualizou
-depois desta release), atualizar nao resolve - o suporte a essa build tem que
-vir deste projeto. Acompanhe a pagina de
-[Releases](https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases) ou o
-[Discord](https://discord.gg/u3S4gFgK6M).
+O unlock funciona enganchando as APIs de licença do GDK (`XStore*`), então não
+depende de uma build específica do jogo: **qualquer build do Minecraft for
+Windows a partir da 1.26 é aceita**, inclusive uma build **mais nova** que a
+verificada nesta release. O menu baixa o `tested-versions.json` deste
+repositório para ler o piso de versão; se o seu jogo for **mais antigo** que
+esse piso, o instalador para antes de baixar qualquer coisa e pede para
+atualizar o Minecraft pela Microsoft Store.
+A lista `tested` desse arquivo é só o registro das builds verificadas na mão:
+estar mais novo que ela não bloqueia nem muda nada.
 
 Quando algo falha - um erro do instalador, o Minecraft nao abrir depois da
 instalacao, ou o jogo crashar logo apos abrir - o menu pergunta se voce quer

@@ -21,7 +21,8 @@ Unlock the full version of **Minecraft Bedrock Edition (GDK)** on Windows 10/11.
 - **Official build only.** Works exclusively with the official **Microsoft
   Store** or **Xbox App** build of Minecraft Bedrock for Windows. It will NOT
   work with third-party launchers or version switchers.
-- **Current version only.** Built and tested against the latest version.
+- **Build 1.26 or newer.** Works with any Minecraft for Windows build from 1.26
+  on, including a build newer than this release. Older builds are refused.
   Microsoft does not let you install older versions, and this project does not
   provide one.
 > **Windows on ARM:** this release ships the x64 build only. The native ARM64
@@ -106,14 +107,15 @@ expected for an unlocker. See [Antivirus false positives](docs/antivirus-false-p
 
 ## Game version compatibility
 
-The menu downloads `tested-versions.json` from this repository and **blocks
-the installation** when your Minecraft version has **not been tested** with
-this unlocker yet. Update the game from the Microsoft Store to the current
-version and run the installer again.
-If your game is **newer** than the tested list (the Store updated it after this
-release), updating cannot help - the support for that build has to come from
-this project. Follow the [Releases](https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases)
-page or the [Discord](https://discord.gg/u3S4gFgK6M).
+The unlock works by hooking the GDK license APIs (`XStore*`), so it is not tied
+to one game build: **any Minecraft for Windows build from 1.26 on is
+accepted**, including a build **newer** than the one this release was verified
+against. The menu downloads `tested-versions.json` from this repository to read
+the minimum supported version; if your game is **older** than that floor, the
+installer stops before downloading anything and asks you to update Minecraft
+from the Microsoft Store.
+The `tested` list in that file is only a record of the builds verified by hand:
+being newer than it does not block or change anything.
 
 When something fails - an installer error, Minecraft not opening after
 install, or the game crashing right after launch - the menu asks whether to

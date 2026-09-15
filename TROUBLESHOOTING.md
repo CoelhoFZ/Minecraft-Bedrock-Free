@@ -399,28 +399,34 @@ Since v4.9.10 a denied write no longer destroys the unlock you already had:
   two lines read the Windows Defender log only, so `[threat] none` with another
   antivirus running means "not covered here", not "nothing blocked it".
 
-## Installer blocks old or untested game versions (v4.9.5+)
+## Installer blocks an old game version (v4.9.5+, version floor since v4.9.23)
 
-Since v4.9.5 the installer refuses to start when your Minecraft **package
-version is not in the tested list** (`tested-versions.json`), instead of
-warning and continuing.
+Since v4.9.23 the installer checks a **minimum supported version** (the
+`min_supported` field of `tested-versions.json`) instead of an exact list: any
+Minecraft for Windows build from **1.26 on** is accepted, including a build
+**newer** than the one this release was verified against. That is on purpose -
+the unlock hooks the GDK license APIs (`XStore*`), which is not tied to the
+game build.
 
-**What it means:** the unlocker is built for one Store version at a time. An
-old game (for example 1.18.x) cannot be unlocked by the current binary, so the
-installer stops before downloading anything, with the message
-"Installation BLOCKED: game version ... has not been tested".
+**What it means when you are blocked:** your game build is **older** than the
+floor (for example 1.18.x or 1.21.x). The installer stops before downloading
+anything, with the message
+"Installation BLOCKED: game version ... is older than the minimum supported
+version (...)".
 
-**How to fix:** update Minecraft from the Microsoft Store to the current
-version, then run the installer again.
+**How to fix:** update Minecraft from the Microsoft Store, then run the
+installer again.
 
-**If your game is NEWER than the tested list** (the Microsoft Store updated it
-after this unlocker release, so updating again is not possible), the unlocker
-simply does not support that build yet. Updating the game will not help -
-the fix comes from this project: follow the
-[Releases](https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases) page or
-the [Discord](https://discord.gg/u3S4gFgK6M) for the version that adds support
-for your build. You can also check which version this release supports in
-[`tested-versions.json`](https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/blob/main/tested-versions.json).
+**If your game is NEWER than the `tested` list:** nothing to do, it is not a
+block. Since v4.9.23 a build newer than the verified one installs normally.
+Older releases (v4.9.5 up to v4.9.22) refused it with the same message, so if
+you saw this on a game that was already up to date, update the installer
+(re-run the one-liner) and try again.
+
+The `tested` list in
+[`tested-versions.json`](https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/blob/main/tested-versions.json)
+is only a record of the builds verified by hand; the `min_supported` field is
+what decides if the installer proceeds.
 
 ## Installer fails while downloading with "contains a virus or potentially unwanted software" ([#49](https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/issues/49))
 During the download step the installer verifies the binary it just wrote to
