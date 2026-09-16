@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.26'
+$Script:Version = '4.9.27'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -18,7 +18,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.26'
+    '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.27'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
     'f7b1408c36590abbfcb5310cf98c1efb1fa16f3a54a9387df56b1441de90335b' = 'v4.4.1'
     '86689c9724be7f391ba9bd1f4ef8dddaa73baec0b76b9c73bebef89f37b76e97' = 'v4.3.0'
@@ -2239,6 +2239,27 @@ function Get-InstalledUnlockLabel {
     return ('<hash:' + $actual.Substring(0, 12) + '>')
 }
 
+function Get-ContentFolderVersion {
+    param([string]$Content)
+    if (-not $Content) {
+        return $null
+    }
+    $leaf = ([string]$Content).TrimEnd('\')
+    $idx = $leaf.LastIndexOf('\')
+    if ($idx -ge 0) {
+        $leaf = $leaf.Substring($idx + 1)
+    }
+    if ($leaf -notlike 'Microsoft.MinecraftUWP_*') {
+        return $null
+    }
+    $parts = $leaf.Substring('Microsoft.MinecraftUWP_'.Length).Split('_')
+    $ver = [string]$parts[0]
+    if (-not (Get-VersionNumbers -Version $ver)) {
+        return $null
+    }
+    return $ver
+}
+
 function Get-GameVersion {
     param([string]$Content)
     if (-not $Content) {
@@ -2263,7 +2284,7 @@ function Get-GameVersion {
             return [string]$appx.Version
         }
     } catch { }
-    return $null
+    return (Get-ContentFolderVersion -Content $Content)
 }
 
 function Get-TestedVersionData {
@@ -2348,9 +2369,18 @@ function Test-OfficialContentSource {
     if (-not $Content) {
         return $false
     }
+    if (([string]$Content).TrimEnd('\') -like '*\WindowsApps\Microsoft.MinecraftUWP_*') {
+        return $true
+    }
     try {
-        $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction SilentlyContinue | Select-Object -First 1
-        if ($appx -and $appx.InstallLocation) {
+        $pkgs = @(Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -AllUsers -ErrorAction SilentlyContinue)
+        if ($pkgs.Count -eq 0) {
+            $pkgs = @(Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction SilentlyContinue)
+        }
+        foreach ($appx in $pkgs) {
+            if (-not $appx -or -not $appx.InstallLocation) {
+                continue
+            }
             $loc = [string]$appx.InstallLocation
             if ($Content -eq $loc) {
                 return $true
@@ -2387,7 +2417,12 @@ function Test-InstallGate {
     }
     $ver = Get-GameVersion -Content $Content
     if (-not (Get-VersionNumbers -Version $ver)) {
-        $Script:GateDiag.Add('version=unknown')
+        $rawVer = if ($ver) {
+            Get-ShortText -Text $ver -Max 40
+        } else {
+            'none'
+        }
+        $Script:GateDiag.Add('version=unknown raw=' + $rawVer)
         Write-Host ''
         Write-Host ("  " + (T 'gate_unknown_ver')) -ForegroundColor Red
         $ans = Read-Host ("  " + (T 'gate_ask'))
@@ -2957,7 +2992,7 @@ function Install-Unlocker {
         if (-not $isArm -and -not $env:MBU_BASE_URL) {
             $dllSources.Add(@{ Url = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll'
                                Tries = 1 })
-            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.26/release/winmm.dll'
+            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.27/release/winmm.dll'
                                Tries = 1 })
         }
         Start-Sleep -Seconds 2
