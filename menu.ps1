@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.27'
+$Script:Version = '4.9.28'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -18,7 +18,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.27'
+    '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.28'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
     'f7b1408c36590abbfcb5310cf98c1efb1fa16f3a54a9387df56b1441de90335b' = 'v4.4.1'
     '86689c9724be7f391ba9bd1f4ef8dddaa73baec0b76b9c73bebef89f37b76e97' = 'v4.3.0'
@@ -484,6 +484,7 @@ $Script:PT = @{
     'gate_decline_hint'     = 'Instalacao cancelada. Atualize o Minecraft pela Microsoft Store e rode o instalador de novo.'
     'crash_offer'           = 'O Minecraft fechou logo depois de abrir.'
     'crash_hint_gaming_services' = 'O Minecraft nao abriu porque falta no Windows um componente que ele usa (o Gaming Services) ou ele esta danificado, e nao por causa do unlock. Abra a Microsoft Store, reinstale o Gaming Services e rode o instalador de novo.'
+    'crash_hint_pkg_unregistered' = 'O Minecraft nao abriu porque o Windows nao conseguiu ativar o app (codigo 0x87E50035), e nao por causa do unlock. No caso mais comum o pacote do jogo esta instalado mas nao esta registrado para a sua conta, e sem isso o jogo nao abre por caminho nenhum. Reinstale ou repare o Minecraft na conta que tem o jogo (Microsoft Store ou Xbox App) e rode o instalador outra vez.'
     'crash_ask'             = 'Remover o unlock agora e deixar o jogo como estava antes? (S para sim, N para nao)'
     'crash_kept'            = 'Unlock mantido. Se o jogo continuar fechando, use a opcao [1] do menu para remover o unlock.'
     'crash_removed'         = 'Unlock removido. Abra o Minecraft para confirmar que voltou a funcionar.'
@@ -1824,6 +1825,15 @@ $Script:I18N = @{
         ar='لم يُفتح Minecraft لأن أحد مكوّنات Windows التي يحتاجها (Gaming Services) مفقود أو تالف، وليس بسبب الأنلوك. افتح Microsoft Store وأعد تثبيت Gaming Services ثم شغّل المثبّت مرة أخرى.'
         ru='Minecraft не запустился, потому что в Windows отсутствует или повреждён нужный ему компонент Gaming Services, а не из-за анлока. Откройте Microsoft Store, переустановите Gaming Services и запустите установщик заново.'
     }
+    'crash_hint_pkg_unregistered' = @{
+        en='Minecraft did not open because Windows could not activate the app (code 0x87E50035), and not because of the unlock. Most of the time the game package is installed but not registered for your account, and without that the game cannot start at all. Reinstall or repair Minecraft on the account that owns the game (Microsoft Store or Xbox App) and run the installer again.'
+        es='Minecraft no se abrio porque Windows no pudo activar la aplicacion (codigo 0x87E50035), y no por el unlock. Lo mas comun es que el paquete del juego este instalado pero no registrado para tu cuenta, y sin eso el juego no abre de ninguna forma. Reinstala o repara Minecraft en la cuenta que tiene el juego (Microsoft Store o Xbox App) y ejecuta el instalador otra vez.'
+        fr='Minecraft ne s''est pas ouvert parce que Windows n''a pas pu activer l''application (code 0x87E50035), et non a cause de l''unlock. Le plus souvent le paquet du jeu est installe mais n''est pas enregistre pour votre compte, et sans cela le jeu ne peut pas demarrer. Reinstallez ou reparez Minecraft sur le compte qui possede le jeu (Microsoft Store ou Xbox App) et relancez l''installateur.'
+        zh='Minecraft 未能打开，是因为 Windows 无法激活该应用（代码 0x87E50035），而不是因为解锁。最常见的情况是游戏包已安装但没有为你的账户注册，没有注册游戏就无法启动。请在拥有该游戏的账户上重新安装或修复 Minecraft（Microsoft Store 或 Xbox App），然后再次运行安装程序。'
+        hi='Minecraft नहीं खुला क्योंकि Windows ऐप को सक्रिय नहीं कर सका (कोड 0x87E50035), और यह अनलॉक की वजह से नहीं है। अक्सर गेम का पैकेज इंस्टॉल होता है पर आपके खाते के लिए रजिस्टर नहीं होता, और उसके बिना गेम शुरू नहीं हो सकता। जिस खाते के पास गेम है उस पर Minecraft फिर से इंस्टॉल या रिपेयर करें (Microsoft Store या Xbox App) और इंस्टॉलर दोबारा चलाएँ।'
+        ar='لم يُفتح Minecraft لأن Windows لم يتمكن من تفعيل التطبيق (الرمز 0x87E50035)، وليس بسبب الأنلوك. في أغلب الحالات تكون حزمة اللعبة مثبّتة لكنها غير مسجّلة لحسابك، وبدون ذلك لا تستطيع اللعبة أن تبدأ. أعد تثبيت Minecraft أو أصلحه على الحساب الذي يملك اللعبة (Microsoft Store أو Xbox App) ثم شغّل المثبّت مرة أخرى.'
+        ru='Minecraft не запустился, потому что Windows не смог активировать приложение (код 0x87E50035), а не из-за анлока. Чаще всего пакет игры установлен, но не зарегистрирован для вашей учётной записи, и без этого игра не запускается. Переустановите или восстановите Minecraft в учётной записи, которой принадлежит игра (Microsoft Store или Xbox App), и запустите установщик заново.'
+    }
     'crash_offer' = @{
         en='Minecraft closed right after opening.'
         es='Minecraft se cerro justo despues de abrir.'
@@ -2992,7 +3002,7 @@ function Install-Unlocker {
         if (-not $isArm -and -not $env:MBU_BASE_URL) {
             $dllSources.Add(@{ Url = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll'
                                Tries = 1 })
-            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.27/release/winmm.dll'
+            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.28/release/winmm.dll'
                                Tries = 1 })
         }
         Start-Sleep -Seconds 2
@@ -3394,7 +3404,7 @@ function Start-Minecraft {
     $Script:LaunchDiag = if ($isStore) {
         'mode=store content=' + $content
     } elseif ($opened) {
-        'mode=exe content=' + $content
+        'mode=exe official=' + $official + ' content=' + $content
     } else {
         'mode=failed official=' + $official + ' exe=' + $exeState + ' uri=' + $uriState + ' start-err=' + $startErr + ' content=' + $content
     }
@@ -3469,15 +3479,23 @@ function Get-DiagReportText {
             $lines.Add('[gate] ' + (@($Script:GateDiag | Select-Object -Unique) -join ' | '))
         }
     } catch { }
+    $allUsers = 'unknown'
+    try {
+        if (Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -AllUsers -ErrorAction SilentlyContinue | Select-Object -First 1) {
+            $allUsers = 'yes'
+        } else {
+            $allUsers = 'no'
+        }
+    } catch { }
     try {
         $appxPkg = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($appxPkg) {
-            $lines.Add('[pkg] registered=yes version=' + $appxPkg.Version + ' loc=' + $appxPkg.InstallLocation)
+            $lines.Add('[pkg] registered=yes allusers=' + $allUsers + ' version=' + $appxPkg.Version + ' loc=' + $appxPkg.InstallLocation)
         } else {
-            $lines.Add('[pkg] registered=no')
+            $lines.Add('[pkg] registered=no allusers=' + $allUsers)
         }
     } catch {
-        $lines.Add('[pkg] query-failed')
+        $lines.Add('[pkg] query-failed allusers=' + $allUsers)
     }
     try {
         if ($Script:LaunchDiag) {
@@ -4094,6 +4112,12 @@ function Get-CrashCodeHint {
         return @{
             key = 'crash_hint_gaming_services'
             tag = '0x80070424: Gaming Services missing/corrupt'
+        }
+    }
+    if ($code32 -eq ([int64]0x87E50035 -band 0xFFFFFFFFL)) {
+        return @{
+            key = 'crash_hint_pkg_unregistered'
+            tag = '0x87E50035: app activation failed (package not registered)'
         }
     }
     return $null

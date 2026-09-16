@@ -325,6 +325,45 @@ game exits with this code, and the failure report marks it as
 unlock problem. If you send the report, the `[pkg]` line also tells whether the
 game package is registered in Windows and which folder is being used.
 
+## Minecraft closes right after launch with exit code 0x87E50035 (v4.9.28+)
+
+```
+exit code: 0x87E50035
+```
+
+**What it means:** Windows could not activate the game app, so it started as a
+plain executable and died before the window appeared. `0x87E5...` codes come from
+the Store / Xbox app activation layer. It is **not** the unlock: a broken
+`winmm.dll` gives the *Bad Image* error `0xc0e90007` instead (see the section
+above).
+
+Three lines of the report show this state:
+
+- `[pkg] registered=no allusers=yes` means `-AllUsers` still sees the package on
+  this PC while your account is not registered for it, which happens when the
+  game was installed by another Windows user or the registration was lost. When
+  both say `no`, there is no package on the PC at all.
+- `[launch] mode=exe official=yes` means the installer started
+  `Minecraft.Windows.exe` straight from the official folder, which only happens
+  when the registered package is not available to open through `shell:AppsFolder`.
+- `[crash] evidence=process-exit code=0x87E50035` is the activation failure.
+
+**How to fix:** the game needs a registration for the account that owns it.
+
+1. Open the **Xbox App** (or the **Microsoft Store**) signed in with the account
+   that owns Minecraft and install, reinstall or repair the game from there.
+2. If the game is already on disk and only the registration is missing, open
+   PowerShell **as administrator** and register the package again:
+
+   ```powershell
+   Get-AppxPackage -AllUsers Microsoft.MinecraftUWP | ForEach-Object { Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppxManifest.xml" }
+   ```
+3. Open the game once to confirm it starts, then run this installer again.
+
+Since v4.9.28 the menu shows this explanation on screen in your language when the
+game exits with this code, and the failure report marks the reason as
+`0x87E50035: app activation failed (package not registered)`.
+
 ## "Access to the path '...winmm.dll.new' is denied" during install
 
 ```
