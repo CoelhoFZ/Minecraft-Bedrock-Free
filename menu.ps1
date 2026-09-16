@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.24'
+$Script:Version = '4.9.25'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -18,7 +18,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.24'
+    '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.25'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
     'f7b1408c36590abbfcb5310cf98c1efb1fa16f3a54a9387df56b1441de90335b' = 'v4.4.1'
     '86689c9724be7f391ba9bd1f4ef8dddaa73baec0b76b9c73bebef89f37b76e97' = 'v4.3.0'
@@ -346,7 +346,9 @@ $Script:PT = @{
     'closing_mc'         = 'Fechando Minecraft...'
     'downloading_bin'    = 'Baixando o binario (winmm.dll)...'
     'retry_download'     = 'Falha temporaria de rede no download (ex.: 503 do servidor). Tentando novamente ({0}/{1})...'
+    'retry_mirror'       = 'Falha no download. Tentando outro endereco...'
     'err_download_unavailable' = 'Nao foi possivel baixar o winmm.dll: o servidor de download (GitHub) respondeu com erro temporario (503/502/504) varias vezes seguidas. Nao e um problema do instalador. Verifique sua conexao e rode o instalador de novo em alguns minutos.'
+    'err_download_offline' = 'Nao foi possivel baixar o winmm.dll: o instalador nao conseguiu conectar ao servidor de download. Isso costuma ser internet instavel, DNS ou VPN bloqueando o acesso. Nao e um problema do instalador. Verifique sua conexao, desligue a VPN ou o proxy se estiver usando, e rode o instalador de novo.'
     'err_download_failed' = 'Nao foi possivel baixar o winmm.dll. Verifique sua conexao com a internet e rode o instalador de novo. Detalhe: {0}'
     'err_hash_invalid'   = 'Hash do winmm.dll invalido: {0}'
     'err_acl'            = 'Nao foi possivel tomar posse da pasta do Minecraft. Rode como administrador.'
@@ -703,6 +705,15 @@ $Script:I18N = @{
         ar='خطأ شبكة مؤقت أثناء التنزيل (مثل 503 من GitHub). إعادة المحاولة ({0}/{1})...'
         ru='Временная сетевая ошибка при загрузке (например, 503 от GitHub). Повторная попытка ({0}/{1})...'
     }
+    'retry_mirror' = @{
+        en='Download failed. Trying another address...'
+        es='La descarga fallo. Probando otra direccion...'
+        fr='Le telechargement a echoue. Essai d''une autre adresse...'
+        zh='下载失败。正在尝试另一个地址...'
+        hi='डाउनलोड विफल हुआ। दूसरा पता आज़माया जा रहा है...'
+        ar='فشل التنزيل. تجربة عنوان آخر...'
+        ru='Загрузка не удалась. Пробуем другой адрес...'
+    }
     'err_download_unavailable' = @{
         en='Could not download winmm.dll: the download server (GitHub) returned a temporary error (503/502/504) several times in a row. This is not an installer problem. Check your connection and run the installer again in a few minutes.'
         es='No se pudo descargar winmm.dll: el servidor de descarga (GitHub) devolvio un error temporal (503/502/504) varias veces seguidas. No es un problema del instalador. Verifica tu conexion y vuelve a ejecutar el instalador en unos minutos.'
@@ -711,6 +722,15 @@ $Script:I18N = @{
         hi='winmm.dll डाउनलोड नहीं हो सका: डाउनलोड सर्वर (GitHub) ने लगातार कई बार अस्थायी त्रुटि (503/502/504) दी। यह इंस्टॉलर की समस्या नहीं है। अपना कनेक्शन जाँचें और कुछ मिनटों बाद इंस्टॉलर फिर से चलाएँ।'
         ar='تعذّر تنزيل winmm.dll: أعاد خادم التنزيل (GitHub) خطأً مؤقتًا (503/502/504) عدة مرات متتالية. ليست مشكلة في المثبّت. تحقق من اتصالك وأعد تشغيل المثبّت بعد بضع دقائق.'
         ru='Не удалось загрузить winmm.dll: сервер загрузки (GitHub) несколько раз подряд возвращал временную ошибку (503/502/504). Это не проблема установщика. Проверьте подключение и снова запустите установщик через несколько минут.'
+    }
+    'err_download_offline' = @{
+        en='Could not download winmm.dll: the installer could not connect to the download server. That is usually an unstable connection, DNS or a VPN blocking the access. This is not an installer problem. Check your connection, turn off any VPN or proxy you use, and run the installer again.'
+        es='No se pudo descargar winmm.dll: el instalador no pudo conectarse al servidor de descarga. Normalmente es una conexion inestable, DNS o una VPN que bloquea el acceso. No es un problema del instalador. Verifica tu conexion, desactiva la VPN o el proxy si los usas y vuelve a ejecutar el instalador.'
+        fr='Impossible de telecharger winmm.dll : l''installateur n''a pas pu se connecter au serveur de telechargement. C''est generalement une connexion instable, un DNS ou un VPN qui bloque l''acces. Ce n''est pas un probleme de l''installateur. Verifiez votre connexion, desactivez le VPN ou le proxy si vous en utilisez, puis relancez l''installateur.'
+        zh='无法下载 winmm.dll：安装程序无法连接到下载服务器。通常是网络不稳定、DNS 或 VPN 拦截访问。这不是安装程序的问题。请检查网络连接，关闭正在使用的 VPN 或代理，然后重新运行安装程序。'
+        hi='winmm.dll डाउनलोड नहीं हो सका: इंस्टॉलर डाउनलोड सर्वर से कनेक्ट नहीं हो सका। यह आमतौर पर अस्थिर इंटरनेट, DNS या VPN के कारण होता है। यह इंस्टॉलर की समस्या नहीं है। अपना कनेक्शन जाँचें, VPN या प्रॉक्सी बंद करें और इंस्टॉलर फिर से चलाएँ।'
+        ar='تعذّر تنزيل winmm.dll: لم يتمكن المثبّت من الاتصال بخادم التنزيل. السبب عادةً اتصال غير مستقر أو DNS أو VPN يحجب الوصول. ليست مشكلة في المثبّت. تحقق من اتصالك وأوقف أي VPN أو وكيل تستخدمه ثم أعد تشغيل المثبّت.'
+        ru='Не удалось загрузить winmm.dll: установщик не смог подключиться к серверу загрузки. Обычно это нестабильное соединение, DNS или VPN, блокирующий доступ. Это не проблема установщика. Проверьте подключение, отключите VPN или прокси, если используете их, и снова запустите установщик.'
     }
     'err_download_failed' = @{
         en='Could not download winmm.dll. Check your internet connection and run the installer again. Detail: {0}'
@@ -2854,70 +2874,116 @@ function Install-Unlocker {
         } else {
             "$base/release/winmm.dll"
         }
+        $dllSources = New-Object System.Collections.Generic.List[object]
+        $dllSources.Add(@{ Url = $remoteDll
+                           Tries = 3 })
+        if (-not $isArm -and -not $env:MBU_BASE_URL) {
+            $dllSources.Add(@{ Url = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll'
+                               Tries = 1 })
+            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.25/release/winmm.dll'
+                               Tries = 1 })
+        }
         Start-Sleep -Seconds 2
         $actual = $null
         $netErr = $null
+        $sawServerError = $false
+        $sawConnError = $false
         $Script:DownloadDiag = New-Object System.Collections.Generic.List[string]
-        for ($attempt = 1; $attempt -le 3; $attempt++) {
-            Remove-Item $dll -Force -ErrorAction SilentlyContinue
+        $cachedBefore = if ($isArm) {
+            $null
+        } else {
+            Test-UnlockCache
+        }
+        $cacheState = if ($cachedBefore) {
+            'ok'
+        } else {
+            'missing'
+        }
+        $sourceIndex = 0
+        $Script:DownloadDiag.Add("cache=$cacheState")
+        foreach ($src in $dllSources) {
+            $sourceIndex = $sourceIndex + 1
+            $url = [string]$src.Url
+            $tries = [int]$src.Tries
+            $isLastSource = ($sourceIndex -eq $dllSources.Count)
+            $hostLabel = $url
             try {
-                Invoke-WebRequest -UseBasicParsing -Uri $remoteDll -OutFile $dll -TimeoutSec 20
-                Unblock-File $dll -ErrorAction SilentlyContinue
-                $Script:DownloadDiag.Add("t$attempt motw=" + (Test-MotW -Path $dll))
-            } catch {
-                $netErr = $_.Exception.Message
-                $code = $null
+                $hostLabel = ([Uri]$url).Host
+            } catch { }
+            for ($attempt = 1; $attempt -le $tries; $attempt++) {
+                Remove-Item $dll -Force -ErrorAction SilentlyContinue
                 try {
-                    $code = [int]$_.Exception.Response.StatusCode
-                } catch { }
-                $transient = ($code -in @(408, 429, 502, 503, 504)) -or
-                             ($netErr -match '50[234]|429|408|timed out|Unable to connect|The connection was closed|The remote name could not be resolved')
-                if ($transient -and $attempt -lt 3) {
-                    Write-Host (((T 'retry_download') -replace '\{0\}', [string]$attempt) -replace '\{1\}', '3') -ForegroundColor Yellow
-                    Start-Sleep -Seconds (3 * $attempt)
-                    continue
-                }
-                $cached = if ($isArm) {
-                    $null
-                } else {
-                    Test-UnlockCache
-                }
-                if ($cached) {
-                    Copy-Item $cached $dll -Force
+                    Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $dll -TimeoutSec 20
                     Unblock-File $dll -ErrorAction SilentlyContinue
-                    Write-Host ((T 'cache_used') -replace '\{0\}', $cached) -ForegroundColor Yellow
-                    $Script:DownloadDiag.Add("t$attempt cache-after-net-error")
-                } else {
-                    if ($isArm) {
-                        Write-Host (T 'arm64_no_release') -ForegroundColor Red
-                        Write-Host ((T 'track_releases') -replace '\{0\}', 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases') -ForegroundColor Yellow
+                    $Script:DownloadDiag.Add("$hostLabel t$attempt ok motw=" + (Test-MotW -Path $dll))
+                } catch {
+                    $netErr = $_.Exception.Message
+                    $code = $null
+                    try {
+                        $code = [int]$_.Exception.Response.StatusCode
+                    } catch { }
+                    $serverError = ($code -in @(408, 429, 502, 503, 504)) -or ($netErr -match '50[234]|429|408')
+                    $connError = ($netErr -match 'timed out|Unable to connect|The connection was closed|The remote name could not be resolved|No such host|connection attempt failed|Connection refused')
+                    if ($serverError) {
+                        $sawServerError = $true
                     }
-                    if ($transient) {
-                        throw (T 'err_download_unavailable')
+                    if ($connError) {
+                        $sawConnError = $true
                     }
-                    throw ((T 'err_download_failed') -replace '\{0\}', $netErr)
+                    if ($code) {
+                        $codeLabel = [string]$code
+                    } else {
+                        $codeLabel = '-'
+                    }
+                    $short = ([string]$netErr) -replace '[\r\n]+', ' '
+                    if ($short.Length -gt 80) {
+                        $short = $short.Substring(0, 80)
+                    }
+                    $Script:DownloadDiag.Add("$hostLabel t$attempt code=$codeLabel err=$short")
+                    $transient = ($serverError -or $connError)
+                    if ($transient -and ($attempt -lt $tries)) {
+                        $wait = [Math]::Min(4 * $attempt, 12)
+                        $retryAfter = 0
+                        try {
+                            $ra = [string]$_.Exception.Response.Headers['Retry-After']
+                            $raSec = 0
+                            if ($ra -and [int]::TryParse($ra.Trim(), [ref]$raSec)) {
+                                if ($raSec -gt 0) {
+                                    $retryAfter = [Math]::Min($raSec, 15)
+                                }
+                            }
+                        } catch { }
+                        if ($retryAfter -gt $wait) {
+                            $wait = $retryAfter
+                        }
+                        Write-Host (((T 'retry_download') -replace '\{0\}', [string]$attempt) -replace '\{1\}', [string]$tries) -ForegroundColor Yellow
+                        Start-Sleep -Seconds $wait
+                        continue
+                    }
+                    if ($cachedBefore) {
+                        Copy-Item $cachedBefore $dll -Force
+                        Unblock-File $dll -ErrorAction SilentlyContinue
+                        Write-Host ((T 'cache_used') -replace '\{0\}', $cachedBefore) -ForegroundColor Yellow
+                        $Script:DownloadDiag.Add("$hostLabel t$attempt cache-after-net-error")
+                    } elseif (-not $isLastSource) {
+                        $Script:DownloadDiag.Add("$hostLabel t$attempt switch-next-source")
+                        Write-Host (T 'retry_mirror') -ForegroundColor Yellow
+                        Start-Sleep -Seconds 2
+                        break
+                    } else {
+                        if ($isArm) {
+                            Write-Host (T 'arm64_no_release') -ForegroundColor Red
+                            Write-Host ((T 'track_releases') -replace '\{0\}', 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases') -ForegroundColor Yellow
+                        }
+                        if ($sawConnError -and -not $sawServerError) {
+                            throw (T 'err_download_offline')
+                        }
+                        if ($sawServerError) {
+                            throw (T 'err_download_unavailable')
+                        }
+                        throw ((T 'err_download_failed') -replace '\{0\}', $netErr)
+                    }
                 }
-            }
-            try {
-                if ((Test-Path $dll) -and ((Get-Item $dll -Force -ErrorAction Stop).Length -gt 0)) {
-                    $actual = Get-SafeFileHash -Path $dll
-                }
-            } catch {
-                $actual = $null
-            }
-            if ($actual) {
-                $Script:DownloadDiag.Add("t$attempt ok")
-                break
-            }
-            $Script:DownloadDiag.Add("t$attempt missing/empty/hash-unreadable")
-            $cacheNow = if ($isArm) {
-                $null
-            } else {
-                Test-UnlockCache
-            }
-            if ($cacheNow) {
-                Copy-Item $cacheNow $dll -Force
-                Unblock-File $dll -ErrorAction SilentlyContinue
                 try {
                     if ((Test-Path $dll) -and ((Get-Item $dll -Force -ErrorAction Stop).Length -gt 0)) {
                         $actual = Get-SafeFileHash -Path $dll
@@ -2926,16 +2992,40 @@ function Install-Unlocker {
                     $actual = $null
                 }
                 if ($actual) {
-                    Write-Host ((T 'cache_used') -replace '\{0\}', $cacheNow) -ForegroundColor Yellow
-                    $Script:DownloadDiag.Add("t$attempt cache-ok")
+                    $Script:DownloadDiag.Add("$hostLabel t$attempt hash-ok")
                     break
                 }
-                $Script:DownloadDiag.Add("t$attempt cache-blocked")
+                $Script:DownloadDiag.Add("$hostLabel t$attempt missing/empty/hash-unreadable")
+                $cacheNow = if ($isArm) {
+                    $null
+                } else {
+                    Test-UnlockCache
+                }
+                if ($cacheNow) {
+                    Copy-Item $cacheNow $dll -Force
+                    Unblock-File $dll -ErrorAction SilentlyContinue
+                    try {
+                        if ((Test-Path $dll) -and ((Get-Item $dll -Force -ErrorAction Stop).Length -gt 0)) {
+                            $actual = Get-SafeFileHash -Path $dll
+                        }
+                    } catch {
+                        $actual = $null
+                    }
+                    if ($actual) {
+                        Write-Host ((T 'cache_used') -replace '\{0\}', $cacheNow) -ForegroundColor Yellow
+                        $Script:DownloadDiag.Add("$hostLabel t$attempt cache-ok")
+                        break
+                    }
+                    $Script:DownloadDiag.Add("$hostLabel t$attempt cache-blocked")
+                }
+                if ($attempt -lt $tries) {
+                    Write-Host (((T 'av_retrying') -replace '\{0\}', [string]$attempt) -replace '\{1\}', [string]$tries) -ForegroundColor Yellow
+                    $null = Add-DefenderExclusions -Paths @($tmp, $content)
+                    Start-Sleep -Seconds 5
+                }
             }
-            if ($attempt -lt 3) {
-                Write-Host (((T 'av_retrying') -replace '\{0\}', [string]$attempt) -replace '\{1\}', '3') -ForegroundColor Yellow
-                $null = Add-DefenderExclusions -Paths @($tmp, $content)
-                Start-Sleep -Seconds 5
+            if ($actual) {
+                break
             }
         }
         if (-not $actual) {

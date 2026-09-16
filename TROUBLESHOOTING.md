@@ -172,6 +172,25 @@ already retries on temporary errors. If it keeps failing, download the newest
 `install.bat` from
 <https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/install.bat>.
 
+## "Could not download winmm.dll" during install (server error or no connection)
+
+**What it means:** the installer could not get the binary from the download
+server. Since v4.9.25 there are two messages for it: one says the server
+answered with a temporary error (503/502/504), the other says the installer
+could not connect to the server at all (unstable connection, DNS, or a VPN or
+proxy blocking the access). Neither one is a problem inside your machine.
+
+**What the installer already does:** it retries the same address and waits
+longer after each try, it honors the `Retry-After` header when the server sends
+one, then it tries two alternative addresses for the same file, and when a
+verified copy already exists in `%LOCALAPPDATA%\mbu-cache` it uses that copy
+instead.
+
+**How to fix:** check your connection, turn off any VPN or proxy you use, wait
+a few minutes and run the installer again. The failure report carries a `[dl]`
+line with the HTTP code of every attempt, which is what tells a temporary
+server error from a block on your side.
+
 ## "An object at the specified path does not exist: C:\Users\NAME~1" (temporary folder)
 
 Seen on Windows with a **space in the user name** (for example `PC XEON`).
@@ -479,8 +498,10 @@ Two things changed, so read this before touching anything:
 When you send the failure report, it now carries the objective evidence of the
 block instead of only saying "your antivirus blocked it":
 
-- `[dl]` - each download attempt and what happened to it (file missing, empty,
-  unreadable hash, whether MotW was present, whether the offline cache worked),
+- `[dl]` - every download attempt with the address, the attempt number, the
+  HTTP code and the error text, plus what happened to the file (missing, empty,
+  unreadable hash, whether MotW was present, whether the offline cache worked,
+  and whether the installer moved to an alternative address),
 - `[threat]` - the last entries Defender recorded as a threat (name, time,
   resource), which is what tells a real detection from a folder-protection
   block,
