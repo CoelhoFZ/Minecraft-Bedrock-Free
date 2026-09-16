@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.25'
+$Script:Version = '4.9.26'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -18,7 +18,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.25'
+    '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.26'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
     'f7b1408c36590abbfcb5310cf98c1efb1fa16f3a54a9387df56b1441de90335b' = 'v4.4.1'
     '86689c9724be7f391ba9bd1f4ef8dddaa73baec0b76b9c73bebef89f37b76e97' = 'v4.3.0'
@@ -371,6 +371,7 @@ $Script:PT = @{
     'nothing_to_restore' = 'O desbloqueio nao esta instalado (nada a restaurar).'
     'mc_started'         = 'Minecraft iniciado.'
     'mc_start_failed'    = 'Nao foi possivel iniciar o Minecraft automaticamente. Abra pelo menu Iniciar.'
+    'mc_start_failed_launcher' = 'Nao foi possivel iniciar o Minecraft automaticamente. Esta pasta nao e a instalacao oficial, entao abra o jogo pelo launcher que voce usou para instalar.'
     'state_unlocked_hint'= 'Se quiser, escolha [1] para remover o desbloqueio e voltar a Trial.'
     'state_trial'        = 'O Minecraft esta na versao TRIAL.'
     'state_trial_hint'   = 'Escolha [1] para desbloquear o jogo completo.'
@@ -478,6 +479,8 @@ $Script:PT = @{
     'gate_unknown_ver'      = 'Nao foi possivel determinar a versao do Minecraft instalado, entao nao da para confirmar que este unlocker funciona nela.'
     'gate_list_unavailable' = 'Nao foi possivel baixar a lista de versoes testadas (sem internet), entao nao da para confirmar que a versao {0} funciona com este unlocker.'
     'gate_ask'              = 'Continuar a instalacao mesmo assim? (S para sim, N para nao)'
+    'gate_source_warn'      = 'Atencao: a pasta encontrada nao e a instalacao oficial do Minecraft (Microsoft Store ou Xbox App): {0}. O desbloqueio foi testado apenas no build oficial, entao em launcher de terceiros ele pode nao funcionar e pode quebrar o launcher. Se o jogo foi instalado por um launcher, abra o jogo por ele depois de instalar.'
+    'gate_source_abort'     = 'Instalacao cancelada. Instale o Minecraft pela Microsoft Store ou pelo Xbox App e rode o instalador de novo.'
     'gate_decline_hint'     = 'Instalacao cancelada. Atualize o Minecraft pela Microsoft Store e rode o instalador de novo.'
     'crash_offer'           = 'O Minecraft fechou logo depois de abrir.'
     'crash_hint_gaming_services' = 'O Minecraft nao abriu porque falta no Windows um componente que ele usa (o Gaming Services) ou ele esta danificado, e nao por causa do unlock. Abra a Microsoft Store, reinstale o Gaming Services e rode o instalador de novo.'
@@ -821,6 +824,15 @@ $Script:I18N = @{
         fr='Impossible de démarrer Minecraft automatiquement. Ouvrez-le depuis le menu Démarrer.'
         ar='تعذّر تشغيل Minecraft تلقائيًا. افتحه من قائمة ابدأ.'
         ru='Не удалось запустить Minecraft автоматически. Откройте его из меню «Пуск».'
+    }
+    'mc_start_failed_launcher' = @{
+        en='Could not start Minecraft automatically. This folder is not the official installation, so open the game through the launcher you used to install it.'
+        es='No se pudo iniciar Minecraft automaticamente. Esta carpeta no es la instalacion oficial, asi que abre el juego desde el launcher que usaste para instalarlo.'
+        fr='Impossible de lancer Minecraft automatiquement. Ce dossier n''est pas l''installation officielle : ouvrez le jeu depuis le launcher que vous avez utilise pour l''installer.'
+        zh='无法自动启动 Minecraft。这个文件夹不是官方安装，请通过你安装游戏时使用的启动器打开游戏。'
+        hi='Minecraft स्वचालित रूप से शुरू नहीं हो सका। यह फ़ोल्डर आधिकारिक इंस्टॉलेशन नहीं है, इसलिए गेम को उसी लॉन्चर से खोलें जिससे आपने इंस्टॉल किया था।'
+        ar='تعذّر تشغيل Minecraft تلقائيًا. هذا المجلد ليس التثبيت الرسمي، لذا افتح اللعبة من المشغّل الذي استخدمته للتثبيت.'
+        ru='Не удалось запустить Minecraft автоматически. Эта папка не является официальной установкой, поэтому откройте игру из лаунчера, через который вы её установили.'
     }
     'state_unlocked_hint' = @{
         en='If you want, choose [1] to remove the unlock and go back to Trial.'
@@ -1776,6 +1788,24 @@ $Script:I18N = @{
         ar='هل تريد متابعة التثبيت رغم ذلك؟ (Y نعم، N لا)'
         ru='Продолжить установку в любом случае? (Y да, N нет)'
     }
+    'gate_source_warn' = @{
+        en='Warning: this Minecraft folder is not the official installation (Microsoft Store or Xbox App): {0}. The unlock was tested on the official build only, so in a third-party launcher it may not work and may break that launcher. If you installed the game with a launcher, open the game through it after installing.'
+        es='Atencion: esta carpeta de Minecraft no es la instalacion oficial (Microsoft Store o Xbox App): {0}. El desbloqueo se probo solo en el build oficial, asi que en un launcher de terceros puede no funcionar y puede romper ese launcher. Si instalaste el juego con un launcher, abrelo desde ese launcher despues de instalar.'
+        fr='Attention : ce dossier Minecraft n''est pas l''installation officielle (Microsoft Store ou Xbox App) : {0}. Le deblocage a ete teste uniquement sur le build officiel, donc dans un launcher tiers il peut ne pas fonctionner et peut casser ce launcher. Si vous avez installe le jeu avec un launcher, ouvrez le jeu depuis ce launcher apres l''installation.'
+        zh='注意：这个 Minecraft 文件夹不是官方安装（Microsoft Store 或 Xbox App）：{0}。解锁只在官方版本上测试过，在第三方启动器中可能无法工作，并且可能破坏该启动器。如果你用启动器安装了游戏，请在安装后通过该启动器打开游戏。'
+        hi='ध्यान दें: यह Minecraft फ़ोल्डर आधिकारिक इंस्टॉलेशन नहीं है (Microsoft Store या Xbox App): {0}. अनलॉक केवल आधिकारिक बिल्ड पर परीक्षित है, इसलिए किसी तीसरे पक्ष के लॉन्चर में यह काम नहीं कर सकता और उस लॉन्चर को तोड़ सकता है। अगर आपने गेम किसी लॉन्चर से इंस्टॉल किया है, तो इंस्टॉल के बाद उसी लॉन्चर से गेम खोलें।'
+        ar='تنبيه: مجلد Minecraft هذا ليس التثبيت الرسمي (Microsoft Store أو Xbox App): {0}. تم اختبار فتح القفل على الإصدار الرسمي فقط، لذا في مشغّل طرف ثالث قد لا يعمل وقد يُفسد ذلك المشغّل. إذا ثبّتت اللعبة بواسطة مشغّل، فافتح اللعبة منه بعد التثبيت.'
+        ru='Внимание: эта папка Minecraft не является официальной установкой (Microsoft Store или Xbox App): {0}. Разблокировка проверялась только на официальной сборке, поэтому в стороннем лаунчере она может не работать и может сломать этот лаунчер. Если вы установили игру через лаунчер, открывайте игру из него после установки.'
+    }
+    'gate_source_abort' = @{
+        en='Install cancelled. Install Minecraft from the Microsoft Store or the Xbox App and run the installer again.'
+        es='Instalacion cancelada. Instala Minecraft desde Microsoft Store o Xbox App y vuelve a ejecutar el instalador.'
+        fr='Installation annulee. Installez Minecraft depuis le Microsoft Store ou l''Xbox App, puis relancez l''installateur.'
+        zh='安装已取消。请从 Microsoft Store 或 Xbox App 安装 Minecraft，然后重新运行安装程序。'
+        hi='इंस्टॉल रद्द कर दिया गया। Minecraft को Microsoft Store या Xbox App से इंस्टॉल करें और इंस्टॉलर फिर से चलाएँ।'
+        ar='تم إلغاء التثبيت. ثبّت Minecraft من Microsoft Store أو Xbox App ثم أعد تشغيل المثبّت.'
+        ru='Установка отменена. Установите Minecraft из Microsoft Store или Xbox App и снова запустите установщик.'
+    }
     'gate_decline_hint' = @{
         en='Installation cancelled. Update Minecraft from the Microsoft Store and run the installer again.'
         es='Instalacion cancelada. Actualiza Minecraft desde la Microsoft Store y ejecuta el instalador otra vez.'
@@ -2301,9 +2331,56 @@ function Get-SupportedFloorVersion {
     return $floor
 }
 
+function Get-ShortText {
+    param([string]$Text, [int]$Max = 80)
+    if (-not $Text) {
+        return ''
+    }
+    $t = ([string]$Text) -replace '[\r\n]+', ' '
+    if ($t.Length -gt $Max) {
+        $t = $t.Substring(0, $Max)
+    }
+    return $t
+}
+
+function Test-OfficialContentSource {
+    param([string]$Content)
+    if (-not $Content) {
+        return $false
+    }
+    try {
+        $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($appx -and $appx.InstallLocation) {
+            $loc = [string]$appx.InstallLocation
+            if ($Content -eq $loc) {
+                return $true
+            }
+            if ($Content -eq (Join-Path $loc 'Content')) {
+                return $true
+            }
+        }
+    } catch { }
+    if ($Content -like '*:\XboxGames\*\Content') {
+        return $true
+    }
+    return $false
+}
+
 function Test-InstallGate {
     param([string]$Content)
     $Script:GateDiag = New-Object System.Collections.Generic.List[string]
+    if (-not (Test-OfficialContentSource -Content $Content)) {
+        $Script:GateDiag.Add('source=unrecognized')
+        Write-Host ''
+        Write-Host ((T 'gate_source_warn') -replace '\{0\}', $Content) -ForegroundColor Yellow
+        $ans = Read-Host ("  " + (T 'gate_ask'))
+        if (([string]$ans) -notmatch '^[syo]') {
+            $Script:GateDiag.Add('source=declined')
+            Write-Host ("  " + (T 'gate_source_abort')) -ForegroundColor DarkGray
+            return $false
+        }
+        $Script:GateDiag.Add('source=confirmed')
+    }
     if ((Get-GameMachineType -Content $Content).machine -eq 0xAA64) {
         $Script:GateDiag.Add('arch=arm64 result=skipped')
         return $true
@@ -2880,7 +2957,7 @@ function Install-Unlocker {
         if (-not $isArm -and -not $env:MBU_BASE_URL) {
             $dllSources.Add(@{ Url = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll'
                                Tries = 1 })
-            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.25/release/winmm.dll'
+            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.26/release/winmm.dll'
                                Tries = 1 })
         }
         Start-Sleep -Seconds 2
@@ -3229,6 +3306,9 @@ function Send-DownloadHit {
 function Start-Minecraft {
     $opened = $false
     $proc = $null
+    $exeState = 'skipped'
+    $startErr = ''
+    $uriState = 'skipped'
     try {
         $content = Find-MinecraftContent
         $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction SilentlyContinue | Select-Object -First 1
@@ -3246,33 +3326,49 @@ function Start-Minecraft {
         } else {
             $exe = Join-Path $content 'Minecraft.Windows.exe'
             if (Test-Path $exe) {
+                $exeState = 'present'
                 $proc = Start-Process -FilePath $exe -WorkingDirectory $content -PassThru -ErrorAction Stop
             } else {
+                $exeState = 'missing'
                 throw 'Executavel nao encontrado'
             }
         }
         $opened = $true
-    } catch { }
+    } catch {
+        $startErr = Get-ShortText -Text $_.Exception.Message
+    }
     if (-not $opened) {
         try {
             Start-Process 'minecraft:' -ErrorAction SilentlyContinue
             Start-Sleep -Seconds 2
             if (Get-Process Minecraft.Windows -ErrorAction SilentlyContinue) {
                 $opened = $true
+                $uriState = 'opened'
+            } else {
+                $uriState = 'no-process'
             }
-        } catch { }
+        } catch {
+            $uriState = 'error=' + (Get-ShortText -Text $_.Exception.Message)
+        }
+    }
+    $official = if (Test-OfficialContentSource -Content $content) {
+        'yes'
+    } else {
+        'no'
     }
     $Script:LaunchDiag = if ($isStore) {
         'mode=store content=' + $content
     } elseif ($opened) {
         'mode=exe content=' + $content
     } else {
-        'mode=failed content=' + $content
+        'mode=failed official=' + $official + ' exe=' + $exeState + ' uri=' + $uriState + ' start-err=' + $startErr + ' content=' + $content
     }
     if ($opened) {
         Write-Host (T 'mc_started')
-    } else {
+    } elseif ($official -eq 'yes') {
         Write-Host (T 'mc_start_failed')
+    } else {
+        Write-Host (T 'mc_start_failed_launcher')
     }
     return @{
         opened = $opened

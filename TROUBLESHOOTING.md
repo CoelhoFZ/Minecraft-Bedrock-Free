@@ -588,6 +588,13 @@ No. The unlock only works with the official **Microsoft Store / Xbox App**
 build. It does nothing in other launchers - and can break them. Do not copy
 it into another launcher.
 
+Since v4.9.26 the installer checks the folder it is about to use. When that
+folder is not the official installation it explains the risk and asks for
+confirmation before touching anything. When the game does not start after the
+install, the failure message tells you to open the game through your launcher,
+and the report records why the automatic start failed (executable missing,
+start error, no process after the fallback).
+
 ### Does it work on an older Minecraft version?
 
 The unlock targets the official build and is only tested on the **current**
