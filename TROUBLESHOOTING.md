@@ -647,3 +647,19 @@ start error, no process after the fallback).
 The unlock targets the official build and is only tested on the **current**
 version. Microsoft doesn't let you install an older version, so there's no
 supported way to run an older version with this unlocker.
+
+### I downloaded the file by hand and left it in Downloads / next to another game
+
+Delete that extra copy and run the installer again, nothing else is needed. The
+file must live only in the Minecraft game folder, which is where the installer
+puts it. Any other program that starts from the same folder as the file picks it
+up, which can stop that program from working (32-bit programs there may not open
+at all) and online games with anticheat can flag the session.
+
+### Where is the offline copy the installer keeps? (v4.9.31+)
+
+It is `%LOCALAPPDATA%\mbu-cache\payload-x64.bin`. Do not move or rename it. It
+is not the file the game reads, and only the installer places the file where the
+game reads it. Installs up to v4.9.30 kept that same copy as `winmm.dll` in that
+folder, and the installer now renames a valid copy to the new name on the first
+run, so the offline install keeps working after the update.

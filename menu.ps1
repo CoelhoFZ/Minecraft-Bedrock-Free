@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.30'
+$Script:Version = '4.9.31'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -19,7 +19,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    'e44230e539e5ec2378c1937746cfb34846ae1e21f9d4f2739f0d4d8c1e37d8da' = '4.9.30'
+    'e44230e539e5ec2378c1937746cfb34846ae1e21f9d4f2739f0d4d8c1e37d8da' = '4.9.31'
     '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.28'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
     'f7b1408c36590abbfcb5310cf98c1efb1fa16f3a54a9387df56b1441de90335b' = 'v4.4.1'
@@ -103,6 +103,8 @@ function Get-TempDir {
 }
 
 $cacheDir = Join-Path $env:LOCALAPPDATA 'mbu-cache'
+$payloadFile = 'payload-x64.bin'
+$Script:StrayDiag = $null
 $Script:TestedVersionData = $null
 $Script:AclDiag = $null
 $Script:SwapPrevDll = $null
@@ -2505,7 +2507,7 @@ function Test-InstallGate {
 }
 
 function Test-UnlockCache {
-    $cached = Join-Path $cacheDir 'winmm.dll'
+    $cached = Join-Path $cacheDir $payloadFile
     if (-not (Test-Path $cached)) {
         return $null
     }
@@ -2514,6 +2516,45 @@ function Test-UnlockCache {
         return $cached
     }
     return $null
+}
+
+function Add-StrayDiag {
+    param([string]$Action, [string]$Path)
+    if (-not $Script:StrayDiag) {
+        $Script:StrayDiag = New-Object System.Collections.Generic.List[string]
+    }
+    $Script:StrayDiag.Add($Action + ':' + $Path)
+}
+
+function Remove-LegacyWinmmCopies {
+    $legacyCache = Join-Path $cacheDir 'winmm.dll'
+    $currentCache = Join-Path $cacheDir $payloadFile
+    try {
+        if ((Test-Path -LiteralPath $legacyCache) -and -not (Test-Path -LiteralPath $currentCache)) {
+            if ((Get-SafeFileHash -Path $legacyCache) -eq $expectedHash) {
+                Move-Item -LiteralPath $legacyCache -Destination $currentCache -Force -ErrorAction Stop
+                Add-StrayDiag 'migrated' $legacyCache
+            }
+        }
+    } catch { }
+    $dirs = @($cacheDir, (Join-Path (Get-TempDir) 'mbu'))
+    try {
+        if ($env:TEMP) {
+            $dirs += (Join-Path $env:TEMP 'mbu')
+        }
+    } catch { }
+    foreach ($d in @($dirs | Select-Object -Unique)) {
+        if (-not $d) {
+            continue
+        }
+        $legacy = Join-Path $d 'winmm.dll'
+        try {
+            if (Test-Path -LiteralPath $legacy) {
+                Remove-Item -LiteralPath $legacy -Force -ErrorAction Stop
+                Add-StrayDiag 'removed' $legacy
+            }
+        } catch { }
+    }
 }
 
 function Test-UnlockInstalled {
@@ -2977,7 +3018,6 @@ function Install-Unlocker {
     if (-not (Test-Path -LiteralPath $tmp -PathType Container)) {
         throw ((T 'err_download_failed') -replace '\{0\}', $tmp)
     }
-    $dll = Join-Path $tmp 'winmm.dll'
     try {
         $extraExcl = @()
         foreach ($cand in Get-MinecraftCandidates) {
@@ -3025,13 +3065,19 @@ function Install-Unlocker {
         } else {
             "$base/release/winmm.dll"
         }
+        $stageName = if ($isArm) {
+            'payload-arm64.bin'
+        } else {
+            $payloadFile
+        }
+        $dll = Join-Path $tmp $stageName
         $dllSources = New-Object System.Collections.Generic.List[object]
         $dllSources.Add(@{ Url = $remoteDll
                            Tries = 3 })
         if (-not $isArm -and -not $env:MBU_BASE_URL) {
             $dllSources.Add(@{ Url = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll'
                                Tries = 1 })
-            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.30/release/winmm.dll'
+            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.31/release/winmm.dll'
                                Tries = 1 })
         }
         Start-Sleep -Seconds 2
@@ -3238,7 +3284,7 @@ function Install-Unlocker {
         if (-not $isArm) {
             try {
                 New-Item -ItemType Directory -Force -Path $cacheDir | Out-Null
-                Copy-Item $winmm (Join-Path $cacheDir 'winmm.dll') -Force
+                Copy-Item $winmm (Join-Path $cacheDir $payloadFile) -Force
                 Write-Host ((T 'cache_saved') -replace '\{0\}', $cacheDir) -ForegroundColor DarkGray
             } catch { }
         }
@@ -3862,12 +3908,17 @@ function Get-DiagReportText {
     $cached = Test-UnlockCache
     $cacheLine = if ($cached) {
         (T 'diag_cache_ok') -replace '\{0\}', $cached
-    } elseif (Test-Path (Join-Path $cacheDir 'winmm.dll')) {
+    } elseif (Test-Path (Join-Path $cacheDir $payloadFile)) {
         T 'diag_cache_bad'
     } else {
         T 'diag_cache_none'
     }
     $lines.Add("$(T 'diag_cache'): $cacheLine")
+    try {
+        if ($Script:StrayDiag -and $Script:StrayDiag.Count -gt 0) {
+            $lines.Add('[stray] ' + ($Script:StrayDiag -join ' | '))
+        }
+    } catch { }
     try {
         $ms = Get-MpComputerStatus -ErrorAction Stop
         $rtp = if ($ms.RealTimeProtectionEnabled) {
@@ -4198,7 +4249,7 @@ function Send-PostLaunchCrashReport {
 
 function Test-PriorUnlockEvidence {
     try {
-        if (Test-Path (Join-Path $cacheDir 'winmm.dll')) {
+        if (Test-Path (Join-Path $cacheDir $payloadFile)) {
             return $true
         }
     } catch { }
@@ -4355,6 +4406,8 @@ function Send-MbuFailureReport {
 if ($env:MBU_NO_LOOP -eq '1') {
     return
 }
+
+Remove-LegacyWinmmCopies
 
 $Script:LateCorruptShown = $false
 

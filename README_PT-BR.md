@@ -33,7 +33,13 @@ Windows 10/11.
 > problemas com o prefixo `[ARM64]` se estiver em ARM.
 
 - NÃO copie o `winmm.dll` para outro launcher/pasta. Ele só desbloqueia o
-  build oficial e pode quebrar outros launchers.
+  build oficial e pode quebrar outros launchers. Deixe o arquivo só onde o
+  instalador coloca: qualquer outro programa que abra da mesma pasta que ele
+  acaba pegando o arquivo ao iniciar, o que pode impedir esse programa de
+  funcionar (programas 32 bits podem nem abrir) e jogos online com anticheat
+  podem marcar a sessão. Isso vale para uma cópia que você baixou na mão e
+  deixou em Downloads, na Área de Trabalho ou junto de outro jogo: apague essa
+  cópia extra e rode o instalador de novo.
 
 ## Instalação
 

@@ -30,7 +30,13 @@ Unlock the full version of **Minecraft Bedrock Edition (GDK)** on Windows 10/11.
 > with the `[ARM64]` prefix if you are on ARM.
 
 - Do **not** copy `winmm.dll` into another launcher/folder. It only unlocks
-  the official build and can break other launchers.
+  the official build and can break other launchers. Leave the file only where
+  the installer puts it: any other program that starts from the same folder as
+  the file picks it up when it starts, which can stop that program from working
+  (32-bit programs there may not open at all) and online games with anticheat
+  can flag the session. This includes a copy you downloaded by hand and left in
+  Downloads, on the Desktop or next to another game: delete that extra copy and
+  run the installer again.
 
 ## Install
 
