@@ -582,6 +582,14 @@ Xbox App, install it from there instead. The old wording for this case was only
 "Minecraft package found but the game executable is missing", which sent users to
 a full reinstall that was usually not necessary.
 
+Since v4.9.30 that list also covers the folder the registered package really
+points to and every `XboxGames` folder on the fixed drives of the PC. So a game
+whose content sits in `C:\XboxGames\Minecraft for Windows_1\Content`, or on a
+drive other than `C:`, is found and installed without a reinstall. The failure
+report shows the same locations: the `[pkg]` line adds `target=` when the
+package folder is a link, and each `[candidate]` line marks it as
+`(junction -> ...)` followed by where it points.
+
 ## "Windows refused administrator permission for this account" (v4.9.21+)
 
 This message appears when Windows itself refuses the elevation request, before

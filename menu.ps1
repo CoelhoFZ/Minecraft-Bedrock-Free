@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.29'
+$Script:Version = '4.9.30'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -19,7 +19,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    'e44230e539e5ec2378c1937746cfb34846ae1e21f9d4f2739f0d4d8c1e37d8da' = '4.9.29'
+    'e44230e539e5ec2378c1937746cfb34846ae1e21f9d4f2739f0d4d8c1e37d8da' = '4.9.30'
     '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.28'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
     'f7b1408c36590abbfcb5310cf98c1efb1fa16f3a54a9387df56b1441de90335b' = 'v4.4.1'
@@ -2034,21 +2034,48 @@ function Get-TimeGreeting {
 }
 
 function Get-MinecraftCandidates {
-    $list = New-Object System.Collections.Generic.List[string]
+    $found = New-Object System.Collections.Generic.List[string]
     try {
         $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -AllUsers -ErrorAction SilentlyContinue | Select-Object -First 1
         if (-not $appx) {
             $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction SilentlyContinue | Select-Object -First 1
         }
         if ($appx -and $appx.InstallLocation) {
-            $list.Add($appx.InstallLocation)
-            $sub = Join-Path $appx.InstallLocation 'Content'
-            if ($sub -ne $appx.InstallLocation) {
-                $list.Add($sub)
+            $found.Add($appx.InstallLocation)
+            $found.Add((Join-Path $appx.InstallLocation 'Content'))
+            $real = Get-PathRealTarget -Path $appx.InstallLocation
+            if ($real) {
+                $found.Add($real)
+                $found.Add((Join-Path $real 'Content'))
             }
         }
     } catch { }
-    $list.Add('C:\XboxGames\Minecraft for Windows\Content')
+    $found.Add('C:\XboxGames\Minecraft for Windows\Content')
+    try {
+        foreach ($drive in [System.IO.DriveInfo]::GetDrives()) {
+            if ($drive.DriveType -ne [System.IO.DriveType]::Fixed) {
+                continue
+            }
+            $xbox = Join-Path $drive.RootDirectory.FullName 'XboxGames'
+            if (-not (Test-Path -LiteralPath $xbox)) {
+                continue
+            }
+            foreach ($child in @(Get-ChildItem -LiteralPath $xbox -Directory -ErrorAction SilentlyContinue)) {
+                $found.Add((Join-Path $child.FullName 'Content'))
+            }
+        }
+    } catch { }
+    $list = New-Object System.Collections.Generic.List[string]
+    $seen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    foreach ($cand in $found) {
+        $item = ([string]$cand).TrimEnd('\')
+        if (-not $item) {
+            continue
+        }
+        if ($seen.Add($item)) {
+            $list.Add($item)
+        }
+    }
     return $list
 }
 
@@ -3004,7 +3031,7 @@ function Install-Unlocker {
         if (-not $isArm -and -not $env:MBU_BASE_URL) {
             $dllSources.Add(@{ Url = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll'
                                Tries = 1 })
-            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.29/release/winmm.dll'
+            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.30/release/winmm.dll'
                                Tries = 1 })
         }
         Start-Sleep -Seconds 2
@@ -3492,7 +3519,12 @@ function Get-DiagReportText {
     try {
         $appxPkg = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($appxPkg) {
-            $lines.Add('[pkg] registered=yes allusers=' + $allUsers + ' version=' + $appxPkg.Version + ' loc=' + $appxPkg.InstallLocation)
+            $pkgLine = '[pkg] registered=yes allusers=' + $allUsers + ' version=' + $appxPkg.Version + ' loc=' + $appxPkg.InstallLocation
+            $pkgReal = Get-PathRealTarget -Path $appxPkg.InstallLocation
+            if ($pkgReal) {
+                $pkgLine += ' target=' + $pkgReal
+            }
+            $lines.Add($pkgLine)
         } else {
             $lines.Add('[pkg] registered=no allusers=' + $allUsers)
         }
@@ -3598,11 +3630,14 @@ function Get-DiagReportText {
             } else {
                 '?'
             }
-            $src = if ($inv -and $inv.ScriptName) {
-                [IO.Path]::GetFileName([string]$inv.ScriptName)
-            } else {
-                '?'
-            }
+            $src = '?'
+            try {
+                if ($inv -and $inv.ScriptName) {
+                    $src = [IO.Path]::GetFileName([string]$inv.ScriptName)
+                } elseif ($PSCommandPath) {
+                    $src = [IO.Path]::GetFileName([string]$PSCommandPath)
+                }
+            } catch { }
             $lineNo = if ($inv) {
                 [string]$inv.ScriptLineNumber
             } else {
@@ -3751,10 +3786,15 @@ function Get-DiagReportText {
         } catch { }
         foreach ($probe in Get-MinecraftCandidates) {
             try {
+                $probeLine = "  $(T 'diag_cand_label') $probe"
+                $probeReal = Get-PathRealTarget -Path $probe
+                if ($probeReal) {
+                    $probeLine += ' (junction -> ' + $probeReal + ')'
+                }
                 if (-not (Test-Path -LiteralPath $probe)) {
-                    $lines.Add("  $(T 'diag_cand_label') $probe : $(T 'diag_probe_missing')")
+                    $lines.Add($probeLine + ' : ' + (T 'diag_probe_missing'))
                 } elseif (-not (Test-Path -LiteralPath (Join-Path $probe 'Minecraft.Windows.exe'))) {
-                    $lines.Add("  $(T 'diag_cand_label') $probe : $(T 'diag_probe_noexe')")
+                    $lines.Add($probeLine + ' : ' + (T 'diag_probe_noexe'))
                 }
             } catch { }
         }
