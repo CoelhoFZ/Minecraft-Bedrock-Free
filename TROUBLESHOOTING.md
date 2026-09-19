@@ -461,13 +461,13 @@ Since v4.9.10 a denied write no longer destroys the unlock you already had:
 
 Since v4.9.23 the installer checks a **minimum supported version** (the
 `min_supported` field of `tested-versions.json`) instead of an exact list: any
-Minecraft for Windows build from **1.26 on** is accepted, including a build
+Minecraft for Windows build from **1.21 on** is accepted, including a build
 **newer** than the one this release was verified against. That is on purpose -
 the unlock hooks the GDK license APIs (`XStore*`), which is not tied to the
 game build.
 
 **What it means when you are blocked:** your game build is **older** than the
-floor (for example 1.18.x or 1.21.x). The installer stops before downloading
+floor (for example 1.17.x or 1.20.x). The installer stops before downloading
 anything, with the message
 "Installation BLOCKED: game version ... is older than the minimum supported
 version (...)".

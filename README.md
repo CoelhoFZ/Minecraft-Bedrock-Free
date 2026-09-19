@@ -21,7 +21,7 @@ Unlock the full version of **Minecraft Bedrock Edition (GDK)** on Windows 10/11.
 - **Official build only.** Works exclusively with the official **Microsoft
   Store** or **Xbox App** build of Minecraft Bedrock for Windows. It will NOT
   work with third-party launchers or version switchers.
-- **Build 1.26 or newer.** Works with any Minecraft for Windows build from 1.26
+- **Build 1.21 or newer.** Works with any Minecraft for Windows build from 1.21
   on, including a build newer than this release. Older builds are refused.
   Microsoft does not let you install older versions, and this project does not
   provide one.
@@ -114,7 +114,7 @@ expected for an unlocker. See [Antivirus false positives](docs/antivirus-false-p
 ## Game version compatibility
 
 The unlock works by hooking the GDK license APIs (`XStore*`), so it is not tied
-to one game build: **any Minecraft for Windows build from 1.26 on is
+to one game build: **any Minecraft for Windows build from 1.21 on is
 accepted**, including a build **newer** than the one this release was verified
 against. The menu downloads `tested-versions.json` from this repository to read
 the minimum supported version; if your game is **older** than that floor, the

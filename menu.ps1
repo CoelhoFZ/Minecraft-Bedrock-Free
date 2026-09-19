@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.31'
+$Script:Version = '4.9.32'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -19,7 +19,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    'e44230e539e5ec2378c1937746cfb34846ae1e21f9d4f2739f0d4d8c1e37d8da' = '4.9.31'
+    'e44230e539e5ec2378c1937746cfb34846ae1e21f9d4f2739f0d4d8c1e37d8da' = '4.9.32'
     '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.28'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
     'f7b1408c36590abbfcb5310cf98c1efb1fa16f3a54a9387df56b1441de90335b' = 'v4.4.1'
@@ -2628,6 +2628,31 @@ function Test-MotW {
     return 'no'
 }
 
+function Copy-PayloadStaging {
+    param([string]$Source, [string]$Target, [string]$Tmp)
+    $round = 0
+    while ($round -lt 2) {
+        $round = $round + 1
+        $dest = $Target
+        if ($round -gt 1) {
+            $stub = [IO.Path]::GetFileNameWithoutExtension($Target)
+            $dest = Join-Path $Tmp ($stub + '-' + [guid]::NewGuid().ToString('N').Substring(0, 8) + '.bin')
+        }
+        $ok = $false
+        try {
+            Remove-Item $dest -Force -ErrorAction SilentlyContinue
+            Copy-Item $Source $dest -Force -ErrorAction Stop
+            $ok = $true
+        } catch {
+            Start-Sleep -Milliseconds 500
+        }
+        if ($ok) {
+            return $dest
+        }
+    }
+    return $null
+}
+
 function Test-CfaEnabled {
     try {
         $cfa = (Get-MpPreference -ErrorAction Stop).EnableControlledFolderAccess
@@ -3077,7 +3102,7 @@ function Install-Unlocker {
         if (-not $isArm -and -not $env:MBU_BASE_URL) {
             $dllSources.Add(@{ Url = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll'
                                Tries = 1 })
-            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.31/release/winmm.dll'
+            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.32/release/winmm.dll'
                                Tries = 1 })
         }
         Start-Sleep -Seconds 2
@@ -3158,10 +3183,18 @@ function Install-Unlocker {
                         continue
                     }
                     if ($cachedBefore) {
-                        Copy-Item $cachedBefore $dll -Force
-                        Unblock-File $dll -ErrorAction SilentlyContinue
-                        Write-Host ((T 'cache_used') -replace '\{0\}', $cachedBefore) -ForegroundColor Yellow
-                        $Script:DownloadDiag.Add("$hostLabel t$attempt cache-after-net-error")
+                        $staged = Copy-PayloadStaging -Source $cachedBefore -Target $dll -Tmp $tmp
+                        if ($staged) {
+                            if ($staged -ne $dll) {
+                                $Script:DownloadDiag.Add("$hostLabel t$attempt staging-renamed")
+                            }
+                            $dll = $staged
+                            Unblock-File $dll -ErrorAction SilentlyContinue
+                            Write-Host ((T 'cache_used') -replace '\{0\}', $cachedBefore) -ForegroundColor Yellow
+                            $Script:DownloadDiag.Add("$hostLabel t$attempt cache-after-net-error")
+                        } else {
+                            $Script:DownloadDiag.Add("$hostLabel t$attempt cache-copy-failed")
+                        }
                     } elseif (-not $isLastSource) {
                         $Script:DownloadDiag.Add("$hostLabel t$attempt switch-next-source")
                         Write-Host (T 'retry_mirror') -ForegroundColor Yellow
@@ -3199,21 +3232,29 @@ function Install-Unlocker {
                     Test-UnlockCache
                 }
                 if ($cacheNow) {
-                    Copy-Item $cacheNow $dll -Force
-                    Unblock-File $dll -ErrorAction SilentlyContinue
-                    try {
-                        if ((Test-Path $dll) -and ((Get-Item $dll -Force -ErrorAction Stop).Length -gt 0)) {
-                            $actual = Get-SafeFileHash -Path $dll
+                    $staged = Copy-PayloadStaging -Source $cacheNow -Target $dll -Tmp $tmp
+                    if ($staged) {
+                        if ($staged -ne $dll) {
+                            $Script:DownloadDiag.Add("$hostLabel t$attempt staging-renamed")
                         }
-                    } catch {
-                        $actual = $null
+                        $dll = $staged
+                        Unblock-File $dll -ErrorAction SilentlyContinue
+                        try {
+                            if ((Test-Path $dll) -and ((Get-Item $dll -Force -ErrorAction Stop).Length -gt 0)) {
+                                $actual = Get-SafeFileHash -Path $dll
+                            }
+                        } catch {
+                            $actual = $null
+                        }
+                        if ($actual) {
+                            Write-Host ((T 'cache_used') -replace '\{0\}', $cacheNow) -ForegroundColor Yellow
+                            $Script:DownloadDiag.Add("$hostLabel t$attempt cache-ok")
+                            break
+                        }
+                        $Script:DownloadDiag.Add("$hostLabel t$attempt cache-blocked")
+                    } else {
+                        $Script:DownloadDiag.Add("$hostLabel t$attempt cache-copy-failed")
                     }
-                    if ($actual) {
-                        Write-Host ((T 'cache_used') -replace '\{0\}', $cacheNow) -ForegroundColor Yellow
-                        $Script:DownloadDiag.Add("$hostLabel t$attempt cache-ok")
-                        break
-                    }
-                    $Script:DownloadDiag.Add("$hostLabel t$attempt cache-blocked")
                 }
                 if ($attempt -lt $tries) {
                     Write-Host (((T 'av_retrying') -replace '\{0\}', [string]$attempt) -replace '\{1\}', [string]$tries) -ForegroundColor Yellow

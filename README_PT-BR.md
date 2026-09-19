@@ -24,8 +24,8 @@ Windows 10/11.
   **Microsoft Store** ou do **Xbox App** do Minecraft Bedrock para Windows.
   NÃO funciona com launchers de terceiros nem seletor de versão (eles não usam
   a API de licença GDK que o unlock intercepta).
-- **Build 1.26 ou mais novo.** Funciona com qualquer build do Minecraft for
-  Windows a partir da 1.26, inclusive uma build mais nova que a desta release.
+- **Build 1.21 ou mais novo.** Funciona com qualquer build do Minecraft for
+  Windows a partir da 1.21, inclusive uma build mais nova que a desta release.
   Builds mais antigas são recusadas. A Microsoft não permite instalar versões
   antigas, e este projeto não fornece nenhuma.
 > **Windows on ARM:** esta release distribui apenas o build x64. O build nativo
@@ -119,7 +119,7 @@ esperado para um unlocker. Veja [Falsos positivos de antivírus](docs/antivirus-
 
 O unlock funciona enganchando as APIs de licença do GDK (`XStore*`), então não
 depende de uma build específica do jogo: **qualquer build do Minecraft for
-Windows a partir da 1.26 é aceita**, inclusive uma build **mais nova** que a
+Windows a partir da 1.21 é aceita**, inclusive uma build **mais nova** que a
 verificada nesta release. O menu baixa o `tested-versions.json` deste
 repositório para ler o piso de versão; se o seu jogo for **mais antigo** que
 esse piso, o instalador para antes de baixar qualquer coisa e pede para
