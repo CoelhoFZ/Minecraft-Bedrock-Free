@@ -398,7 +398,10 @@ the generic "Minecraft closed right after opening" message.
    the gaming services and app activation cases above.
 
 The cause of the unload is under investigation; the module, the exception code
-and the fault offset in the report are what make it possible to fix.
+and the fault offset in the report are what make it possible to fix. Since
+v4.9.35 the unlock stays loaded for the whole game session, which covers this
+case on the installations that release the DLL; if the crash still appears on
+v4.9.35 or newer, the report is what moves the fix forward.
 
 ## "Access to the path '...winmm.dll.new' is denied" during install
 
@@ -459,6 +462,12 @@ entries present on the folder, including inherited ones, and whether they
 were removed) and adds a read-back of the folder state taken after the last
 attempt (`aclOwner`, `aclDenyLeft`, `aclAdmWrite`). The report also
 lists the file system filters loaded in the system in the `[filters]` line.
+Since v4.9.35 the `Err=` suffix only appears when the tool really failed: a
+localized *success* summary (for example the Spanish `Se procesaron
+correctamente 1 archivos; error al procesar 0 archivos`, which contains the
+word `error`) no longer marks a successful step as an error, and a failure is
+recognized by the access-denied wording or by a non-zero count in the summary
+(`Failed processing 1 files`). Steps that succeed are printed as `name=0`.
 When the read-back shows the permissions are correct (owner changed, no deny
 entry left, `aclAdmWrite=yes`) and the write is still denied, no permission
 change will help: a product with a filter in the disk stack (antivirus,
@@ -511,6 +520,13 @@ Since v4.9.10 a denied write no longer destroys the unlock you already had:
   exclusions and whether Windows accepted them, which is what Tamper Protection
   blocks - until now the report could not tell "tried and failed" from "never
   tried").
+- Since v4.9.35 the `[swap]` line also tells why a copy was rejected:
+  `verify=fail got=<hash prefix> want=<hash prefix>` means the copied file did
+  not match the expected hash (the antivirus changed or quarantined it), while
+  `got=unreadable` means the copy could not even be read back, which is what a
+  file held open by a scanner looks like. The installer now re-reads that copy
+  up to 3 times before giving up, so a short lock during the scan no longer
+  fails the install and shows up as `verify=retry-ok`.
 - `[threat]` and `[cfa]` now say when a third-party antivirus is active: those
   two lines read the Windows Defender log only, so `[threat] none` with another
   antivirus running means "not covered here", not "nothing blocked it".

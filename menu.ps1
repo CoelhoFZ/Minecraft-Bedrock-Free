@@ -1,13 +1,14 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.34'
+$Script:Version = '4.9.35'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
     'https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main'
 }
-$expectedHash = 'e44230e539e5ec2378c1937746cfb34846ae1e21f9d4f2739f0d4d8c1e37d8da'
+$expectedHash = 'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c'
 $knownUnlockHashes = @(
+    'e44230e539e5ec2378c1937746cfb34846ae1e21f9d4f2739f0d4d8c1e37d8da',
     '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299',
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e',
     'f7b1408c36590abbfcb5310cf98c1efb1fa16f3a54a9387df56b1441de90335b',
@@ -19,6 +20,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
+    'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c' = '4.9.35'
     'e44230e539e5ec2378c1937746cfb34846ae1e21f9d4f2739f0d4d8c1e37d8da' = '4.9.34'
     '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.28'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
@@ -2195,7 +2197,9 @@ function Invoke-AclCmd {
     } finally {
         $ErrorActionPreference = $prev
     }
-    $suspect = ($out -match '(?i)\b(error|denied)\b') -or ($out -match 'Failed processing [1-9]')
+    $deniedWord = ($out -match '(?i)(denied|negado|denegado|negato|verweigert|refus)') -or ($out -match 'отказано|拒绝访问|تم رفض')
+    $failCount = ($out -match '(?i)\b(error|failed|fehler|erro|erreur|falha|errore)\b[^0-9]*[1-9][0-9]*')
+    $suspect = ($deniedWord -or $failCount)
     if (($code -eq 0 -and -not $suspect) -or -not $out) {
         return ($Name + '=' + $code)
     }
@@ -2889,8 +2893,26 @@ function Write-UnlockDllAtomic {
         $prevMoved = $false
         try {
             Copy-Item $SourceDll $stagedDll -Force -ErrorAction Stop
-            if ($CheckHash -and (Get-SafeFileHash -Path $stagedDll) -ne $CheckHash) {
-                throw (T 'err_copy_corrupt')
+            $stagedHash = Get-SafeFileHash -Path $stagedDll
+            if ($CheckHash -and $stagedHash -ne $CheckHash) {
+                for ($verify = 1; $verify -le 3 -and $stagedHash -ne $CheckHash; $verify++) {
+                    Start-Sleep -Milliseconds 400
+                    $stagedHash = Get-SafeFileHash -Path $stagedDll
+                }
+                if ($stagedHash -eq $CheckHash) {
+                    $Script:SwapDiag.Add("verify=retry-ok attempt=$attempt")
+                } else {
+                    $gotShort = 'unreadable'
+                    if ($stagedHash) {
+                        $gotShort = $stagedHash.Substring(0, 12)
+                    }
+                    $wantShort = [string]$CheckHash
+                    if ($wantShort.Length -gt 12) {
+                        $wantShort = $wantShort.Substring(0, 12)
+                    }
+                    $Script:SwapDiag.Add("verify=fail attempt=$attempt got=$gotShort want=$wantShort")
+                    throw (T 'err_copy_corrupt')
+                }
             }
             if (Test-Path $winmm) {
                 Move-Item $winmm $prevDll -Force -ErrorAction Stop
@@ -3179,7 +3201,7 @@ function Install-Unlocker {
         if (-not $isArm -and -not $env:MBU_BASE_URL) {
             $dllSources.Add(@{ Url = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll'
                                Tries = 1 })
-            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.34/release/winmm.dll'
+            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.35/release/winmm.dll'
                                Tries = 1 })
         }
         Start-Sleep -Seconds 2
@@ -4401,7 +4423,13 @@ function Get-CrashFaultInfo {
         } elseif ($msg -match '(?i)P7:\s*0*([0-9a-f]{4,8})') {
             $info.code = '0x' + $Matches[1].ToLowerInvariant()
         }
-        if ($msg -match '(?i)P8:\s*0*([0-9a-f]{4,16})') {
+        $evtXml = ''
+        try {
+            $evtXml = [string]$evt.ToXml()
+        } catch { }
+        if ($evtXml -match '(?i)<Data Name="FaultingOffset">0*([0-9a-f]{1,16})</Data>') {
+            $info.offset = '0x' + $Matches[1].ToLowerInvariant()
+        } elseif ($msg -match '(?i)P8:\s*0*([0-9a-f]{4,16})') {
             $info.offset = '0x' + $Matches[1].ToLowerInvariant()
         }
         return $info
