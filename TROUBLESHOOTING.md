@@ -418,6 +418,28 @@ Steps that fail also include the tool's own output (for example
 `grantAdm=1, grantAdmErr=Access is denied. | ...`), which tells whether the
 permission change itself was rejected.
 
+Since v4.9.33 that line also reports `denySeen` and `denyRemoved` (deny
+entries present on the folder, including inherited ones, and whether they
+were removed) and adds a read-back of the folder state taken after the last
+attempt (`aclOwner`, `aclDenyLeft`, `aclAdmWrite`). The report also
+lists the file system filters loaded in the system in the `[filters]` line.
+When the read-back shows the permissions are correct (owner changed, no deny
+entry left, `aclAdmWrite=yes`) and the write is still denied, no permission
+change will help: a product with a filter in the disk stack (antivirus,
+endpoint security or a system hardening tool) is blocking the write to the
+game folder, and the filter names in the report usually identify it.
+
+If the game is the old Microsoft Store (UWP) installation (the game folder is
+inside `C:\Program Files\WindowsApps`), Windows may deny the permission change
+even to an administrator, and no antivirus exclusion will help. Since v4.9.33
+the installer adds that note to the error message. The current Minecraft
+version, installed through the Xbox app (GDK), uses a folder the installer can
+write to (`C:\XboxGames`), so moving the game to that version is the way out on
+a PC where the Store folder stays blocked. If the Store does not offer a newer
+version, uninstall the game and install it again from the Store or the Xbox
+app. Back up your worlds first: they live in
+`%LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds`.
+
 If you are still stuck after the steps above, sending that report tells the
 developer exactly which step is being denied.
 
@@ -477,6 +499,8 @@ installer again.
 
 **If your game is NEWER than the `tested` list:** nothing to do, it is not a
 block. Since v4.9.23 a build newer than the verified one installs normally.
+Since v4.9.33 a build between the minimum supported and the verified build is
+reported as `older than the verified build`, which is not a block either.
 Older releases (v4.9.5 up to v4.9.22) refused it with the same message, so if
 you saw this on a game that was already up to date, update the installer
 (re-run the one-liner) and try again.

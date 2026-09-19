@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.32'
+$Script:Version = '4.9.33'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -19,7 +19,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    'e44230e539e5ec2378c1937746cfb34846ae1e21f9d4f2739f0d4d8c1e37d8da' = '4.9.32'
+    'e44230e539e5ec2378c1937746cfb34846ae1e21f9d4f2739f0d4d8c1e37d8da' = '4.9.33'
     '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.28'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
     'f7b1408c36590abbfcb5310cf98c1efb1fa16f3a54a9387df56b1441de90335b' = 'v4.4.1'
@@ -421,6 +421,7 @@ $Script:PT = @{
     'diag_tested'        = 'Suporte a versao do jogo'
     'diag_tested_ok'     = 'OK - build verificada (tested-versions.json)'
     'diag_tested_newer'  = 'OK - mais nova que a build verificada'
+    'diag_tested_older'  = 'OK - mais antiga que a build verificada (acima do minimo)'
     'diag_tested_bad'    = 'BLOQUEADA - abaixo do minimo suportado'
     'diag_tested_unknown'= 'indisponivel (sem internet ou sem dados)'
     'diag_av'            = 'Exclusoes do Defender (mbu/Minecraft)'
@@ -462,6 +463,7 @@ $Script:PT = @{
     'sac_off_write_fail'    = 'Nao foi possivel GRAVAR a chave do Smart App Control (acesso negado). O reboot NAO resolve isso. Verifique se o antivirus/politica nao protege o registro, rode como administrador e tente de novo - ou desligue pela Seguranca do Windows: App e navegador > Smart App Control settings.'
     'sac_skip_launch'       = 'O Smart App Control foi desligado, mas o Windows so libera o Minecraft depois de reiniciar. O jogo NAO foi aberto. Reinicie o PC e rode o instalador de novo.'
     'err_acl_admin'         = 'A pasta do Minecraft segue bloqueada para escrita MESMO com permissao de administrador aplicada. Isso normalmente e causado por um antivirus de terceiros (protecao anti-ransomware ou pasta protegida) ou uma politica de seguranca. Verifique o antivirus instalado, permita/exclua a pasta do Minecraft nele e rode o instalador de novo.'
+    'err_uwp_folder_hint'   = 'Atencao: este jogo e a instalacao da Microsoft Store (UWP) e o Windows protege essa pasta contra alteracoes. A versao atual do Minecraft, instalada pelo Xbox App (GDK), usa uma pasta em que o instalador consegue gravar.'
     'diag_avs'              = 'Antivirus registrados (SecurityCenter2)'
     'diag_avs_none'         = 'nenhum produto registrado'
     'diag_avs_unavail'      = 'indisponivel'
@@ -1244,6 +1246,15 @@ $Script:I18N = @{
         ar='موافق - أحدث من الإصدار الموثّق'
         ru='OK - новее проверенной сборки'
     }
+    'diag_tested_older' = @{
+        en='OK - older than the verified build (at or above the minimum supported)'
+        es='OK - más antigua que la compilación verificada (dentro del mínimo compatible)'
+        zh='OK - 比已验证版本旧（达到或高于最低支持版本）'
+        hi='OK - सत्यापित बिल्ड से पुराना (न्यूनतम समर्थित से ऊपर)'
+        fr='OK - plus ancienne que la version vérifiée (au-dessus du minimum pris en charge)'
+        ar='موافق - أقدم من الإصدار الموثّق (ضمن الحد الأدنى المدعوم)'
+        ru='OK - старее проверенной сборки (не ниже минимальной поддерживаемой)'
+    }
     'diag_tested_bad' = @{
         en='BLOCKED - older than the minimum supported'
         es='BLOQUEADA - más antigua que el mínimo compatible'
@@ -1603,6 +1614,15 @@ $Script:I18N = @{
         hi='Minecraft फ़ोल्डर अभी भी लेखन के लिए अवरुद्ध है, प्रशासक अनुमति लागू होने के बावजूद भी। यह आमतौर पर थर्ड-पार्टी एंटीवायरस (रैंसमवेयर/संरक्षित-फ़ोल्डर सुरक्षा) या सुरक्षा नीति के कारण होता है। जाँचें कि कौन सा एंटीवायरस स्थापित है, उसमें Minecraft फ़ोल्डर को अनुमति दें/बहिष्कृत करें, और इंस्टॉलर फिर से चलाएँ।'
         ar='مجلد Minecraft لا يزال محظورًا ضد الكتابة حتى مع تطبيق إذن المسؤول. عادةً ما يسبب هذا برنامج مكافحة فيروسات تابع لجهة خارجية (حماية من برامج الفدية/المجلدات المحمية) أو سياسة أمان. تحقق من برنامج مكافحة الفيروسات المثبت، واسمح/استبعد مجلد Minecraft فيه، ثم شغّل المثبّت مرة أخرى.'
         ru='Папка Minecraft по-прежнему заблокирована для записи, ДАЖЕ с применёнными правами администратора. Обычно это вызвано сторонним антивирусом (защита от шифровальщиков или защищённые папки) или политикой безопасности. Проверьте, какой антивирус установлен, разрешите/исключите папку Minecraft в нём и снова запустите установщик.'
+    }
+    'err_uwp_folder_hint' = @{
+        en='Note: this game is the Microsoft Store (UWP) installation and Windows protects that folder against changes. The current Minecraft version, installed through the Xbox app (GDK), uses a folder the installer can write to.'
+        es='Nota: este juego es la instalación de Microsoft Store (UWP) y Windows protege esa carpeta contra cambios. La versión actual de Minecraft, instalada mediante la Xbox app (GDK), usa una carpeta en la que el instalador sí puede escribir.'
+        fr='Remarque : ce jeu est l''installation Microsoft Store (UWP) et Windows protège ce dossier contre les modifications. La version actuelle de Minecraft, installée via l''app Xbox (GDK), utilise un dossier dans lequel l''installateur peut écrire.'
+        zh='注意：此游戏是 Microsoft Store (UWP) 安装，Windows 会保护该文件夹不被更改。通过 Xbox 应用安装的当前 Minecraft 版本 (GDK) 使用安装程序可写入的文件夹。'
+        hi='ध्यान दें: यह गेम Microsoft Store (UWP) इंस्टॉलेशन है और Windows उस फ़ोल्डर को बदलावों से सुरक्षित रखता है। Xbox ऐप (GDK) से इंस्टॉल किया गया मौजूदा Minecraft संस्करण ऐसे फ़ोल्डर का उपयोग करता है जिसमें इंस्टॉलर लिख सकता है।'
+        ar='ملاحظة: هذه هي نسخة تثبيت Microsoft Store (UWP) ويحمي Windows هذا المجلد من التغييرات. ينسخ الإصدار الحالي من Minecraft، المُثبَّت عبر تطبيق Xbox (GDK)، إلى مجلد يستطيع المثبّت الكتابة فيه.'
+        ru='Примечание: это установка из Microsoft Store (UWP), и Windows защищает эту папку от изменений. Текущая версия Minecraft, установленная через приложение Xbox (GDK), использует папку, в которую установщик может записывать.'
     }
     'diag_avs' = @{
         en='Registered antivirus products (SecurityCenter2)'
@@ -2165,7 +2185,8 @@ function Invoke-AclCmd {
     } finally {
         $ErrorActionPreference = $prev
     }
-    if ($code -eq 0 -or -not $out) {
+    $suspect = ($out -match '(?i)\b(error|denied)\b') -or ($out -match 'Failed processing [1-9]')
+    if (($code -eq 0 -and -not $suspect) -or -not $out) {
         return ($Name + '=' + $code)
     }
     $one = ($out -replace '\r?\n', ' | ').Trim()
@@ -2178,6 +2199,7 @@ function Invoke-AclCmd {
 function Ensure-ContentWritable {
     param([string]$Content)
     $diag = New-Object System.Collections.Generic.List[string]
+    $head = New-Object System.Collections.Generic.List[string]
     $adm = '*S-1-5-32-544'
     $sys = '*S-1-5-18'
     $user = $null
@@ -2216,10 +2238,18 @@ function Ensure-ContentWritable {
     }
     if (-not $ok) {
         $denyRemoved = $false
+        $denySeen = 0
+        $denyInherited = 0
         try {
             $acl = Get-Acl -LiteralPath $Content
+            $denyRules = @($acl.Access | Where-Object { $_.AccessControlType -eq [Security.AccessControl.AccessControlType]::Deny })
+            $denySeen = $denyRules.Count
+            $denyInherited = @($denyRules | Where-Object { $_.IsInherited }).Count
+            if ($denyInherited -gt 0) {
+                $acl.SetAccessRuleProtection($true, $true)
+            }
             foreach ($ace in @($acl.Access)) {
-                if ($ace.AccessControlType -eq [Security.AccessControl.AccessControlType]::Deny -and $ace.IsInherited -eq $false) {
+                if ($ace.AccessControlType -eq [Security.AccessControl.AccessControlType]::Deny) {
                     $acl.RemoveAccessRuleSpecific($ace) | Out-Null
                     $denyRemoved = $true
                 }
@@ -2228,6 +2258,7 @@ function Ensure-ContentWritable {
                 Set-Acl -LiteralPath $Content -AclObject $acl
             }
         } catch { }
+        $diag.Add('denySeen=' + $denySeen + '(inherited=' + $denyInherited + ')')
         $diag.Add('denyRemoved=' + $(if ($denyRemoved) {
             'yes'
         } else {
@@ -2246,6 +2277,29 @@ function Ensure-ContentWritable {
             'fail (' + $Script:LastProbeError + ')'
         }))
     }
+    if (-not $ok) {
+        try {
+            $aclNow = Get-Acl -LiteralPath $Content
+            $denyLeft = 0
+            $admWrite = 'no'
+            foreach ($ace in @($aclNow.Access)) {
+                if ($ace.AccessControlType -eq [Security.AccessControl.AccessControlType]::Deny) {
+                    $denyLeft = $denyLeft + 1
+                } elseif ($ace.FileSystemRights.HasFlag([Security.AccessControl.FileSystemRights]::Modify)) {
+                    try {
+                        if ($ace.IdentityReference.Translate([Security.Principal.SecurityIdentifier]).Value -eq 'S-1-5-32-544') {
+                            $admWrite = 'yes'
+                        }
+                    } catch { }
+                }
+            }
+            $head.Add('aclOwner=' + [string]$aclNow.Owner)
+            $head.Add('aclDenyLeft=' + $denyLeft)
+            $head.Add('aclAdmWrite=' + $admWrite)
+        } catch {
+            $head.Add('aclRead=fail')
+        }
+    }
     $winmm = Join-Path $Content 'winmm.dll'
     if ($ok -and (Test-Path $winmm)) {
         Set-ItemProperty -Path $winmm -Name IsReadOnly -Value $false -ErrorAction SilentlyContinue
@@ -2253,6 +2307,7 @@ function Ensure-ContentWritable {
         $diag.Add((Invoke-AclCmd 'takeownFile' 'takeown.exe' @('/f', $winmm)))
         $diag.Add((Invoke-AclCmd 'grantFile' 'icacls.exe' @($winmm, '/grant', ($adm + ':(F)'))))
     }
+    $diag.InsertRange(0, $head)
     $Script:AclDiag = ($diag -join ', ')
     return $ok
 }
@@ -2391,6 +2446,18 @@ function Get-SupportedFloorVersion {
         }
     }
     return $floor
+}
+
+function Get-HighestTestedVersion {
+    $data = Get-TestedVersionData
+    if (-not $data -or -not $data.tested) { return $null }
+    $top = $null
+    foreach ($k in @($data.tested.PSObject.Properties.Name)) {
+        $cmp = if ($top) { Compare-GameVersion -Version $k -Other $top } else { 1 }
+        if ($null -eq $cmp) { $cmp = 1 }
+        if ($cmp -gt 0) { $top = $k }
+    }
+    return $top
 }
 
 function Get-ShortText {
@@ -3102,7 +3169,7 @@ function Install-Unlocker {
         if (-not $isArm -and -not $env:MBU_BASE_URL) {
             $dllSources.Add(@{ Url = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll'
                                Tries = 1 })
-            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.32/release/winmm.dll'
+            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.33/release/winmm.dll'
                                Tries = 1 })
         }
         Start-Sleep -Seconds 2
@@ -3284,10 +3351,15 @@ function Install-Unlocker {
         Close-Minecraft
 
         if (-not (Ensure-ContentWritable -Content $content)) {
-            if (Test-IsAdmin) {
-                throw (T 'err_acl_admin')
+            $aclMsg = if (Test-IsAdmin) {
+                (T 'err_acl_admin')
+            } else {
+                (T 'err_acl')
             }
-            throw (T 'err_acl')
+            if (([string]$content).TrimEnd('\') -like '*\WindowsApps\Microsoft.MinecraftUWP_*') {
+                $aclMsg = $aclMsg + ' ' + (T 'err_uwp_folder_hint')
+            }
+            throw $aclMsg
         }
 
         $winmm = Join-Path $content 'winmm.dll'
@@ -3924,17 +3996,26 @@ function Get-DiagReportText {
     } else {
         $null
     }
+    $verifiedVer = Get-HighestTestedVersion
+    $cmpVerified = if ($gameVer -and $verifiedVer) {
+        Compare-GameVersion -Version $gameVer -Other $verifiedVer
+    } else {
+        $null
+    }
     $testedLine = if ($null -eq $tested -or $null -eq $cmpFloor) {
         T 'diag_tested_unknown'
     }
                   elseif ($tested) {
         T 'diag_tested_ok'
     }
-                  elseif ($cmpFloor -ge 0) {
-        T 'diag_tested_newer'
+                  elseif ($cmpFloor -lt 0) {
+        T 'diag_tested_bad'
+    }
+                  elseif ($null -ne $cmpVerified -and $cmpVerified -lt 0) {
+        T 'diag_tested_older'
     }
                   else {
-        T 'diag_tested_bad'
+        T 'diag_tested_newer'
     }
     $lines.Add("$(T 'diag_tested'): $testedLine")
     $exclInfo = Get-DefenderMbuExclusions
@@ -4038,6 +4119,25 @@ function Get-DiagReportText {
     }
     if ($Script:AclDiag) {
         $lines.Add('[acl] ' + $Script:AclDiag)
+    }
+    try {
+        $filterNames = New-Object System.Collections.Generic.List[string]
+        foreach ($fltLine in @(& (Join-Path $env:SystemRoot 'System32\fltmc.exe') filters 2>$null)) {
+            if ([string]$fltLine -match '^\s*(\S+)\s+\d+\s+\d+') {
+                $filterNames.Add($Matches[1])
+            }
+        }
+        if ($filterNames.Count -gt 0) {
+            $fltText = ($filterNames -join ',')
+            if ($fltText.Length -gt 220) {
+                $fltText = $fltText.Substring(0, 220) + '...'
+            }
+            $lines.Add('[filters] ' + $fltText)
+        } else {
+            $lines.Add('[filters] unavailable')
+        }
+    } catch {
+        $lines.Add('[filters] unavailable')
     }
     return ($lines -join "`n")
 }
