@@ -364,6 +364,42 @@ Since v4.9.28 the menu shows this explanation on screen in your language when th
 game exits with this code, and the failure report marks the reason as
 `0x87E50035: app activation failed (package not registered)`.
 
+## Minecraft closes and the crash log names WINMM.dll (v4.9.34+)
+
+```
+Faulting module name: WINMM.dll_unloaded, version: 0.0.0.0, timestamp: 0x00000000
+Exception code: 0xc0000005
+Fault offset: 0x6b37
+```
+
+**What it means:** the Windows crash log (WER) names the *faulting module*, so
+when that module is `WINMM.dll` (sometimes written `WINMM.dll_unloaded`) the
+fault was recorded inside the unlock, not in the game. The `_unloaded` suffix
+means the module was already being or had been unloaded when the fault was
+recorded, which is consistent with a short-lived unlock thread still pending
+when the game released the DLL (or when the game was shutting down). The
+`0.0.0.0` version and the `0x00000000` timestamp are also expected: the unlock
+file is built without a version resource and without a timestamp, so they do not
+point at a wrong file.
+
+**What to do:**
+
+1. Remove the unlock with option `[1]` of the menu and open the game: without
+the unlock it starts normally. The menu offers exactly that right after the
+crash, and since v4.9.34 it shows this explanation in your language instead of
+the generic "Minecraft closed right after opening" message.
+2. If your game is the old 1.21 line (Microsoft Store or Minecraft Launcher
+   install), try updating it through the Microsoft Store or the Xbox App. The
+   unlock is verified on the current build, so an update also gives you the
+   supported target.
+3. Send the failure report. Since v4.9.34 the report adds
+   `[crash] fault-module=WINMM.dll_unloaded code=0xc0000005 off=0x6b37` (when the
+   WER event carries these fields), which is what makes this case separable from
+   the gaming services and app activation cases above.
+
+The cause of the unload is under investigation; the module, the exception code
+and the fault offset in the report are what make it possible to fix.
+
 ## "Access to the path '...winmm.dll.new' is denied" during install
 
 ```

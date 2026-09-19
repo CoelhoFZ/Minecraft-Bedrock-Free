@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.33'
+$Script:Version = '4.9.34'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -19,7 +19,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    'e44230e539e5ec2378c1937746cfb34846ae1e21f9d4f2739f0d4d8c1e37d8da' = '4.9.33'
+    'e44230e539e5ec2378c1937746cfb34846ae1e21f9d4f2739f0d4d8c1e37d8da' = '4.9.34'
     '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.28'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
     'f7b1408c36590abbfcb5310cf98c1efb1fa16f3a54a9387df56b1441de90335b' = 'v4.4.1'
@@ -491,6 +491,7 @@ $Script:PT = @{
     'crash_offer'           = 'O Minecraft fechou logo depois de abrir.'
     'crash_hint_gaming_services' = 'O Minecraft nao abriu porque falta no Windows um componente que ele usa (o Gaming Services) ou ele esta danificado, e nao por causa do unlock. Abra a Microsoft Store, reinstale o Gaming Services e rode o instalador de novo.'
     'crash_hint_pkg_unregistered' = 'O Minecraft nao abriu porque o Windows nao conseguiu ativar o app (codigo 0x87E50035), e nao por causa do unlock. No caso mais comum o pacote do jogo esta instalado mas nao esta registrado para a sua conta, e sem isso o jogo nao abre por caminho nenhum. Reinstale ou repare o Minecraft na conta que tem o jogo (Microsoft Store ou Xbox App) e rode o instalador outra vez.'
+    'crash_hint_winmm'      = 'A falha foi registrada dentro do arquivo do unlock (winmm.dll), e nao no jogo. Remova o unlock com a opcao [1] do menu para voltar a jogar agora. O relatorio enviado vai ajudar a corrigir isso.'
     'crash_ask'             = 'Remover o unlock agora e deixar o jogo como estava antes? (S para sim, N para nao)'
     'crash_kept'            = 'Unlock mantido. Se o jogo continuar fechando, use a opcao [1] do menu para remover o unlock.'
     'crash_removed'         = 'Unlock removido. Abra o Minecraft para confirmar que voltou a funcionar.'
@@ -1858,6 +1859,15 @@ $Script:I18N = @{
         ar='لم يُفتح Minecraft لأن Windows لم يتمكن من تفعيل التطبيق (الرمز 0x87E50035)، وليس بسبب الأنلوك. في أغلب الحالات تكون حزمة اللعبة مثبّتة لكنها غير مسجّلة لحسابك، وبدون ذلك لا تستطيع اللعبة أن تبدأ. أعد تثبيت Minecraft أو أصلحه على الحساب الذي يملك اللعبة (Microsoft Store أو Xbox App) ثم شغّل المثبّت مرة أخرى.'
         ru='Minecraft не запустился, потому что Windows не смог активировать приложение (код 0x87E50035), а не из-за анлока. Чаще всего пакет игры установлен, но не зарегистрирован для вашей учётной записи, и без этого игра не запускается. Переустановите или восстановите Minecraft в учётной записи, которой принадлежит игра (Microsoft Store или Xbox App), и запустите установщик заново.'
     }
+    'crash_hint_winmm' = @{
+        en='The fault was recorded inside the unlock file (winmm.dll), not in the game. Remove the unlock with menu option [1] to play again now. The report sent will help fix this.'
+        es='La falla se registro dentro del archivo del unlock (winmm.dll), no en el juego. Quita el unlock con la opcion [1] del menu para volver a jugar ahora. El informe enviado ayudara a corregir esto.'
+        fr='La faille a ete enregistree dans le fichier de l''unlock (winmm.dll), pas dans le jeu. Retirez l''unlock avec l''option [1] du menu pour rejouer des maintenant. Le rapport envoye aidera a corriger cela.'
+        zh='故障记录在解锁文件 (winmm.dll) 内部，而不是游戏中。请用菜单选项 [1] 移除解锁后立即游玩。已发送的报告将帮助修复此问题。'
+        hi='विफलता गेम में नहीं, बल्कि अनलॉक फ़ाइल (winmm.dll) के अंदर दर्ज हुई। अभी खेलने के लिए मेनू विकल्प [1] से अनलॉक हटाएँ। भेजी गई रिपोर्ट इस समस्या को ठीक करने में मदद करेगी।'
+        ar='تم تسجيل الخطأ داخل ملف الأنلوك (winmm.dll) وليس في اللعبة. أزل الأنلوك من الخيار [1] في القائمة للعب الآن. سيساعد التقرير المرسل على إصلاح هذا.'
+        ru='Сбой зафиксирован внутри файла анлока (winmm.dll), а не в самой игре. Удалите анлок пунктом [1] меню, чтобы снова играть сейчас же. Отправленный отчёт поможет это исправить.'
+    }
     'crash_offer' = @{
         en='Minecraft closed right after opening.'
         es='Minecraft se cerro justo despues de abrir.'
@@ -3169,7 +3179,7 @@ function Install-Unlocker {
         if (-not $isArm -and -not $env:MBU_BASE_URL) {
             $dllSources.Add(@{ Url = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll'
                                Tries = 1 })
-            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.33/release/winmm.dll'
+            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.34/release/winmm.dll'
                                Tries = 1 })
         }
         Start-Sleep -Seconds 2
@@ -4357,6 +4367,49 @@ function Get-CrashCodeHint {
     return $null
 }
 
+function Get-CrashFaultInfo {
+    param([Nullable[datetime]]$LaunchAt)
+    try {
+        $evt = Get-WindowsCrashEvent -Since $LaunchAt
+        if (-not $evt) {
+            return $null
+        }
+        $msg = [string]$evt.Message
+        if (-not $msg) {
+            return $null
+        }
+        $info = @{
+            module = ''
+            winmm = $false
+            code = ''
+            offset = ''
+        }
+        $mod = ''
+        $suf = ''
+        if ($msg -match '(?i)([A-Za-z0-9_.-]+\.dll)(_unloaded)?') {
+            $mod = $Matches[1]
+            if ($Matches.Count -gt 2 -and $Matches[2]) {
+                $suf = $Matches[2]
+            }
+        }
+        $info.module = $mod + $suf
+        if (($info.module -match '(?i)^WINMM\.dll') -or ($msg -match '(?i)WINMM\.dll')) {
+            $info.winmm = $true
+        }
+        if ($msg -match '(?i)(0xc[0-9a-f]{7})') {
+            $info.code = $Matches[1].ToLowerInvariant()
+        } elseif ($msg -match '(?i)P7:\s*0*([0-9a-f]{4,8})') {
+            $info.code = '0x' + $Matches[1].ToLowerInvariant()
+        }
+        if ($msg -match '(?i)P8:\s*0*([0-9a-f]{4,16})') {
+            $info.offset = '0x' + $Matches[1].ToLowerInvariant()
+        }
+        return $info
+    } catch {
+        return $null
+    }
+}
+
 function Send-PostLaunchCrashReport {
     param($MinecraftProcess, [Nullable[datetime]]$LaunchAt, [string]$Content)
     $gcReason = Get-CrashDetailInfo -MinecraftProcess $MinecraftProcess -LaunchAt $LaunchAt
@@ -4368,10 +4421,38 @@ function Send-PostLaunchCrashReport {
     if ($hint) {
         $gcReason = $gcReason + ' | ' + $hint.tag
     }
+    $fault = Get-CrashFaultInfo -LaunchAt $LaunchAt
+    $faultWinmm = $false
+    if ($fault) {
+        if ($fault.winmm) {
+            $faultWinmm = $true
+        }
+        $faultTag = ''
+        if ($fault.module) {
+            $faultTag = 'fault-module=' + $fault.module
+        }
+        if ($fault.code) {
+            if ($faultTag) {
+                $faultTag = $faultTag + ' '
+            }
+            $faultTag = $faultTag + 'code=' + $fault.code
+        }
+        if ($fault.offset) {
+            if ($faultTag) {
+                $faultTag = $faultTag + ' '
+            }
+            $faultTag = $faultTag + 'off=' + $fault.offset
+        }
+        if ($faultTag) {
+            $Script:CrashDiag.Add($faultTag)
+        }
+    }
     Send-MbuFailureReport -Trigger 'game_crashed' -Reason $gcReason
     Write-Host ''
     if ($hint) {
         Write-Host ("  " + (T $hint.key)) -ForegroundColor Yellow
+    } elseif ($faultWinmm) {
+        Write-Host ("  " + (T 'crash_hint_winmm')) -ForegroundColor Yellow
     } else {
         Write-Host ("  " + (T 'crash_offer')) -ForegroundColor Yellow
     }
