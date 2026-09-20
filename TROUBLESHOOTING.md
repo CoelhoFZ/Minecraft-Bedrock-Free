@@ -717,17 +717,45 @@ really is installed.
 **How to fix:** open the launcher you installed the game with, let it finish the
 installation (or use its verify/repair option), start the game once and close it,
 then run the installer again. If your copy comes from the Microsoft Store or the
-Xbox App, install it from there instead. The old wording for this case was only
-"Minecraft package found but the game executable is missing", which sent users to
-a full reinstall that was usually not necessary.
+Xbox App, install it from there instead. Until v4.9.37 the missing-executable
+case showed only "Minecraft package found but the game executable is missing",
+which sent users to a full reinstall that was usually not necessary. Since
+v4.9.38 that message names the Xbox app / Microsoft Store repair path instead.
 
 Since v4.9.30 that list also covers the folder the registered package really
 points to and every `XboxGames` folder on the fixed drives of the PC. So a game
 whose content sits in `C:\XboxGames\Minecraft for Windows_1\Content`, or on a
 drive other than `C:`, is found and installed without a reinstall. The failure
-report shows the same locations: the `[pkg]` line adds `target=` when the
-package folder is a link, and each `[candidate]` line marks it as
-`(junction -> ...)` followed by where it points.
+report shows the same locations: the `[pkg]` line adds `target=` and
+`target-exists=` when the package folder is a link, and each `[candidate]` line
+marks it as `(junction -> ...)` followed by where it points, or as `link target
+is missing` when the link points to a folder that is gone.
+
+## "Minecraft is registered, but the folder the package points to does not exist" (v4.9.38+)
+
+The current Microsoft Store package of Minecraft (package version
+`1.26.4501.0` on the machines seen so far) keeps a folder inside
+`C:\Program Files\WindowsApps` that is a link to
+`C:\XboxGames\Minecraft for Windows\Content`, the same folder the Xbox app
+installation uses. The game files, `Minecraft.Windows.exe` included, live in
+that linked folder, not inside `WindowsApps`.
+
+When that folder is gone (deleted by a disk cleanup tool, moved to another
+drive, an interrupted uninstall or a failed repair), the package stays
+registered and the link keeps pointing to a path that no longer exists. Windows
+still reports the `WindowsApps` entry as existing, so the old failure report
+said only `exists, no Minecraft.Windows.exe`, which reads like a problem inside
+the protected package folder. The installer stops because there is no game
+folder to write the unlock into.
+
+**How to fix:** in the Xbox app (or the Microsoft Store) select Minecraft and
+use Repair, or reinstall it, start the game once and then run this installer
+again. A cleanup tool that deletes the `XboxGames` folder can cause this, so
+keep that folder out of automatic cleaners.
+
+**How to tell this apart in a report:** the `[pkg]` line carries
+`target-exists=no`, and the linked `[candidate]` line says
+`link target is missing` instead of `exists, no Minecraft.Windows.exe`.
 
 ## "Windows refused administrator permission for this account" (v4.9.21+)
 

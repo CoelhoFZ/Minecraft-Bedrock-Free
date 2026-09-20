@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.37'
+$Script:Version = '4.9.38'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -346,7 +346,8 @@ $Script:PT = @{
     'greet_evening'      = 'Boa noite'
     'banner_build_note'  = 'Suporte apenas ao build OFICIAL (Store/Xbox App) na versao ATUAL. Launchers de terceiros e versoes antigas NAO sao suportados.'
     'err_content_not_found' = 'Content do Minecraft nao encontrado. Instale o Minecraft pelo Xbox App ou pela Microsoft Store e tente de novo.'
-    'err_package_incomplete' = 'Pacote do Minecraft encontrado, mas o executavel esta faltando. Reinstale o Minecraft e tente de novo.'
+    'err_package_incomplete' = 'O Minecraft esta registrado, mas o executavel do jogo esta faltando na pasta dele. No Xbox App (ou na Microsoft Store), use Reparar no Minecraft ou reinstale, e rode este instalador de novo.'
+    'err_package_content_missing' = 'O Minecraft esta registrado, mas a pasta para onde o pacote aponta nao existe: {0}. E nessa pasta que ficam os arquivos do jogo. No Xbox App (ou na Microsoft Store), use Reparar no Minecraft ou reinstale, abra o jogo uma vez e rode este instalador de novo.'
     'err_package_launcher' = 'Pacote do Minecraft Launcher encontrado, mas os arquivos do jogo estao faltando. Abra o Minecraft Launcher, deixe ele terminar ou verificar a instalacao, e rode o instalador de novo.'
     'probe_list'         = 'Pastas verificadas: {0}'
     'closing_mc'         = 'Fechando Minecraft...'
@@ -481,6 +482,7 @@ $Script:PT = @{
     'diag_search_proc_none' = 'nao esta rodando'
     'diag_probe_missing'    = 'nao existe'
     'diag_probe_noexe'      = 'existe, sem Minecraft.Windows.exe'
+    'diag_probe_linkmissing' = 'destino do link nao existe'
     'report_trigger_install_error' = 'O instalador encontrou um erro.'
     'report_trigger_start_failed'  = 'O Minecraft nao abriu apos a instalacao.'
     'report_trigger_game_crashed'  = 'O Minecraft abriu e fechou logo em seguida.'
@@ -666,13 +668,22 @@ $Script:I18N = @{
         ru='Папка Content Minecraft не найдена. Установите Minecraft из приложения Xbox.'
     }
     'err_package_incomplete' = @{
-        en='Minecraft package found but the game executable is missing. Reinstall Minecraft and try again.'
-        zh='找到 Minecraft 包，但缺少游戏可执行文件。请重新安装 Minecraft 后再试。'
-        hi='Minecraft पैकेज मिला, लेकिन गेम एक्ज़ीक्यूटेबल गायब है। Minecraft फिर से इंस्टॉल करके देखें。'
-        es='Se encontró el paquete de Minecraft, pero falta el ejecutable del juego. Reinstala Minecraft e inténtalo de nuevo.'
-        fr='Le package Minecraft est présent, mais l''exécutable du jeu est manquant. Réinstallez Minecraft et réessayez.'
-        ar='تم العثور على حزمة Minecraft، لكن ملف تشغيل اللعبة مفقود. أعد تثبيت Minecraft وحاول مرة أخرى.'
-        ru='Пакет Minecraft найден, но исполняемый файл игры отсутствует. Переустановите Minecraft и попробуйте снова.'
+        en='Minecraft is registered, but the game executable is missing from its folder. In the Xbox app (or the Microsoft Store), choose Repair for Minecraft or reinstall it, then run this installer again.'
+        zh='Minecraft 已注册，但其文件夹中缺少游戏可执行文件。请在 Xbox 应用（或 Microsoft Store）中对 Minecraft 选择“修复”或重新安装，然后再次运行此安装程序。'
+        hi='Minecraft पंजीकृत है, लेकिन उसके फ़ोल्डर में गेम का एक्ज़ीक्यूटेबल मौजूद नहीं है। Xbox App (या Microsoft Store) में Minecraft के लिए Repair चुनें या उसे फिर से इंस्टॉल करें, फिर यह इंस्टॉलर दोबारा चलाएँ।'
+        es='Minecraft esta registrado, pero falta el ejecutable del juego en su carpeta. En la Xbox App (o en Microsoft Store), usa Reparar en Minecraft o reinstalalo, y ejecuta este instalador de nuevo.'
+        fr='Minecraft est enregistre, mais l''executable du jeu est absent de son dossier. Dans l''application Xbox (ou le Microsoft Store), choisissez Reparer pour Minecraft ou reinstallez-le, puis relancez cet installateur.'
+        ar='Minecraft مسجَّل، لكن ملف تشغيل اللعبة مفقود من مجلده. في تطبيق Xbox (أو Microsoft Store) اختر "إصلاح" (Repair) للعبة Minecraft أو أعد تثبيتها، ثم شغّل هذا المثبّت مرة أخرى.'
+        ru='Minecraft зарегистрирован, но исполняемый файл игры отсутствует в его папке. В приложении Xbox (или Microsoft Store) выберите "Восстановить"/Repair для Minecraft или переустановите её, затем снова запустите этот установщик.'
+    }
+    'err_package_content_missing' = @{
+        en='Minecraft is registered, but the folder the package points to does not exist: {0}. That folder holds the game files. In the Xbox app (or the Microsoft Store), choose Repair for Minecraft or reinstall it, start the game once, then run this installer again.'
+        zh='Minecraft 已注册，但程序包指向的文件夹不存在：{0}。游戏文件就在该文件夹中。请在 Xbox 应用（或 Microsoft Store）中对 Minecraft 选择“修复”或重新安装，启动游戏一次，然后再次运行此安装程序。'
+        hi='Minecraft पंजीकृत है, लेकिन पैकेज जिस फ़ोल्डर की ओर इशारा करता है वह मौजूद नहीं है: {0}। गेम फ़ाइलें उसी फ़ोल्डर में रहती हैं। Xbox App (या Microsoft Store) में Minecraft के लिए Repair चुनें या उसे फिर से इंस्टॉल करें, गेम एक बार चलाएँ, फिर यह इंस्टॉलर दोबारा चलाएँ।'
+        es='Minecraft esta registrado, pero la carpeta a la que apunta el paquete no existe: {0}. En esa carpeta estan los archivos del juego. En la Xbox App (o en Microsoft Store), usa Reparar en Minecraft o reinstalalo, abre el juego una vez y ejecuta este instalador de nuevo.'
+        fr='Minecraft est enregistre, mais le dossier vers lequel pointe le package n''existe pas : {0}. C''est dans ce dossier que se trouvent les fichiers du jeu. Dans l''application Xbox (ou le Microsoft Store), choisissez Reparer pour Minecraft ou reinstallez-le, lancez le jeu une fois, puis relancez cet installateur.'
+        ar='Minecraft مسجَّل، لكن المجلد الذي تشير إليه الحزمة غير موجود: {0}. ملفات اللعبة موجودة في ذلك المجلد. في تطبيق Xbox (أو Microsoft Store) اختر "إصلاح" (Repair) للعبة Minecraft أو أعد تثبيتها، ثم شغّل اللعبة مرة واحدة وشغّل هذا المثبّت مرة أخرى.'
+        ru='Minecraft зарегистрирован, но папка, на которую указывает пакет, не существует: {0}. Именно в этой папке находятся файлы игры. В приложении Xbox (или Microsoft Store) выберите "Восстановить"/Repair для Minecraft или переустановите её, запустите игру один раз и снова запустите этот установщик.'
     }
     'err_package_launcher' = @{
         en='Minecraft Launcher package found, but the game files are missing. Open the Minecraft Launcher, let it finish or verify the installation, then run this installer again.'
@@ -1772,6 +1783,15 @@ $Script:I18N = @{
         ar='موجود، بدون Minecraft.Windows.exe'
         ru='существует, без Minecraft.Windows.exe'
     }
+    'diag_probe_linkmissing' = @{
+        en='link target is missing'
+        es='falta el destino del enlace'
+        fr='cible du lien manquante'
+        zh='链接目标不存在'
+        hi='लिंक लक्ष्य मौजूद नहीं'
+        ar='هدف الرابط غير موجود'
+        ru='цель ссылки не существует'
+    }
     'report_trigger_install_error' = @{
         en='The installer ran into an error.'
         es='El instalador encontró un error.'
@@ -2169,6 +2189,13 @@ function Find-MinecraftContent {
         throw (T 'err_package_launcher')
     }
     if ($hasAppx) {
+        $appxReal = Get-PathRealTarget -Path $appxLoc
+        if ($appxReal -and -not (Test-Path -LiteralPath $appxReal)) {
+            throw ((T 'err_package_content_missing') -replace '\{0\}', $appxReal)
+        }
+        if (-not (Test-Path -LiteralPath $appxLoc)) {
+            throw ((T 'err_package_content_missing') -replace '\{0\}', $appxLoc)
+        }
         throw (T 'err_package_incomplete')
     }
     throw (T 'err_content_not_found')
@@ -3282,7 +3309,7 @@ function Install-Unlocker {
         if (-not $isArm -and -not $env:MBU_BASE_URL) {
             $dllSources.Add(@{ Url = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll'
                                Tries = 1 })
-            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.37/release/winmm.dll'
+            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.38/release/winmm.dll'
                                Tries = 1 })
         }
         Start-Sleep -Seconds 2
@@ -3836,6 +3863,11 @@ function Get-DiagReportText {
             $pkgReal = Get-PathRealTarget -Path $appxPkg.InstallLocation
             if ($pkgReal) {
                 $pkgLine += ' target=' + $pkgReal
+                $pkgLine += ' target-exists=' + $(if (Test-Path -LiteralPath $pkgReal) {
+                    'yes'
+                } else {
+                    'no'
+                })
             }
             $lines.Add($pkgLine)
         } else {
@@ -4129,6 +4161,8 @@ function Get-DiagReportText {
                 }
                 if (-not (Test-Path -LiteralPath $probe)) {
                     $lines.Add($probeLine + ' : ' + (T 'diag_probe_missing'))
+                } elseif ($probeReal -and -not (Test-Path -LiteralPath $probeReal)) {
+                    $lines.Add($probeLine + ' : ' + (T 'diag_probe_linkmissing'))
                 } elseif (-not (Test-Path -LiteralPath (Join-Path $probe 'Minecraft.Windows.exe'))) {
                     $lines.Add($probeLine + ' : ' + (T 'diag_probe_noexe'))
                 }
