@@ -364,6 +364,45 @@ Since v4.9.28 the menu shows this explanation on screen in your language when th
 game exits with this code, and the failure report marks the reason as
 `0x87E50035: app activation failed (package not registered)`.
 
+## Minecraft does not open and the installation itself looks incomplete (v4.9.37+)
+
+```
+[launch] mode=failed official=yes exe=present exe-size=0B exe-pe=0x0000 pkg=no uri=no-process start-err=This command cannot be run due to the error: ... content=C:\XboxGames\...
+```
+
+**What it means:** the installer wrote `winmm.dll` and then tried to open the
+game, and Windows could not run the game's own executable. The `[launch]` line
+now describes the state of the installation itself:
+
+- `exe-size=` and `exe-pe=` describe `Minecraft.Windows.exe` in the folder being
+  used. `exe-size=0B` or `exe-pe=0x0000` means the file is a placeholder or a
+  truncated leftover (a paused download, an interrupted update or the remains of
+  an uninstall), and no launch path works while it is like that. A healthy x64
+  build reports `exe-pe=0x8664`.
+- `pkg=` says whether Windows still has a Minecraft package registered for your
+  account. `pkg=no` together with an official folder means the game cannot be
+  activated either, so the installer tells you to repair the game instead of
+  blaming itself.
+
+The report can also carry a `[content] used=<folder> now=...` line. It records the
+game folder used during the run and how that same folder looks when the report is
+written: `now=missing` when it is gone, `now=no-exe` when it exists without the
+game executable, or another folder when the game moved. It exists so that a
+folder changing mid-run cannot make two lines of the same report look
+contradictory.
+
+**How to fix:**
+
+1. Open the **Xbox App** (or the **Microsoft Store**), use **Repair**, or
+   reinstall Minecraft. Do not run the installer against a folder the Xbox app
+   still shows as *installing*, *paused* or *needs attention*.
+2. Confirm the game opens on its own once, close it, then run this installer
+   again.
+
+In this state the menu shows a message in your language that names the incomplete
+or unregistered game installation, instead of the generic "could not start
+Minecraft automatically".
+
 ## Minecraft closes and the crash log names WINMM.dll (v4.9.34+)
 
 ```
@@ -472,6 +511,14 @@ correctamente 1 archivos; error al procesar 0 archivos`, which contains the
 word `error`) no longer marks a successful step as an error, and a failure is
 recognized by the access-denied wording or by a non-zero count in the summary
 (`Failed processing 1 files`). Steps that succeed are printed as `name=0`.
+Since v4.9.37 the installer calls those tools by their full path inside
+`%SystemRoot%\System32` instead of relying on `PATH`: on a machine where `PATH`
+is trimmed (debloated or hardened Windows images) the old code could not even
+find `takeown.exe` and `icacls.exe`, so the permission step silently did nothing
+and the report showed the shell's own "command not recognized" text. When
+neither `System32` nor `Sysnative` has the tool, the step is now reported as
+`takeown=missing-tool` (or `grantAdm=missing-tool`) instead of an error that
+looks like a permission denial.
 When the read-back shows the permissions are correct (owner changed, no deny
 entry left, `aclAdmWrite=yes`) and the write is still denied, no permission
 change will help: a product with a filter in the disk stack (antivirus,

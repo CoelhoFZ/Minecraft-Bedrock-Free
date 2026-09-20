@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.36'
+$Script:Version = '4.9.37'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -378,6 +378,7 @@ $Script:PT = @{
     'mc_started'         = 'Minecraft iniciado.'
     'mc_start_failed'    = 'Nao foi possivel iniciar o Minecraft automaticamente. Abra pelo menu Iniciar.'
     'mc_start_failed_launcher' = 'Nao foi possivel iniciar o Minecraft automaticamente. Esta pasta nao e a instalacao oficial, entao abra o jogo pelo launcher que voce usou para instalar.'
+    'mc_start_failed_broken' = 'O Minecraft nao abriu porque a instalacao do proprio jogo esta incompleta, danificada ou sem registro neste PC: o Windows nao conseguiu executar o Minecraft.Windows.exe da pasta do jogo. Isso nao tem relacao com o desbloqueio. Abra o Xbox App (ou a Microsoft Store), repare ou reinstale o Minecraft, confirme que o jogo abre uma vez e rode este instalador de novo.'
     'state_unlocked_hint'= 'Se quiser, escolha [1] para remover o desbloqueio e voltar a Trial.'
     'state_trial'        = 'O Minecraft esta na versao TRIAL.'
     'state_trial_hint'   = 'Escolha [1] para desbloquear o jogo completo.'
@@ -843,6 +844,15 @@ $Script:I18N = @{
         hi='Minecraft स्वचालित रूप से शुरू नहीं हो सका। यह फ़ोल्डर आधिकारिक इंस्टॉलेशन नहीं है, इसलिए गेम को उसी लॉन्चर से खोलें जिससे आपने इंस्टॉल किया था।'
         ar='تعذّر تشغيل Minecraft تلقائيًا. هذا المجلد ليس التثبيت الرسمي، لذا افتح اللعبة من المشغّل الذي استخدمته للتثبيت.'
         ru='Не удалось запустить Minecraft автоматически. Эта папка не является официальной установкой, поэтому откройте игру из лаунчера, через который вы её установили.'
+    }
+    'mc_start_failed_broken' = @{
+        en='Minecraft did not open because the game installation itself is incomplete, damaged or not registered on this PC: Windows could not run Minecraft.Windows.exe from the game folder. This is not caused by the unlock. Open the Xbox App (or the Microsoft Store), repair or reinstall Minecraft, confirm the game opens once, then run this installer again.'
+        es='Minecraft no se abrio porque la instalacion del propio juego esta incompleta, danada o sin registro en este PC: Windows no pudo ejecutar Minecraft.Windows.exe desde la carpeta del juego. Esto no tiene relacion con el desbloqueo. Abre la Xbox App (o la Microsoft Store), repara o reinstala Minecraft, confirma que el juego abre una vez y vuelve a ejecutar este instalador.'
+        fr='Minecraft ne s''est pas ouvert car l''installation du jeu elle-meme est incomplete, endommagee ou non enregistree sur ce PC : Windows n''a pas pu executer Minecraft.Windows.exe depuis le dossier du jeu. Cela n''a aucun rapport avec le deblocage. Ouvrez l''application Xbox (ou le Microsoft Store), reparez ou reinstallez Minecraft, verifiez que le jeu s''ouvre une fois, puis relancez cet installateur.'
+        zh='Minecraft 没有打开，是因为游戏本身的安装不完整、损坏或未在此电脑上注册：Windows 无法运行游戏文件夹中的 Minecraft.Windows.exe。这与解锁无关。请打开 Xbox 应用（或 Microsoft Store），修复或重新安装 Minecraft，确认游戏能打开一次，然后再次运行此安装程序。'
+        hi='Minecraft नहीं खुला क्योंकि गेम का इंस्टॉलेशन ही अधूरा, खराब या इस PC पर पंजीकृत नहीं है: Windows गेम फ़ोल्डर से Minecraft.Windows.exe चला नहीं सका। इसका अनलॉक से कोई संबंध नहीं है। Xbox ऐप (या Microsoft Store) खोलें, Minecraft को रिपेयर या फिर से इंस्टॉल करें, सुनिश्चित करें कि गेम एक बार खुल जाए, फिर यह इंस्टॉलर दोबारा चलाएँ।'
+        ar='لم يفتح Minecraft لأن تثبيت اللعبة نفسه غير مكتمل أو تالف أو غير مسجّل على هذا الكمبيوتر: لم يتمكن Windows من تشغيل Minecraft.Windows.exe من مجلد اللعبة. هذا لا علاقة له بفتح القفل. افتح تطبيق Xbox (أو Microsoft Store)، وأصلح أو أعد تثبيت Minecraft، وتأكد من فتح اللعبة مرة واحدة، ثم شغّل هذا المثبّت مرة أخرى.'
+        ru='Minecraft не запустился, потому что сама установка игры неполная, повреждена или не зарегистрирована на этом ПК: Windows не смогла запустить Minecraft.Windows.exe из папки игры. К разблокировке это отношения не имеет. Откройте приложение Xbox (или Microsoft Store), восстановите или переустановите Minecraft, убедитесь, что игра запускается, и запустите установщик снова.'
     }
     'state_unlocked_hint' = @{
         en='If you want, choose [1] to remove the unlock and go back to Trial.'
@@ -2184,12 +2194,36 @@ function Test-DirectoryWritable {
     }
 }
 
+function Get-AclToolPath {
+    param([string]$Name)
+    $root = $env:SystemRoot
+    if (-not $root) {
+        $root = 'C:\Windows'
+    }
+    foreach ($sub in @('System32', 'Sysnative')) {
+        try {
+            $full = Join-Path (Join-Path $root $sub) $Name
+            if (Test-Path -LiteralPath $full) {
+                return $full
+            }
+        } catch { }
+    }
+    return $null
+}
+
 function Invoke-AclCmd {
     param([string]$Name, [string]$Exe, [string[]]$CmdArgs)
+    $tool = $Exe
+    if ($Exe -notmatch '[\\/]') {
+        $tool = Get-AclToolPath -Name $Exe
+        if (-not $tool) {
+            return ($Name + '=missing-tool')
+        }
+    }
     $prev = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
     try {
-        $out = (& $Exe @CmdArgs 2>&1 | Out-String).Trim()
+        $out = (& $tool @CmdArgs 2>&1 | Out-String).Trim()
         $code = [int]$LASTEXITCODE
     } catch {
         $out = $_.Exception.Message
@@ -2325,7 +2359,12 @@ function Ensure-ContentWritable {
     $winmm = Join-Path $Content 'winmm.dll'
     if ($ok -and (Test-Path $winmm)) {
         Set-ItemProperty -Path $winmm -Name IsReadOnly -Value $false -ErrorAction SilentlyContinue
-        & takeown.exe /f $winmm 2>&1 | Out-Null
+        $takeownTool = Get-AclToolPath -Name 'takeown.exe'
+        if ($takeownTool) {
+            try {
+                & $takeownTool /f $winmm 2>&1 | Out-Null
+            } catch { }
+        }
         $diag.Add((Invoke-AclCmd 'takeownFile' 'takeown.exe' @('/f', $winmm)))
         $diag.Add((Invoke-AclCmd 'grantFile' 'icacls.exe' @($winmm, '/grant', ($adm + ':(F)'))))
     }
@@ -3148,6 +3187,7 @@ function Install-Unlocker {
         }
     }
     $content = Find-MinecraftContent
+    $Script:RunContent = $content
     Write-Host ((T 'install_content_dir') -replace '\{0\}', $content)
 
     if (-not (Test-InstallGate -Content $content)) {
@@ -3242,7 +3282,7 @@ function Install-Unlocker {
         if (-not $isArm -and -not $env:MBU_BASE_URL) {
             $dllSources.Add(@{ Url = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll'
                                Tries = 1 })
-            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.36/release/winmm.dll'
+            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.37/release/winmm.dll'
                                Tries = 1 })
         }
         Start-Sleep -Seconds 2
@@ -3487,6 +3527,9 @@ function Install-Unlocker {
         $mc = Start-Minecraft
         if (-not $mc.opened) {
             $sfReason = Get-WinmmCorruptHint -Content $content
+            if (-not $sfReason -and $mc.broken) {
+                $sfReason = 'the game installation is incomplete or not registered (Minecraft.Windows.exe not runnable: exe=' + $mc.exeState + ' size=' + $mc.exeSize + 'B pe=0x' + ('{0:X4}' -f $mc.exePe) + ' pkg=' + $mc.pkgState + ')'
+            }
             Send-MbuFailureReport -Trigger 'start_failed' -Reason $sfReason
             return
         }
@@ -3618,8 +3661,13 @@ function Start-Minecraft {
     $exeState = 'skipped'
     $startErr = ''
     $uriState = 'skipped'
+    $content = $null
+    $appx = $null
+    $exeSize = -1
+    $exePe = 0
     try {
         $content = Find-MinecraftContent
+        $Script:RunContent = $content
         $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction SilentlyContinue | Select-Object -First 1
         $isStore = $appx -and ($content -eq $appx.InstallLocation)
         if ($isStore) {
@@ -3636,6 +3684,10 @@ function Start-Minecraft {
             $exe = Join-Path $content 'Minecraft.Windows.exe'
             if (Test-Path $exe) {
                 $exeState = 'present'
+                try {
+                    $exeSize = [int64](Get-Item -LiteralPath $exe -Force -ErrorAction Stop).Length
+                    $exePe = Get-PeMachineType -Path $exe
+                } catch { }
                 $proc = Start-Process -FilePath $exe -WorkingDirectory $content -PassThru -ErrorAction Stop
             } else {
                 $exeState = 'missing'
@@ -3665,15 +3717,36 @@ function Start-Minecraft {
     } else {
         'no'
     }
+    $pkgState = if ($appx) {
+        'registered'
+    } else {
+        'no'
+    }
+    $exeBroken = (-not $opened) -and ($exeState -eq 'present') -and (($exeSize -le 0) -or ($exePe -eq 0))
+    $brokenInstall = ($official -eq 'yes') -and (($pkgState -eq 'no') -or $exeBroken)
     $Script:LaunchDiag = if ($isStore) {
         'mode=store content=' + $content
     } elseif ($opened) {
         'mode=exe official=' + $official + ' content=' + $content
     } else {
-        'mode=failed official=' + $official + ' exe=' + $exeState + ' uri=' + $uriState + ' start-err=' + $startErr + ' content=' + $content
+        $parts = New-Object System.Collections.Generic.List[string]
+        $parts.Add('mode=failed')
+        $parts.Add('official=' + $official)
+        $parts.Add('exe=' + $exeState)
+        if ($exeState -eq 'present') {
+            $parts.Add('exe-size=' + $exeSize + 'B')
+            $parts.Add(('exe-pe=0x{0:X4}' -f $exePe))
+        }
+        $parts.Add('pkg=' + $pkgState)
+        $parts.Add('uri=' + $uriState)
+        $parts.Add('start-err=' + $startErr)
+        $parts.Add('content=' + $content)
+        ($parts -join ' ')
     }
     if ($opened) {
         Write-Host (T 'mc_started')
+    } elseif ($brokenInstall) {
+        Write-Host (T 'mc_start_failed_broken')
     } elseif ($official -eq 'yes') {
         Write-Host (T 'mc_start_failed')
     } else {
@@ -3682,6 +3755,11 @@ function Start-Minecraft {
     return @{
         opened = $opened
         proc = $proc
+        broken = $brokenInstall
+        exeState = $exeState
+        exeSize = $exeSize
+        exePe = $exePe
+        pkgState = $pkgState
     }
 }
 
@@ -3931,8 +4009,31 @@ function Get-DiagReportText {
         }
     } catch { }
     $gameVer = $null
+    $runContent = $null
     try {
-        $content = Find-MinecraftContent
+        if ($Script:RunContent) {
+            $runContent = [string]$Script:RunContent
+        }
+    } catch { }
+    $contentNow = $null
+    try {
+        $contentNow = Find-MinecraftContent
+    } catch { }
+    if ($runContent -and ($runContent -ne $contentNow)) {
+        $nowTag = if ($contentNow) {
+            'now=' + $contentNow
+        } elseif (Test-Path -LiteralPath $runContent) {
+            'now=no-exe'
+        } else {
+            'now=missing'
+        }
+        $lines.Add('[content] used=' + $runContent + ' ' + $nowTag)
+    }
+    try {
+        $content = $contentNow
+        if (-not $content) {
+            throw (T 'err_content_not_found')
+        }
         $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction SilentlyContinue | Select-Object -First 1
         $source = if ($appx -and ($content -eq $appx.InstallLocation)) {
             T 'diag_source_store'

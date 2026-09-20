@@ -305,7 +305,32 @@ if ($p) {
     Start-Sleep -Seconds 2
 }
 
+function Get-AclToolPath {
+    param([string]$Name)
+    $root = $env:SystemRoot
+    if (-not $root) {
+        $root = 'C:\Windows'
+    }
+    foreach ($sub in @('System32', 'Sysnative')) {
+        try {
+            $full = Join-Path (Join-Path $root $sub) $Name
+            if (Test-Path -LiteralPath $full) {
+                return $full
+            }
+        } catch { }
+    }
+    return $null
+}
+
 function Initialize-AclForWrite {
+    $toolTakeown = Get-AclToolPath -Name 'takeown.exe'
+    if (-not $toolTakeown) {
+        $toolTakeown = 'takeown.exe'
+    }
+    $toolIcacls = Get-AclToolPath -Name 'icacls.exe'
+    if (-not $toolIcacls) {
+        $toolIcacls = 'icacls.exe'
+    }
     param([string]$Path)
     $adm = '*S-1-5-32-544'
     $sys = '*S-1-5-18'
@@ -314,17 +339,17 @@ function Initialize-AclForWrite {
         $user = '*' + [Security.Principal.WindowsIdentity]::GetCurrent().User.Value
     } catch { }
     try {
-        & takeown.exe /f $Path 2>&1 | Out-Null
+        & $toolTakeown /f $Path 2>&1 | Out-Null
     } catch { }
     try {
-        & icacls.exe $Path /grant ($adm + ':(OI)(CI)F') 2>&1 | Out-Null
+        & $toolIcacls $Path /grant ($adm + ':(OI)(CI)F') 2>&1 | Out-Null
     } catch { }
     if ($user) {
         try {
-            & icacls.exe $Path /grant ($user + ':(OI)(CI)F') 2>&1 | Out-Null
+            & $toolIcacls $Path /grant ($user + ':(OI)(CI)F') 2>&1 | Out-Null
         } catch { }
         try {
-            & icacls.exe $Path /grant ($sys + ':(OI)(CI)F') 2>&1 | Out-Null
+            & $toolIcacls $Path /grant ($sys + ':(OI)(CI)F') 2>&1 | Out-Null
         } catch { }
     }
     try {
@@ -341,7 +366,7 @@ function Initialize-AclForWrite {
         }
     } catch { }
     try {
-        & icacls.exe $Path /grant ($adm + ':(OI)(CI)F') 2>&1 | Out-Null
+        & $toolIcacls $Path /grant ($adm + ':(OI)(CI)F') 2>&1 | Out-Null
     } catch { }
 }
 
