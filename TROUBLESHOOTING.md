@@ -460,7 +460,11 @@ permission change itself was rejected.
 Since v4.9.33 that line also reports `denySeen` and `denyRemoved` (deny
 entries present on the folder, including inherited ones, and whether they
 were removed) and adds a read-back of the folder state taken after the last
-attempt (`aclOwner`, `aclDenyLeft`, `aclAdmWrite`). The report also
+attempt (`aclOwner`, `aclDenyLeft`, `aclAdmWrite`). Since v4.9.36 that
+read-back also ends with `aclVerdict`: `deny-present` when a deny entry for
+an administrator is still there, `adm-no-write` when Administrators does not
+hold the Modify right, and `acl-clean-still-denied` when the permissions are
+already correct and the write is denied anyway. The report also
 lists the file system filters loaded in the system in the `[filters]` line.
 Since v4.9.35 the `Err=` suffix only appears when the tool really failed: a
 localized *success* summary (for example the Spanish `Se procesaron
@@ -476,8 +480,13 @@ game folder, and the filter names in the report usually identify it.
 
 If the game is the old Microsoft Store (UWP) installation (the game folder is
 inside `C:\Program Files\WindowsApps`), Windows may deny the permission change
-even to an administrator, and no antivirus exclusion will help. Since v4.9.33
-the installer adds that note to the error message. The current Minecraft
+even to an administrator, and no antivirus exclusion will help. Since v4.9.36
+the installer gives that folder its own error message instead of the generic
+one that blames an antivirus: it names the Store (UWP) installation as the
+cause, states that an antivirus exclusion does not help, and points to the
+Xbox app version. The same message replaces the antivirus wording when the
+copy step inside the folder fails, and the report marks the case with
+`aclVerdict=acl-clean-still-denied`. The current Minecraft
 version, installed through the Xbox app (GDK), uses a folder the installer can
 write to (`C:\XboxGames`), so moving the game to that version is the way out on
 a PC where the Store folder stays blocked. If the Store does not offer a newer
@@ -616,7 +625,14 @@ block instead of only saying "your antivirus blocked it":
 - `[dl]` - every download attempt with the address, the attempt number, the
   HTTP code and the error text, plus what happened to the file (missing, empty,
   unreadable hash, whether MotW was present, whether the offline cache worked,
-  and whether the installer moved to an alternative address),
+  and whether the installer moved to an alternative address). Since v4.9.36 the
+  hash step is labelled for what it is: `hash-match` when the downloaded file is
+  the expected one and `hash-mismatch=<first 12 hex of what was received>` when
+  it is not. Until v4.9.35 the label was `hash-ok` and it only meant "file
+  downloaded and readable", so it is NOT evidence that the contents were the
+  expected payload. On a mismatch the installer now tries the next address
+  (the jsDelivr address pinned to the installer's own version is immutable, so
+  it always serves the matching file) instead of stopping at the first mirror,
 - `[threat]` - the last entries Defender recorded as a threat (name, time,
   resource), which is what tells a real detection from a folder-protection
   block,

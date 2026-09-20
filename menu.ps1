@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.35'
+$Script:Version = '4.9.36'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -20,7 +20,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c' = '4.9.35'
+    'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c' = '4.9.36'
     'e44230e539e5ec2378c1937746cfb34846ae1e21f9d4f2739f0d4d8c1e37d8da' = '4.9.34'
     '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.28'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
@@ -356,7 +356,7 @@ $Script:PT = @{
     'err_download_unavailable' = 'Nao foi possivel baixar o winmm.dll: o servidor de download (GitHub) respondeu com erro temporario (503/502/504) varias vezes seguidas. Nao e um problema do instalador. Verifique sua conexao e rode o instalador de novo em alguns minutos.'
     'err_download_offline' = 'Nao foi possivel baixar o winmm.dll: o instalador nao conseguiu conectar ao servidor de download. Isso costuma ser internet instavel, DNS ou VPN bloqueando o acesso. Nao e um problema do instalador. Verifique sua conexao, desligue a VPN ou o proxy se estiver usando, e rode o instalador de novo.'
     'err_download_failed' = 'Nao foi possivel baixar o winmm.dll. Verifique sua conexao com a internet e rode o instalador de novo. Detalhe: {0}'
-    'err_hash_invalid'   = 'Hash do winmm.dll invalido: {0}'
+    'err_hash_invalid'   = 'Nao foi possivel obter uma copia valida do winmm.dll: o arquivo baixado nao corresponde ao esperado (hash {0}), mesmo tentando todos os enderecos de download. Isso normalmente e um antivirus, um proxy/VPN ou um DNS alterando o download, e nao um problema do instalador. Verifique a conexao, desligue VPN ou proxy se estiver usando, adicione as exclusoes do antivirus e rode o instalador de novo. Se acontecer de novo, envie o relatorio.'
     'err_acl'            = 'Nao foi possivel tomar posse da pasta do Minecraft. Rode como administrador.'
     'err_copy_corrupt'   = 'Falha ao copiar winmm.dll (copia corrompida/bloqueada). Verifique se o antivirus nao bloqueou e tente de novo.'
     'err_replace'        = 'Nao foi possivel substituir winmm.dll (Access denied ou arquivo em uso). Feche o Minecraft e rode como administrador.'
@@ -465,7 +465,7 @@ $Script:PT = @{
     'sac_off_write_fail'    = 'Nao foi possivel GRAVAR a chave do Smart App Control (acesso negado). O reboot NAO resolve isso. Verifique se o antivirus/politica nao protege o registro, rode como administrador e tente de novo - ou desligue pela Seguranca do Windows: App e navegador > Smart App Control settings.'
     'sac_skip_launch'       = 'O Smart App Control foi desligado, mas o Windows so libera o Minecraft depois de reiniciar. O jogo NAO foi aberto. Reinicie o PC e rode o instalador de novo.'
     'err_acl_admin'         = 'A pasta do Minecraft segue bloqueada para escrita MESMO com permissao de administrador aplicada. Isso normalmente e causado por um antivirus de terceiros (protecao anti-ransomware ou pasta protegida) ou uma politica de seguranca. Verifique o antivirus instalado, permita/exclua a pasta do Minecraft nele e rode o instalador de novo.'
-    'err_uwp_folder_hint'   = 'Atencao: este jogo e a instalacao da Microsoft Store (UWP) e o Windows protege essa pasta contra alteracoes. A versao atual do Minecraft, instalada pelo Xbox App (GDK), usa uma pasta em que o instalador consegue gravar.'
+    'err_uwp_folder'        = 'Nao da para gravar o winmm.dll nesta copia do jogo: ela e a instalacao da Microsoft Store (UWP), em C:\Program Files\WindowsApps, uma pasta que o Windows mantem protegida (dono TrustedInstaller, verificada pelo sistema de pacotes). Nem como administrador o instalador consegue gravar nela, e isso NAO e problema de permissao nem de antivirus, entao exclusao de antivirus nao resolve. Para desbloquear, instale o Minecraft pelo Xbox App (a versao atual vem como pacote GDK) e rode o instalador de novo: essa copia fica em C:\XboxGames. Antes de trocar, faca backup dos seus mundos, que ficam em %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds.'
     'diag_avs'              = 'Antivirus registrados (SecurityCenter2)'
     'diag_avs_none'         = 'nenhum produto registrado'
     'diag_avs_unavail'      = 'indisponivel'
@@ -755,13 +755,13 @@ $Script:I18N = @{
         ru='Не удалось загрузить winmm.dll. Проверьте подключение к интернету и снова запустите установщик. Подробности: {0}'
     }
     'err_hash_invalid' = @{
-        en='Invalid winmm.dll hash: {0}'
-        zh='winmm.dll 哈希无效: {0}'
-        hi='winmm.dll का हैश अमान्य: {0}'
-        es='Hash de winmm.dll inválido: {0}'
-        fr='Hash de winmm.dll invalide : {0}'
-        ar='تجزئة winmm.dll غير صالحة: {0}'
-        ru='Неверный хеш winmm.dll: {0}'
+        en='Could not get a valid copy of winmm.dll: the downloaded file does not match the expected one (hash {0}) even after trying every download address. This is usually an antivirus, a proxy/VPN or a DNS modifying the download, not a problem with the installer. Check your connection, turn off any VPN or proxy, add the antivirus exclusions and run the installer again. If it happens again, send the report.'
+        zh='无法获取有效的 winmm.dll 副本：即使尝试了所有下载地址，下载的文件仍与预期文件（哈希 {0}）不一致。这通常是杀毒软件、代理/VPN 或 DNS 修改了下载内容，而不是安装程序的问题。请检查网络，关闭 VPN 或代理，添加杀毒软件排除项后重新运行安装程序。如果再次出现，请发送报告。'
+        hi='winmm.dll की मान्य प्रतिलिपि नहीं मिल सकी: सभी डाउनलोड पते आज़माने के बाद भी डाउनलोड की गई फ़ाइल अपेक्षित फ़ाइल (हैश {0}) से मेल नहीं खाती। यह आमतौर पर एंटीवायरस, प्रॉक्सी/VPN या DNS द्वारा डाउनलोड बदलने के कारण होता है, इंस्टॉलर की समस्या नहीं। कनेक्शन जाँचें, VPN या प्रॉक्सी बंद करें, एंटीवायरस बहिष्करण जोड़ें और इंस्टॉलर फिर से चलाएँ। दोबारा हो तो रिपोर्ट भेजें।'
+        es='No se pudo obtener una copia valida de winmm.dll: el archivo descargado no coincide con el esperado (hash {0}), incluso despues de probar todas las direcciones de descarga. Normalmente es un antivirus, un proxy/VPN o un DNS modificando la descarga, y no un problema del instalador. Verifica la conexion, desactiva la VPN o el proxy si lo usas, anade las exclusiones del antivirus y vuelve a ejecutar el instalador. Si vuelve a pasar, envia el informe.'
+        fr='Impossible d''obtenir une copie valide de winmm.dll : le fichier telecharge ne correspond pas a celui attendu (hash {0}), meme apres avoir essaye toutes les adresses de telechargement. C''est generalement un antivirus, un proxy/VPN ou un DNS qui modifie le telechargement, et non un probleme de l''installateur. Verifiez la connexion, desactivez le VPN ou le proxy si vous en utilisez, ajoutez les exclusions de l''antivirus et relancez l''installateur. Si cela se reproduit, envoyez le rapport.'
+        ar='تعذّر الحصول على نسخة صالحة من winmm.dll: الملف الذي تم تنزيله لا يطابق الملف المتوقع (التجزئة {0}) حتى بعد تجربة كل عناوين التنزيل. عادةً ما يقوم برنامج مكافحة فيروسات أو وكيل/VPN أو DNS بتعديل التنزيل، وهذه ليست مشكلة في المثبّت. تحقق من الاتصال، وأوقف VPN أو الوكيل إن كنت تستخدمه، وأضف استثناءات مكافحة الفيروسات ثم أعد تشغيل المثبّت. إذا تكرر الأمر، أرسل التقرير.'
+        ru='Не удалось получить действительную копию winmm.dll: загруженный файл не совпадает с ожидаемым (хеш {0}) даже после проверки всех адресов загрузки. Обычно это антивирус, прокси/VPN или DNS изменяет загрузку, а не проблема установщика. Проверьте соединение, отключите VPN или прокси, добавьте исключения антивируса и снова запустите установщик. Если повторится, отправьте отчёт.'
     }
     'backup_orig' = @{
         en='Backup of the original winmm saved as winmm.dll.orig'
@@ -1618,14 +1618,14 @@ $Script:I18N = @{
         ar='مجلد Minecraft لا يزال محظورًا ضد الكتابة حتى مع تطبيق إذن المسؤول. عادةً ما يسبب هذا برنامج مكافحة فيروسات تابع لجهة خارجية (حماية من برامج الفدية/المجلدات المحمية) أو سياسة أمان. تحقق من برنامج مكافحة الفيروسات المثبت، واسمح/استبعد مجلد Minecraft فيه، ثم شغّل المثبّت مرة أخرى.'
         ru='Папка Minecraft по-прежнему заблокирована для записи, ДАЖЕ с применёнными правами администратора. Обычно это вызвано сторонним антивирусом (защита от шифровальщиков или защищённые папки) или политикой безопасности. Проверьте, какой антивирус установлен, разрешите/исключите папку Minecraft в нём и снова запустите установщик.'
     }
-    'err_uwp_folder_hint' = @{
-        en='Note: this game is the Microsoft Store (UWP) installation and Windows protects that folder against changes. The current Minecraft version, installed through the Xbox app (GDK), uses a folder the installer can write to.'
-        es='Nota: este juego es la instalación de Microsoft Store (UWP) y Windows protege esa carpeta contra cambios. La versión actual de Minecraft, instalada mediante la Xbox app (GDK), usa una carpeta en la que el instalador sí puede escribir.'
-        fr='Remarque : ce jeu est l''installation Microsoft Store (UWP) et Windows protège ce dossier contre les modifications. La version actuelle de Minecraft, installée via l''app Xbox (GDK), utilise un dossier dans lequel l''installateur peut écrire.'
-        zh='注意：此游戏是 Microsoft Store (UWP) 安装，Windows 会保护该文件夹不被更改。通过 Xbox 应用安装的当前 Minecraft 版本 (GDK) 使用安装程序可写入的文件夹。'
-        hi='ध्यान दें: यह गेम Microsoft Store (UWP) इंस्टॉलेशन है और Windows उस फ़ोल्डर को बदलावों से सुरक्षित रखता है। Xbox ऐप (GDK) से इंस्टॉल किया गया मौजूदा Minecraft संस्करण ऐसे फ़ोल्डर का उपयोग करता है जिसमें इंस्टॉलर लिख सकता है।'
-        ar='ملاحظة: هذه هي نسخة تثبيت Microsoft Store (UWP) ويحمي Windows هذا المجلد من التغييرات. ينسخ الإصدار الحالي من Minecraft، المُثبَّت عبر تطبيق Xbox (GDK)، إلى مجلد يستطيع المثبّت الكتابة فيه.'
-        ru='Примечание: это установка из Microsoft Store (UWP), и Windows защищает эту папку от изменений. Текущая версия Minecraft, установленная через приложение Xbox (GDK), использует папку, в которую установщик может записывать.'
+    'err_uwp_folder' = @{
+        en='The unlock cannot be written into this copy of the game: it is the Microsoft Store (UWP) installation, inside C:\Program Files\WindowsApps, a folder Windows keeps protected (owned by TrustedInstaller and verified by the packaging system). Even as administrator the installer cannot write there, and this is NOT a permission or antivirus problem, so an antivirus exclusion will not help. To unlock the game, install Minecraft from the Xbox app (the current version ships as a GDK package) and run the installer again, that copy lives under C:\XboxGames. Back up your worlds first, they are in %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds.'
+        es='No se puede escribir el winmm.dll en esta copia del juego: es la instalacion de Microsoft Store (UWP), en C:\Program Files\WindowsApps, una carpeta que Windows mantiene protegida (propietario TrustedInstaller, verificada por el sistema de paquetes). Ni como administrador el instalador puede escribir en ella, y NO es un problema de permisos ni de antivirus, asi que excluirla en el antivirus no ayuda. Para desbloquear, instala Minecraft desde la Xbox app (la version actual viene como paquete GDK) y vuelve a ejecutar el instalador, esa copia esta en C:\XboxGames. Antes de cambiar, haz una copia de seguridad de tus mundos, que estan en %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds.'
+        fr='L''unlock ne peut pas etre ecrit dans cette copie du jeu : c''est l''installation Microsoft Store (UWP), dans C:\Program Files\WindowsApps, un dossier que Windows protege (proprietaire TrustedInstaller, verifie par le systeme de paquets). Meme en administrateur l''installateur ne peut pas y ecrire, et ce n''est PAS un probleme de permissions ni d''antivirus : une exclusion antivirus n''y changera rien. Pour debloquer, installez Minecraft via l''app Xbox (la version actuelle est un paquet GDK) et relancez l''installateur, cette copie se trouve dans C:\XboxGames. Sauvegardez d''abord vos mondes, ils sont dans %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds.'
+        zh='无法将 winmm.dll 写入该游戏副本：它是 Microsoft Store (UWP) 安装，位于 C:\Program Files\WindowsApps，Windows 会保护该文件夹（所有者为 TrustedInstaller，并由程序包系统校验）。即使以管理员身份，安装程序也无法写入，这不是权限或杀毒软件问题，添加杀毒排除项也无济于事。要解锁游戏，请通过 Xbox 应用安装 Minecraft（当前版本为 GDK 程序包）后重新运行安装程序，该副本位于 C:\XboxGames。更换前请先备份存档，存档在 %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds。'
+        hi='इस गेम कॉपी में winmm.dll नहीं लिखा जा सकता: यह Microsoft Store (UWP) इंस्टॉलेशन है, C:\Program Files\WindowsApps में, जिसे Windows सुरक्षित रखता है (स्वामी TrustedInstaller, और पैकेज सिस्टम इसकी जाँच करता है)। व्यवस्थापक के रूप में भी इंस्टॉलर वहाँ नहीं लिख सकता, और यह अनुमति या एंटीवायरस की समस्या नहीं है, इसलिए एंटीवायरस बहिष्करण से फ़ायदा नहीं होगा। गेम अनलॉक करने के लिए Minecraft को Xbox ऐप से इंस्टॉल करें (मौजूदा संस्करण GDK पैकेज है) और इंस्टॉलर फिर से चलाएँ, वह कॉपी C:\XboxGames में रहती है। बदलने से पहले अपने वर्ल्ड का बैकअप लें, वे %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds में हैं।'
+        ar='لا يمكن كتابة winmm.dll في هذه النسخة من اللعبة: إنها نسخة Microsoft Store (UWP) داخل C:\Program Files\WindowsApps، وهو مجلد يحميه Windows (المالك TrustedInstaller ويتحقق منه نظام الحزم). حتى كمسؤول لا يستطيع المثبّت الكتابة فيه، وهذه ليست مشكلة صلاحيات ولا مشكلة مكافحة فيروسات، لذا لن يفيد أي استثناء في برنامج مكافحة الفيروسات. لفتح اللعبة، ثبّت Minecraft من تطبيق Xbox (الإصدار الحالي يأتي كحزمة GDK) ثم شغّل المثبّت مرة أخرى، تلك النسخة توجد في C:\XboxGames. خذ نسخة احتياطية من عوالمك أولاً، فهي في %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds.'
+        ru='В эту копию игры нельзя записать winmm.dll: это установка из Microsoft Store (UWP) в C:\Program Files\WindowsApps, папке, которую Windows защищает (владелец TrustedInstaller, проверяется системой пакетов). Даже от имени администратора установщик не может туда писать, и это НЕ проблема прав или антивируса, поэтому исключение в антивирусе не поможет. Чтобы разблокировать игру, установите Minecraft через приложение Xbox (текущая версия поставляется как пакет GDK) и снова запустите установщик, эта копия находится в C:\XboxGames. Сначала сделайте резервную копию миров, они лежат в %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds.'
     }
     'diag_avs' = @{
         en='Registered antivirus products (SecurityCenter2)'
@@ -2310,6 +2310,14 @@ function Ensure-ContentWritable {
             $head.Add('aclOwner=' + [string]$aclNow.Owner)
             $head.Add('aclDenyLeft=' + $denyLeft)
             $head.Add('aclAdmWrite=' + $admWrite)
+            $verdict = if ($denyLeft -gt 0) {
+                'deny-present'
+            } elseif ($admWrite -eq 'yes') {
+                'acl-clean-still-denied'
+            } else {
+                'adm-no-write'
+            }
+            $head.Add('aclVerdict=' + $verdict)
         } catch {
             $head.Add('aclRead=fail')
         }
@@ -2865,6 +2873,45 @@ function Get-ThirdPartyAvNames {
     return @($names)
 }
 
+function Get-DownloadAcceptance {
+    param([string]$Actual, [string]$Expected)
+    if (-not $Actual) {
+        return 'unreadable'
+    }
+    if ($Expected -and ($Actual -ne $Expected)) {
+        return 'mismatch'
+    }
+    return 'match'
+}
+
+function Test-StorePackageFolder {
+    param([string]$Content)
+    if (-not $Content) {
+        return $false
+    }
+    return (([string]$Content).TrimEnd('\') -like '*\WindowsApps\Microsoft.MinecraftUWP_*')
+}
+
+function Get-WriteBlockedMessage {
+    param([string]$Content, [string]$Kind)
+    if (Test-StorePackageFolder -Content $Content) {
+        return (T 'err_uwp_folder')
+    }
+    if ($Kind -eq 'acl') {
+        if (Test-IsAdmin) {
+            return (T 'err_acl_admin')
+        }
+        return (T 'err_acl')
+    }
+    $avs = Get-ThirdPartyAvNames
+    $who = if ($avs.Count -gt 0) {
+        ($avs -join ', ')
+    } else {
+        T 'av_generic_name'
+    }
+    return ((T 'err_write_blocked') -replace '\{0\}', $who)
+}
+
 function Write-UnlockDllAtomic {
     param([string]$SourceDll, [string]$Content, [string]$CheckHash)
     $winmm = Join-Path $Content 'winmm.dll'
@@ -2970,13 +3017,7 @@ function Write-UnlockDllAtomic {
         $denied = ("$lastErr" -match 'denied|negado')
     }
     if ($denied) {
-        $avs = Get-ThirdPartyAvNames
-        $who = if ($avs.Count -gt 0) {
-            ($avs -join ', ')
-        } else {
-            T 'av_generic_name'
-        }
-        throw ((T 'err_write_blocked') -replace '\{0\}', $who)
+        throw (Get-WriteBlockedMessage -Content $Content -Kind 'publish')
     }
     throw $lastErr
 }
@@ -3201,7 +3242,7 @@ function Install-Unlocker {
         if (-not $isArm -and -not $env:MBU_BASE_URL) {
             $dllSources.Add(@{ Url = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll'
                                Tries = 1 })
-            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.35/release/winmm.dll'
+            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.36/release/winmm.dll'
                                Tries = 1 })
         }
         Start-Sleep -Seconds 2
@@ -3320,8 +3361,19 @@ function Install-Unlocker {
                 } catch {
                     $actual = $null
                 }
-                if ($actual) {
-                    $Script:DownloadDiag.Add("$hostLabel t$attempt hash-ok")
+                $accept = Get-DownloadAcceptance -Actual $actual -Expected $checkHash
+                if ($accept -eq 'match') {
+                    $Script:DownloadDiag.Add("$hostLabel t$attempt hash-match")
+                    break
+                }
+                if ($accept -eq 'mismatch') {
+                    $Script:DownloadDiag.Add("$hostLabel t$attempt hash-mismatch=" + $actual.Substring(0, 12))
+                    if (-not $isLastSource) {
+                        Write-Host (T 'retry_mirror') -ForegroundColor Yellow
+                        Start-Sleep -Seconds 2
+                        $actual = $null
+                        break
+                    }
                     break
                 }
                 $Script:DownloadDiag.Add("$hostLabel t$attempt missing/empty/hash-unreadable")
@@ -3383,15 +3435,7 @@ function Install-Unlocker {
         Close-Minecraft
 
         if (-not (Ensure-ContentWritable -Content $content)) {
-            $aclMsg = if (Test-IsAdmin) {
-                (T 'err_acl_admin')
-            } else {
-                (T 'err_acl')
-            }
-            if (([string]$content).TrimEnd('\') -like '*\WindowsApps\Microsoft.MinecraftUWP_*') {
-                $aclMsg = $aclMsg + ' ' + (T 'err_uwp_folder_hint')
-            }
-            throw $aclMsg
+            throw (Get-WriteBlockedMessage -Content $content -Kind 'acl')
         }
 
         $winmm = Join-Path $content 'winmm.dll'
