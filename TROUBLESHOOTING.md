@@ -392,6 +392,47 @@ Since v4.9.28 the menu shows this explanation on screen in your language when th
 game exits with this code, and the failure report marks the reason as
 `0x87E50035: app activation failed (package not registered)`.
 
+## Minecraft closes right after launch with exit code 0xC0000135 (v4.9.40+)
+
+```
+exit code: 0xC0000135
+```
+
+**What it means:** `0xC0000135` is the Windows error *"the specified module could
+not be found"*: the game's own executable could not load a file it needs in
+order to start. It is **not** the unlock: the unlock's `winmm.dll` only uses
+files present in every Windows install (`KERNEL32.dll` and `msvcrt.dll`), so a
+missing piece of the game cannot come from it. A broken `winmm.dll` gives the
+*Bad Image* error `0xc0e90007` instead (see above).
+
+The usual cause is that the copy of the game being used does not belong to (or
+is not registered for) the Windows account running the installer, so its own
+dependencies are not available to it. The report shows it:
+
+- `[pkg] registered=no allusers=yes` means the game is installed or registered
+  for another Windows user of the PC (`-AllUsers` still finds it), not for the
+  account in use. This is common with a launcher copy under another user's
+  `%APPDATA%\.minecraft_bedrock` folder.
+- `[launch] mode=exe official=yes` means the installer started
+  `Minecraft.Windows.exe` straight from that folder, outside the app
+  registration. Without the registration the game cannot load the components
+  the Store/Xbox install provides to it (the Visual C++/VCLibs pieces).
+- `[crash] evidence=process-exit code=0xC0000135` is the missing-file exit.
+
+**How to fix:** the game has to be installed, repaired or registered for the
+account that will play it.
+
+1. Sign in to Windows with the account that owns Minecraft (or install the game
+   for your account). Open the **Xbox App** or the **Microsoft Store** signed in
+   with that account and install, reinstall or repair Minecraft from there.
+2. If the game was installed by the official Minecraft launcher, open that
+   launcher and start the game once so it repairs its own files, then close it.
+3. Open the game once to confirm it starts, then run this installer again.
+
+Since v4.9.40 the menu shows this explanation on screen in your language when the
+game exits with this code, and the failure report marks the reason as
+`0xC0000135: required game file missing (copy not usable for this account)`.
+
 ## Minecraft does not open and the installation itself looks incomplete (v4.9.37+)
 
 ```

@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.39'
+$Script:Version = '4.9.40'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -537,6 +537,7 @@ $Script:PT = @{
     'crash_offer'           = 'O Minecraft fechou logo depois de abrir.'
     'crash_hint_gaming_services' = 'O Minecraft nao abriu porque falta no Windows um componente que ele usa (o Gaming Services) ou ele esta danificado, e nao por causa do unlock. Abra a Microsoft Store, reinstale o Gaming Services e rode o instalador de novo.'
     'crash_hint_pkg_unregistered' = 'O Minecraft nao abriu porque o Windows nao conseguiu ativar o app (codigo 0x87E50035), e nao por causa do unlock. No caso mais comum o pacote do jogo esta instalado mas nao esta registrado para a sua conta, e sem isso o jogo nao abre por caminho nenhum. Reinstale ou repare o Minecraft na conta que tem o jogo (Microsoft Store ou Xbox App) e rode o instalador outra vez.'
+    'crash_hint_dll_missing' = 'O Minecraft nao abriu porque o Windows nao conseguiu carregar um arquivo que esta copia do jogo precisa (codigo 0xC0000135), e nao por causa do unlock. Esta copia nao funciona nesta conta do Windows: o mais comum e o jogo pertencer (ou estar registrado) a outro usuario do PC, ou a instalacao estar incompleta. Instale ou repare o Minecraft na Microsoft Store ou no Xbox App conectado na conta que tem o jogo, abra o jogo uma vez e rode o instalador de novo.'
     'crash_hint_winmm'      = 'A falha foi registrada dentro do arquivo do unlock (winmm.dll), e nao no jogo. Remova o unlock com a opcao [1] do menu para voltar a jogar agora. O relatorio enviado vai ajudar a corrigir isso.'
     'crash_ask'             = 'Remover o unlock agora e deixar o jogo como estava antes? (S para sim, N para nao)'
     'crash_kept'            = 'Unlock mantido. Se o jogo continuar fechando, use a opcao [1] do menu para remover o unlock.'
@@ -1931,6 +1932,15 @@ $Script:I18N = @{
         hi='Minecraft नहीं खुला क्योंकि Windows ऐप को सक्रिय नहीं कर सका (कोड 0x87E50035), और यह अनलॉक की वजह से नहीं है। अक्सर गेम का पैकेज इंस्टॉल होता है पर आपके खाते के लिए रजिस्टर नहीं होता, और उसके बिना गेम शुरू नहीं हो सकता। जिस खाते के पास गेम है उस पर Minecraft फिर से इंस्टॉल या रिपेयर करें (Microsoft Store या Xbox App) और इंस्टॉलर दोबारा चलाएँ।'
         ar='لم يُفتح Minecraft لأن Windows لم يتمكن من تفعيل التطبيق (الرمز 0x87E50035)، وليس بسبب الأنلوك. في أغلب الحالات تكون حزمة اللعبة مثبّتة لكنها غير مسجّلة لحسابك، وبدون ذلك لا تستطيع اللعبة أن تبدأ. أعد تثبيت Minecraft أو أصلحه على الحساب الذي يملك اللعبة (Microsoft Store أو Xbox App) ثم شغّل المثبّت مرة أخرى.'
         ru='Minecraft не запустился, потому что Windows не смог активировать приложение (код 0x87E50035), а не из-за анлока. Чаще всего пакет игры установлен, но не зарегистрирован для вашей учётной записи, и без этого игра не запускается. Переустановите или восстановите Minecraft в учётной записи, которой принадлежит игра (Microsoft Store или Xbox App), и запустите установщик заново.'
+    }
+    'crash_hint_dll_missing' = @{
+        en='Minecraft did not start because Windows could not load a file this copy of the game needs (code 0xC0000135), and not because of the unlock. This copy cannot run for this Windows account: most of the time the game belongs to (or is registered for) another user of the PC, or the installation is incomplete. Install or repair Minecraft from the Microsoft Store or the Xbox App signed in to the account that owns the game, open the game once, then run this installer again.'
+        es='Minecraft no se abrio porque Windows no pudo cargar un archivo que esta copia del juego necesita (codigo 0xC0000135), y no por el unlock. Esta copia no funciona en esta cuenta de Windows: lo mas comun es que el juego pertenezca (o este registrado) a otro usuario del PC, o que la instalacion este incompleta. Instala o repara Minecraft desde la Microsoft Store o la Xbox App con la cuenta que tiene el juego, abre el juego una vez y ejecuta el instalador otra vez.'
+        fr='Minecraft ne s''est pas lance parce que Windows n''a pas pu charger un fichier dont cette copie du jeu a besoin (code 0xC0000135), et non a cause de l''unlock. Cette copie ne peut pas fonctionner sur ce compte Windows : le plus souvent le jeu appartient a (ou est enregistre pour) un autre utilisateur du PC, ou l''installation est incomplete. Installez ou reparez Minecraft depuis le Microsoft Store ou l''application Xbox connecte au compte qui possede le jeu, ouvrez le jeu une fois, puis relancez cet installateur.'
+        zh='Minecraft 未能启动，因为 Windows 无法加载这份游戏副本需要的文件（代码 0xC0000135），而不是解锁的问题。这份副本无法在此 Windows 账户下运行：最常见的情况是游戏属于（或注册在）电脑上的另一个用户，或者安装不完整。请登录拥有游戏的账户，从 Microsoft Store 或 Xbox 应用重新安装或修复 Minecraft，先打开游戏一次，然后再次运行本安装程序。'
+        hi='Minecraft शुरू नहीं हुआ क्योंकि Windows गेम की इस कॉपी के लिए ज़रूरी फ़ाइल लोड नहीं कर सका (कोड 0xC0000135), और यह अनलॉक की वजह से नहीं है। यह कॉपी इस Windows खाते के लिए काम नहीं करती: अक्सर गेम PC के किसी दूसरे उपयोगकर्ता का होता है (या उसके लिए रजिस्टर होता है), या इंस्टॉलेशन अधूरा होता है। जिस खाते के पास गेम है उससे साइन इन करके Microsoft Store या Xbox ऐप से Minecraft इंस्टॉल या रिपेयर करें, गेम एक बार खोलें, फिर यह इंस्टॉलर दोबारा चलाएँ।'
+        ar='لم يبدأ Minecraft لأن Windows لم يتمكن من تحميل ملف تحتاجه هذه النسخة من اللعبة (الرمز 0xC0000135)، وليس بسبب الأنلوك. هذه النسخة لا تعمل على حساب Windows الحالي: في أغلب الحالات تكون اللعبة مملوكة (أو مسجّلة) لمستخدم آخر على الجهاز، أو يكون التثبيت غير مكتمل. سجّل الدخول بالحساب الذي يملك اللعبة، ثم أعد تثبيت Minecraft أو أصلحه من Microsoft Store أو تطبيق Xbox، وافتح اللعبة مرة واحدة، ثم شغّل هذا المثبّت مرة أخرى.'
+        ru='Minecraft не запустился, потому что Windows не смог загрузить файл, нужный этой копии игры (код 0xC0000135), а не из-за анлока. Эта копия не работает для текущей учётной записи Windows: чаще всего игра принадлежит (или зарегистрирована) другому пользователю ПК, либо установка неполная. Войдите в учётную запись, которой принадлежит игра, установите или восстановите Minecraft из Microsoft Store или приложения Xbox, откройте игру один раз и запустите этот установщик снова.'
     }
     'crash_hint_winmm' = @{
         en='The fault was recorded inside the unlock file (winmm.dll), not in the game. Remove the unlock with menu option [1] to play again now. The report sent will help fix this.'
@@ -3350,7 +3360,7 @@ function Install-Unlocker {
         if (-not $isArm -and -not $env:MBU_BASE_URL) {
             $dllSources.Add(@{ Url = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll'
                                Tries = 1 })
-            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.39/release/winmm.dll'
+            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.40/release/winmm.dll'
                                Tries = 1 })
         }
         Start-Sleep -Seconds 2
@@ -4613,6 +4623,12 @@ function Get-CrashCodeHint {
         return @{
             key = 'crash_hint_pkg_unregistered'
             tag = '0x87E50035: app activation failed (package not registered)'
+        }
+    }
+    if ($code32 -eq ([int64]0xC0000135 -band 0xFFFFFFFFL)) {
+        return @{
+            key = 'crash_hint_dll_missing'
+            tag = '0xC0000135: required game file missing (copy not usable for this account)'
         }
     }
     return $null
