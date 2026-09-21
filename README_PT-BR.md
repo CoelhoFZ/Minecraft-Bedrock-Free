@@ -43,7 +43,11 @@ Windows 10/11.
 
 ## Instalação
 
-1. Instale o Minecraft pelo **Xbox App** ou pela **Microsoft Store** e abra uma vez.
+1. Instale o Minecraft pelo **Xbox App** ou pela **Microsoft Store** e abra uma
+   vez. A versão de teste serve, o instalador desbloqueia ela. Se a página da
+   Store só oferecer "Comprar", leia
+   [A página da Store só oferece "Comprar" e eu preciso do teste](TROUBLESHOOTING.md#the-store-page-only-offers-buy-and-i-need-the-trial)
+   antes de continuar.
 2. Abra o **PowerShell** e rode:
 
 ```powershell

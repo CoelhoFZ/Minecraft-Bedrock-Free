@@ -40,7 +40,11 @@ Unlock the full version of **Minecraft Bedrock Edition (GDK)** on Windows 10/11.
 
 ## Install
 
-1. Install Minecraft from the **Xbox App** or the **Microsoft Store** and run it once.
+1. Install Minecraft from the **Xbox App** or the **Microsoft Store** and run it
+   once. The trial version is enough, the installer unlocks it. If the Store
+   page offers only "Buy", read
+   [The Store page only offers "Buy" and I need the trial](TROUBLESHOOTING.md#the-store-page-only-offers-buy-and-i-need-the-trial)
+   before going on.
 2. Open **PowerShell** and run:
 
 ```powershell

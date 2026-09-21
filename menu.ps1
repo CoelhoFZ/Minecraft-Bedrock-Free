@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.38'
+$Script:Version = '4.9.39'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -147,6 +147,47 @@ function Get-PeMachineType {
         }
     } catch {
         return 0
+    }
+}
+
+function Get-FileAttrFlags {
+    param([System.IO.FileAttributes]$Attributes)
+    $flags = New-Object System.Collections.Generic.List[string]
+    if (($Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) {
+        $flags.Add('reparse')
+    }
+    if (($Attributes -band [System.IO.FileAttributes]::SparseFile) -ne 0) {
+        $flags.Add('sparse')
+    }
+    if (($Attributes -band [System.IO.FileAttributes]::Offline) -ne 0) {
+        $flags.Add('offline')
+    }
+    if (($Attributes -band [System.IO.FileAttributes]::Encrypted) -ne 0) {
+        $flags.Add('encrypted')
+    }
+    if ($flags.Count -eq 0) {
+        return 'none'
+    }
+    return ($flags -join '+')
+}
+
+function Get-FileReadState {
+    param([string]$Path)
+    try {
+        $fs = [IO.File]::OpenRead($Path)
+        $fs.Dispose()
+        return 'ok'
+    } catch {
+        $ex = $_.Exception
+        $depth = 0
+        while ($ex -and ($depth -lt 4)) {
+            if (($ex -is [System.UnauthorizedAccessException]) -or ($ex.HResult -eq -2147024891)) {
+                return 'denied'
+            }
+            $ex = $ex.InnerException
+            $depth = $depth + 1
+        }
+        return 'error'
     }
 }
 
@@ -3309,7 +3350,7 @@ function Install-Unlocker {
         if (-not $isArm -and -not $env:MBU_BASE_URL) {
             $dllSources.Add(@{ Url = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll'
                                Tries = 1 })
-            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.38/release/winmm.dll'
+            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.39/release/winmm.dll'
                                Tries = 1 })
         }
         Start-Sleep -Seconds 2
@@ -3555,7 +3596,7 @@ function Install-Unlocker {
         if (-not $mc.opened) {
             $sfReason = Get-WinmmCorruptHint -Content $content
             if (-not $sfReason -and $mc.broken) {
-                $sfReason = 'the game installation is incomplete or not registered (Minecraft.Windows.exe not runnable: exe=' + $mc.exeState + ' size=' + $mc.exeSize + 'B pe=0x' + ('{0:X4}' -f $mc.exePe) + ' pkg=' + $mc.pkgState + ')'
+                $sfReason = 'the game installation is incomplete or not registered (Minecraft.Windows.exe not runnable: exe=' + $mc.exeState + ' size=' + $mc.exeSize + 'B pe=0x' + ('{0:X4}' -f $mc.exePe) + ' read=' + $mc.exeRead + ' attrs=' + $mc.exeAttrs + ' pkg=' + $mc.pkgState + ')'
             }
             Send-MbuFailureReport -Trigger 'start_failed' -Reason $sfReason
             return
@@ -3692,6 +3733,8 @@ function Start-Minecraft {
     $appx = $null
     $exeSize = -1
     $exePe = 0
+    $exeRead = 'unknown'
+    $exeAttrs = 'none'
     try {
         $content = Find-MinecraftContent
         $Script:RunContent = $content
@@ -3712,8 +3755,11 @@ function Start-Minecraft {
             if (Test-Path $exe) {
                 $exeState = 'present'
                 try {
-                    $exeSize = [int64](Get-Item -LiteralPath $exe -Force -ErrorAction Stop).Length
+                    $item = Get-Item -LiteralPath $exe -Force -ErrorAction Stop
+                    $exeSize = [int64]$item.Length
+                    $exeRead = Get-FileReadState -Path $exe
                     $exePe = Get-PeMachineType -Path $exe
+                    $exeAttrs = Get-FileAttrFlags -Attributes $item.Attributes
                 } catch { }
                 $proc = Start-Process -FilePath $exe -WorkingDirectory $content -PassThru -ErrorAction Stop
             } else {
@@ -3763,6 +3809,8 @@ function Start-Minecraft {
         if ($exeState -eq 'present') {
             $parts.Add('exe-size=' + $exeSize + 'B')
             $parts.Add(('exe-pe=0x{0:X4}' -f $exePe))
+            $parts.Add('exe-read=' + $exeRead)
+            $parts.Add('exe-attrs=' + $exeAttrs)
         }
         $parts.Add('pkg=' + $pkgState)
         $parts.Add('uri=' + $uriState)
@@ -3786,6 +3834,8 @@ function Start-Minecraft {
         exeState = $exeState
         exeSize = $exeSize
         exePe = $exePe
+        exeRead = $exeRead
+        exeAttrs = $exeAttrs
         pkgState = $pkgState
     }
 }

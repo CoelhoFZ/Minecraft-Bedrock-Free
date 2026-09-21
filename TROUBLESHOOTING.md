@@ -19,6 +19,34 @@ project maintainer through a Cloudflare Worker. Nothing leaves your machine
 without your confirmation, and declining changes nothing about how the
 installer behaves.
 
+## The Store page only offers "Buy" and I need the trial
+
+**What it means:** the free trial was not removed. The Microsoft Store listing
+**Minecraft for Windows** (product ID `9NBLGGH2JHXJ`) still carries the trial
+option, and it is the package this project unlocks
+(`Microsoft.MinecraftUWP_8wekyb3d8bbwe`). When the Store offers only "Buy", the
+block is on the Store/account side, not a product that went away.
+
+**How to fix:** open the Microsoft Store **app** on that exact listing, using
+the direct link `ms-windows-store://pdp/?productid=9NBLGGH2JHXJ` (web page:
+<https://apps.microsoft.com/detail/9nblggh2jhxj>), and use the trial button
+there. Searching for "Minecraft" in the Xbox app can land you on another
+product.
+
+- Check the listing before anything else. The Store and the Xbox app also show
+  **Minecraft: Java & Bedrock Edition for PC** and the **Minecraft Launcher**,
+  which are different products and have no trial.
+- The Store is known to offer "Free trial" before you sign in and to hide the
+  option after you sign in. Sign out and in again in the Store, clear the Store
+  cache with `wsreset`, then open the listing again.
+- Check that the Store region (Settings > Time & language > Language & region)
+  matches the region of the account you are signed in with.
+- Install the trial, open the game once, then run the installer. The trial is
+  what the unlocker turns into the full game.
+
+If the exact listing still offers only "Buy", the Store is not offering the
+trial to that account and only Microsoft Store support can release it.
+
 ## "'xxx' is not recognized as an internal or external command" errors from a .bat file
 
 If you ran a `.bat` file and cmd printed a long list of errors like
@@ -367,18 +395,34 @@ game exits with this code, and the failure report marks the reason as
 ## Minecraft does not open and the installation itself looks incomplete (v4.9.37+)
 
 ```
-[launch] mode=failed official=yes exe=present exe-size=0B exe-pe=0x0000 pkg=no uri=no-process start-err=This command cannot be run due to the error: ... content=C:\XboxGames\...
+[launch] mode=failed official=yes exe=present exe-size=0B exe-pe=0x0000 exe-read=ok exe-attrs=none pkg=no uri=no-process start-err=This command cannot be run due to the error: ... content=C:\XboxGames\...
 ```
 
 **What it means:** the installer wrote `winmm.dll` and then tried to open the
 game, and Windows could not run the game's own executable. The `[launch]` line
 now describes the state of the installation itself:
 
-- `exe-size=` and `exe-pe=` describe `Minecraft.Windows.exe` in the folder being
-  used. `exe-size=0B` or `exe-pe=0x0000` means the file is a placeholder or a
-  truncated leftover (a paused download, an interrupted update or the remains of
-  an uninstall), and no launch path works while it is like that. A healthy x64
-  build reports `exe-pe=0x8664`.
+- `exe-size=` is the size Windows reports for `Minecraft.Windows.exe` in the
+  folder being used. `exe-size=0B` means an empty file, the usual leftover of a
+  paused download, an interrupted update or a partial uninstall.
+- `exe-pe=` is the machine type read from the file's own PE header. A healthy x64
+  build reports `exe-pe=0x8664`, the only value that proves the file really is an
+  executable. `exe-pe=0x0000` means the header could not be read, and on its own
+  it does not tell apart an empty file, a truncated one and a file Windows
+  refuses to open. That is why the two fields below exist.
+- `exe-read=` (v4.9.39+) is the result of opening the file just to read it:
+  `ok`, `denied` when Windows refused the access, `error` for any other failure,
+  or `unknown` when the file could not even be inspected. `exe-read=denied` with
+  a full `exe-size` is the signature of game files that are on disk but cannot be
+  read, which is not a size problem and not a truncated download.
+- `exe-attrs=` (v4.9.39+) lists the file attributes that matter here: `reparse`,
+  `sparse`, `offline`, `encrypted`, several of them joined by `+`, or `none`.
+  `reparse`, `sparse` and `offline` mean a placeholder whose real content lives
+  somewhere else, which is how the Xbox app and the Microsoft Store store game
+  files on some installs, and they stay unreadable without the package that owns
+  them. `encrypted` means the file is encrypted for another Windows account.
+  `none` together with `exe-read=denied` points at permissions or at security
+  software instead.
 - `pkg=` says whether Windows still has a Minecraft package registered for your
   account. `pkg=no` together with an official folder means the game cannot be
   activated either, so the installer tells you to repair the game instead of
@@ -391,12 +435,22 @@ game executable, or another folder when the game moved. It exists so that a
 folder changing mid-run cannot make two lines of the same report look
 contradictory.
 
+`pkg=no` combined with `exe-read=denied` on a full size executable is the
+signature of game files left behind by a game that is no longer registered: the
+folder is still there, the size is still reported, and nothing in it can be read
+or run. Repair does not apply in that state because there is nothing to repair.
+
 **How to fix:**
 
-1. Open the **Xbox App** (or the **Microsoft Store**), use **Repair**, or
-   reinstall Minecraft. Do not run the installer against a folder the Xbox app
+1. If the report shows `pkg=no` with `exe-read=denied`, open the **Xbox App** (or
+   the **Microsoft Store**), select Minecraft and choose **Uninstall** to clear
+   the leftover, then install the game again from there. Do not delete the game
+   folder by hand: a missing folder is a different failure the installer also has
+   to explain.
+2. Otherwise open the **Xbox App** (or the **Microsoft Store**), use **Repair**,
+   or reinstall Minecraft. Do not run the installer against a folder the Xbox app
    still shows as *installing*, *paused* or *needs attention*.
-2. Confirm the game opens on its own once, close it, then run this installer
+3. Confirm the game opens on its own once, close it, then run this installer
    again.
 
 In this state the menu shows a message in your language that names the incomplete
