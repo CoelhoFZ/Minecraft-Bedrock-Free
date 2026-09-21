@@ -418,7 +418,7 @@ if (-not $downloaded) {
     Read-Host (L 'press_enter_close')
     exit 1
 }
-$menuHash = '869a5fa11072168970f74a59e76446ae828e46b552bb279a9557ed707a0f8ed4'
+$menuHash = '915e64a229ec6a8b76c9207b33aafc3af50324149ec15656131036d05ecea9eb'
 $menuBytes = [IO.File]::ReadAllBytes($menu)
 $clean = New-Object System.Collections.Generic.List[byte]
 foreach ($b in $menuBytes) {
@@ -625,6 +625,7 @@ function Set-MbuConsoleLook {
 if ($isAdmin) {
     Add-MbuLog 'stage=launch-in-place'
     Set-MbuConsoleLook
+    $env:MBU_MENU_PATH = [string]$menu
     try {
         iex $menuText
     } catch {
@@ -649,6 +650,7 @@ if ($isAdmin) {
         ('} catch { }')
         ('try { Clear-Host } catch { }')
         ('$p = ' + $menuLit)
+        ('$env:MBU_MENU_PATH = $p')
         ('[IO.File]::AppendAllText(' + $logLit + ', ((Get-Date).ToString("yyyy-MM-dd HH:mm:ss") + " run=' + $runId + ' stage=child-started pid=" + $PID + [Environment]::NewLine))')
         ('try {')
         ('    iex ([IO.File]::ReadAllText($p))')

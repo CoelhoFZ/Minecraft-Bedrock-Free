@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.40'
+$Script:Version = '4.9.41'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -20,7 +20,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c' = '4.9.36'
+    'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c' = '4.9.41'
     'e44230e539e5ec2378c1937746cfb34846ae1e21f9d4f2739f0d4d8c1e37d8da' = '4.9.34'
     '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.28'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
@@ -2148,8 +2148,44 @@ function Get-TimeGreeting {
     }
 }
 
+function Get-MbuLogicalDrives {
+    try {
+        return [System.IO.DriveInfo]::GetDrives()
+    } catch {
+        return @()
+    }
+}
+
+function Get-MbuScanLine {
+    $scan = $Script:MbuScan
+    if (-not $scan) {
+        return '[scan] drives=none'
+    }
+    $drives = 'none'
+    if (@($scan.Drives).Count -gt 0) {
+        $drives = (@($scan.Drives) -join ',')
+    }
+    $skip = 'none'
+    if (@($scan.Skipped).Count -gt 0) {
+        $skip = (@($scan.Skipped) -join ',')
+    }
+    $fail = 'none'
+    if (@($scan.Failed).Count -gt 0) {
+        $fail = (@($scan.Failed) -join ',')
+    }
+    return '[scan] drives=' + $drives + ' | xbox=' + $scan.Xbox + ' store=' + $scan.Store + ' | skip=' + $skip + ' | fail=' + $fail
+}
+
 function Get-MinecraftCandidates {
     $found = New-Object System.Collections.Generic.List[string]
+    $scan = [pscustomobject]@{
+        Drives  = New-Object System.Collections.Generic.List[string]
+        Skipped = New-Object System.Collections.Generic.List[string]
+        Failed  = New-Object System.Collections.Generic.List[string]
+        Xbox    = 0
+        Store   = 0
+    }
+    $Script:MbuScan = $scan
     try {
         $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -AllUsers -ErrorAction SilentlyContinue | Select-Object -First 1
         if (-not $appx) {
@@ -2166,20 +2202,92 @@ function Get-MinecraftCandidates {
         }
     } catch { }
     $found.Add('C:\XboxGames\Minecraft for Windows\Content')
+    $storeRoots = New-Object System.Collections.Generic.List[string]
     try {
-        foreach ($drive in [System.IO.DriveInfo]::GetDrives()) {
-            if ($drive.DriveType -ne [System.IO.DriveType]::Fixed) {
+        foreach ($vol in @(Get-AppxVolume -ErrorAction SilentlyContinue)) {
+            if (-not $vol) {
                 continue
             }
-            $xbox = Join-Path $drive.RootDirectory.FullName 'XboxGames'
-            if (-not (Test-Path -LiteralPath $xbox)) {
+            $offline = $false
+            try {
+                $offline = [bool]$vol.IsOffline
+            } catch {
+                $offline = $false
+            }
+            if ($offline) {
                 continue
             }
-            foreach ($child in @(Get-ChildItem -LiteralPath $xbox -Directory -ErrorAction SilentlyContinue)) {
-                $found.Add((Join-Path $child.FullName 'Content'))
+            $storePath = ''
+            try {
+                $storePath = [string]$vol.PackageStorePath
+            } catch {
+                $storePath = ''
+            }
+            if ($storePath) {
+                $storeRoots.Add($storePath.TrimEnd('\'))
             }
         }
     } catch { }
+    foreach ($drive in Get-MbuLogicalDrives) {
+        $letter = ''
+        try {
+            $letter = ([string]$drive.Name).TrimEnd('\')
+        } catch {
+            $letter = ''
+        }
+        if (-not $letter) {
+            continue
+        }
+        $driveType = 'unknown'
+        try {
+            $driveType = ([string]$drive.DriveType).ToLower()
+        } catch {
+            $driveType = 'unknown'
+        }
+        $token = $letter.TrimEnd(':') + ':' + $driveType
+        $scan.Drives.Add($token)
+        if ($driveType -ne 'fixed') {
+            $scan.Skipped.Add($token)
+            continue
+        }
+        $root = $letter + '\'
+        try {
+            $xbox = Join-Path $root 'XboxGames'
+            if (Test-Path -LiteralPath $xbox) {
+                foreach ($child in @(Get-ChildItem -LiteralPath $xbox -Directory -ErrorAction SilentlyContinue)) {
+                    $scan.Xbox = $scan.Xbox + 1
+                    $found.Add((Join-Path $child.FullName 'Content'))
+                }
+            }
+        } catch {
+            $scan.Failed.Add($letter + ':xboxgames')
+        }
+        $storeRoots.Add((Join-Path $root 'WindowsApps'))
+    }
+    $seenRoot = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    foreach ($storeRoot in $storeRoots) {
+        if (-not $storeRoot) {
+            continue
+        }
+        if (-not $seenRoot.Add($storeRoot)) {
+            continue
+        }
+        try {
+            if (-not (Test-Path -LiteralPath $storeRoot)) {
+                continue
+            }
+            $pkgs = @(Get-ChildItem -LiteralPath $storeRoot -Directory -ErrorAction SilentlyContinue | Where-Object {
+                $_.Name -like 'Microsoft.MinecraftUWP*'
+            })
+            foreach ($pkg in $pkgs) {
+                $scan.Store = $scan.Store + 1
+                $found.Add($pkg.FullName)
+                $found.Add((Join-Path $pkg.FullName 'Content'))
+            }
+        } catch {
+            $scan.Failed.Add($storeRoot)
+        }
+    }
     $list = New-Object System.Collections.Generic.List[string]
     $seen = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     foreach ($cand in $found) {
@@ -3360,7 +3468,7 @@ function Install-Unlocker {
         if (-not $isArm -and -not $env:MBU_BASE_URL) {
             $dllSources.Add(@{ Url = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll'
                                Tries = 1 })
-            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.40/release/winmm.dll'
+            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.41/release/winmm.dll'
                                Tries = 1 })
         }
         Start-Sleep -Seconds 2
@@ -4036,11 +4144,21 @@ function Get-DiagReportText {
                 '?'
             }
             $src = '?'
+            $srcFrom = ''
             try {
                 if ($inv -and $inv.ScriptName) {
-                    $src = [IO.Path]::GetFileName([string]$inv.ScriptName)
+                    $srcFrom = [string]$inv.ScriptName
                 } elseif ($PSCommandPath) {
-                    $src = [IO.Path]::GetFileName([string]$PSCommandPath)
+                    $srcFrom = [string]$PSCommandPath
+                } elseif ($env:MBU_MENU_PATH) {
+                    $srcFrom = [string]$env:MBU_MENU_PATH
+                }
+                $srcName = ''
+                if ($srcFrom) {
+                    $srcName = [IO.Path]::GetFileName($srcFrom)
+                }
+                if ($srcName) {
+                    $src = $srcName
                 }
             } catch { }
             $lineNo = if ($inv) {
@@ -4176,6 +4294,7 @@ function Get-DiagReportText {
             }
             $lines.Add("$(T 'diag_cand_label') $cand  ($(T $cstateKey))$cmark")
         }
+        $lines.Add((Get-MbuScanLine))
         $wst = Get-WinmmDiskState -Content $content
         $wline = '[winmm] ' + $(if ($wst.present) {
             'present'
@@ -4228,6 +4347,7 @@ function Get-DiagReportText {
                 }
             } catch { }
         }
+        $lines.Add((Get-MbuScanLine))
         try {
             $probeProc = Get-Process Minecraft.Windows -ErrorAction SilentlyContinue | Select-Object -First 1
             if ($probeProc) {

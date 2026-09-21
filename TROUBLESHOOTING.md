@@ -741,11 +741,16 @@ v4.9.38 that message names the Xbox app / Microsoft Store repair path instead.
 Since v4.9.30 that list also covers the folder the registered package really
 points to and every `XboxGames` folder on the fixed drives of the PC. So a game
 whose content sits in `C:\XboxGames\Minecraft for Windows_1\Content`, or on a
-drive other than `C:`, is found and installed without a reinstall. The failure
-report shows the same locations: the `[pkg]` line adds `target=` and
-`target-exists=` when the package folder is a link, and each `[candidate]` line
-marks it as `(junction -> ...)` followed by where it points, or as `link target
-is missing` when the link points to a folder that is gone.
+drive other than `C:`, is found and installed without a reinstall. Since v4.9.41
+it also covers the package store of every drive (`<drive>:\WindowsApps` and the
+store path Windows reports for app packages), which is where a Microsoft Store
+installation lands when Windows is set to install apps on another drive. The
+failure report shows the same locations plus a `[scan]` line with the drives it
+looked at, their type, and how many `XboxGames` and package store folders it
+found: the `[pkg]` line adds `target=` and `target-exists=` when the package
+folder is a link, and each `[candidate]` line marks it as `(junction -> ...)`
+followed by where it points, or as `link target is missing` when the link points
+to a folder that is gone.
 
 ## "Minecraft is registered, but the folder the package points to does not exist" (v4.9.38+)
 
