@@ -219,46 +219,6 @@ a few minutes and run the installer again. The failure report carries a `[dl]`
 line with the HTTP code of every attempt, which is what tells a temporary
 server error from a block on your side.
 
-## "An object at the specified path does not exist: C:\Users\NAME~1" (temporary folder)
-
-Seen on Windows with a **space in the user name** (for example `PC XEON`).
-Windows stores the temporary folder with the **8.3 short name**
-(`C:\Users\PCXEON~1\AppData\Local\Temp`) in the `%TEMP%` environment variable.
-When that short alias no longer exists on the volume (8.3 names disabled by
-policy, recreated user profile, cloned/restored image), every file operation
-pointed at `%TEMP%` hits a dead path: PowerShell reports
-`An object at the specified path does not exist` (the message comes from the
-PowerShell file-system provider, so it is shown in your system language) and the
-installer stops.
-
-**Addressed in v4.9.7**, with two changes:
-
-1. The installer no longer trusts `%TEMP%` blindly: it resolves a temporary
-   folder that is **proven to exist and accept writes**, in this order:
-
-   1. `%TEMP%`, 2. `%TMP%`, 3. `%LOCALAPPDATA%\Temp`,
-   4. `%USERPROFILE%\AppData\Local\Temp`, 5. `%SystemRoot%\Temp`.
-
-   Candidates whose name carries an **8.3 short alias** (`C:\Users\NAME~1\...`)
-   are tried **last**, so the readable spelling (`%LOCALAPPDATA%\Temp`) wins
-   when it accepts writes. Nothing is discarded: if only the short spelling
-   works, it is still used.
-
-   The selected folder is printed in the failure report on the
-   `[temp] used=...` line (with `env=`, `tmp=`, `local=`, `uprof=`, `sysroot=`
-   for comparison).
-
-2. The failure report now records the **exact operation that failed**: cmdlet,
-   script line and `FullyQualifiedErrorId` (line `[error] ...`). That makes the
-   next occurrence point straight at the failing step instead of leaving only
-   the translated message.
-
-Note: the Windows PowerShell host itself creates `%TEMP%` when it starts, so a
-missing temporary folder can appear as a real directory once the installer runs.
-If you are on an older version, update to v4.9.7 or later (the bootstraps
-`install.bat` and `i.ps1` resolve the folder too, so redownloading either one is
-enough).
-
 ## "Bad Image" error (status 0xc0e90007) for WINMM.dll when launching Minecraft
 
 ```
@@ -497,45 +457,6 @@ or run. Repair does not apply in that state because there is nothing to repair.
 In this state the menu shows a message in your language that names the incomplete
 or unregistered game installation, instead of the generic "could not start
 Minecraft automatically".
-
-## Minecraft closes and the crash log names WINMM.dll (v4.9.34+)
-
-```
-Faulting module name: WINMM.dll_unloaded, version: 0.0.0.0, timestamp: 0x00000000
-Exception code: 0xc0000005
-Fault offset: 0x6b37
-```
-
-**What it means:** the Windows crash log (WER) names the *faulting module*, so
-when that module is `WINMM.dll` (sometimes written `WINMM.dll_unloaded`) the
-fault was recorded inside the unlock, not in the game. The `_unloaded` suffix
-means the module was already being or had been unloaded when the fault was
-recorded, which is consistent with a short-lived unlock thread still pending
-when the game released the DLL (or when the game was shutting down). The
-`0.0.0.0` version and the `0x00000000` timestamp are also expected: the unlock
-file is built without a version resource and without a timestamp, so they do not
-point at a wrong file.
-
-**What to do:**
-
-1. Remove the unlock with option `[1]` of the menu and open the game: without
-the unlock it starts normally. The menu offers exactly that right after the
-crash, and since v4.9.34 it shows this explanation in your language instead of
-the generic "Minecraft closed right after opening" message.
-2. If your game is the old 1.21 line (Microsoft Store or Minecraft Launcher
-   install), try updating it through the Microsoft Store or the Xbox App. The
-   unlock is verified on the current build, so an update also gives you the
-   supported target.
-3. Send the failure report. Since v4.9.34 the report adds
-   `[crash] fault-module=WINMM.dll_unloaded code=0xc0000005 off=0x6b37` (when the
-   WER event carries these fields), which is what makes this case separable from
-   the gaming services and app activation cases above.
-
-The cause of the unload is under investigation; the module, the exception code
-and the fault offset in the report are what make it possible to fix. Since
-v4.9.35 the unlock stays loaded for the whole game session, which covers this
-case on the installations that release the DLL; if the crash still appears on
-v4.9.35 or newer, the report is what moves the fix forward.
 
 ## "Access to the path '...winmm.dll.new' is denied" during install
 
