@@ -121,8 +121,7 @@ The DLL it needs is no longer a valid file. To fix it:
    - **Windows Defender:** Settings → Privacy & security → Windows Security →
      Virus & threat protection → Manage settings → Exclusions → Add an
      exclusion → Folder → select `C:\XboxGames\Minecraft for Windows\Content`
-     (Xbox App) or the `Microsoft.MinecraftUWP_*` folder inside
-     `C:\Program Files\WindowsApps` (Microsoft Store).
+     (the Xbox App installation, the copy this project supports).
    - Other AVs: add the same folder to their exclusion/whitelist.
 2. Run the installer again. It writes a verified copy and checks the hash
    again after copying.

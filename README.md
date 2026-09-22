@@ -12,15 +12,19 @@
 
 Unlock the full version of **Minecraft Bedrock Edition (GDK)** on Windows 10/11.
 
-**Works with Xbox App (GDK) and Microsoft Store installations** on Windows 10/11.
+**Works with the Xbox App (GDK) installation** on Windows 10/11. The Microsoft
+Store installation is **not** supported - see
+[The Microsoft Store version is not supported](#the-microsoft-store-version-is-not-supported).
 
 > ⚠️ Educational project. Please support the developers by purchasing the game.
 
 ## Requirements
 
-- **Official build only.** Works exclusively with the official **Microsoft
-  Store** or **Xbox App** build of Minecraft Bedrock for Windows. It will NOT
-  work with third-party launchers or version switchers.
+- **Official Xbox App build only.** Works exclusively with the official
+  **Xbox App** (GDK) build of Minecraft Bedrock for Windows. The copy installed
+  by the **Microsoft Store** is not supported: the installer detects it, explains
+  it and stops instead of installing. It will NOT work with third-party
+  launchers or version switchers either.
 - **Build 1.21 or newer.** Works with any Minecraft for Windows build from 1.21
   on, including a build newer than this release. Older builds are refused.
   Microsoft does not let you install older versions, and this project does not
@@ -38,10 +42,33 @@ Unlock the full version of **Minecraft Bedrock Edition (GDK)** on Windows 10/11.
   Downloads, on the Desktop or next to another game: delete that extra copy and
   run the installer again.
 
+## The Microsoft Store version is not supported
+
+Minecraft whose game files live inside `C:\Program Files\WindowsApps` was
+installed by the **Microsoft Store** into the folder Windows keeps protected, and
+the unlock is not compatible with that copy. The installer follows the links the
+Store uses to find where the files really are, notices it, says so and stops
+**before** downloading anything, so nothing is changed on your PC. An
+installation whose files really live in `C:\XboxGames` (where the Xbox app puts
+them, and where many Store installs end up through a link) is **not** blocked.
+
+To use this project, uninstall that copy and install the game from the Xbox app:
+
+1. Back up your worlds first. They live in
+   `%LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds`.
+2. Uninstall the current copy: **Settings > Apps > Installed apps > Minecraft
+   for Windows > Uninstall**.
+3. Install Minecraft again from the **Xbox app**. That copy lives in
+   `C:\XboxGames` and is the one this project supports.
+4. Run the installer again.
+
+Step by step, with what each one does:
+[TROUBLESHOOTING.md](TROUBLESHOOTING.md#the-microsoft-store-version-is-not-supported-v4942).
+
 ## Install
 
-1. Install Minecraft from the **Xbox App** or the **Microsoft Store** and run it
-   once. The trial version is enough, the installer unlocks it. If the Store
+1. Install Minecraft from the **Xbox App** (not from the Microsoft Store) and run
+   it once. The trial version is enough, the installer unlocks it. If the Store
    page offers only "Buy", read
    [The Store page only offers "Buy" and I need the trial](TROUBLESHOOTING.md#the-store-page-only-offers-buy-and-i-need-the-trial)
    before going on.
@@ -121,9 +148,8 @@ The unlock works by hooking the GDK license APIs (`XStore*`), so it is not tied
 to one game build: **any Minecraft for Windows build from 1.21 on is
 accepted**, including a build **newer** than the one this release was verified
 against. The menu downloads `tested-versions.json` from this repository to read
-the minimum supported version; if your game is **older** than that floor, the
-installer stops before downloading anything and asks you to update Minecraft
-from the Microsoft Store.
+the minimum supported version; if your game is **older** than that floor,the installer stops before downloading anything and asks you to update Minecraft
+from the Xbox app.
 The `tested` list in that file is only a record of the builds verified by hand:
 being newer than it does not block or change anything.
 

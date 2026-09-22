@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.41'
+$Script:Version = '4.9.42'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -20,7 +20,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c' = '4.9.41'
+    'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c' = '4.9.42'
     'e44230e539e5ec2378c1937746cfb34846ae1e21f9d4f2739f0d4d8c1e37d8da' = '4.9.34'
     '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.28'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
@@ -441,7 +441,7 @@ $Script:PT = @{
     'state_unlocked_v'   = 'O Minecraft ja esta DESBLOQUEADO ({0}).'
     'state_older_hint'   = 'O unlock instalado ({0}) e mais antigo que este menu ({1}) - use [2] para atualizar.'
     'gate_untested'      = 'Instalacao BLOQUEADA: a versao do jogo {0} e mais antiga que o minimo suportado ({1}) e provavelmente nao funcionaria.'
-    'gate_untested_hint' = 'Atualize o Minecraft pela Microsoft Store para a versao suportada e rode o instalador de novo.'
+    'gate_untested_hint' = 'Atualize o Minecraft pelo Xbox App para a versao suportada e rode o instalador de novo.'
     'gate_supported_ok'  = 'Versao do jogo: {0} (suportada)'
     'cache_used'         = 'Sem internet: usando copia local validada do binario ({0}).'
     'cache_saved'        = 'Copia local salva para reinstalacao offline: {0}'
@@ -531,13 +531,15 @@ $Script:PT = @{
     'gate_unknown_ver'      = 'Nao foi possivel determinar a versao do Minecraft instalado, entao nao da para confirmar que este unlocker funciona nela.'
     'gate_list_unavailable' = 'Nao foi possivel baixar a lista de versoes testadas (sem internet), entao nao da para confirmar que a versao {0} funciona com este unlocker.'
     'gate_ask'              = 'Continuar a instalacao mesmo assim? (S para sim, N para nao)'
-    'gate_source_warn'      = 'Atencao: a pasta encontrada nao e a instalacao oficial do Minecraft (Microsoft Store ou Xbox App): {0}. O desbloqueio foi testado apenas no build oficial, entao em launcher de terceiros ele pode nao funcionar e pode quebrar o launcher. Se o jogo foi instalado por um launcher, abra o jogo por ele depois de instalar.'
-    'gate_source_abort'     = 'Instalacao cancelada. Instale o Minecraft pela Microsoft Store ou pelo Xbox App e rode o instalador de novo.'
-    'gate_decline_hint'     = 'Instalacao cancelada. Atualize o Minecraft pela Microsoft Store e rode o instalador de novo.'
+    'gate_source_warn'      = 'Atencao: a pasta encontrada nao e a instalacao oficial do Minecraft (Xbox App): {0}. O desbloqueio foi testado apenas no build oficial, entao em launcher de terceiros ele pode nao funcionar e pode quebrar o launcher. Se o jogo foi instalado por um launcher, abra o jogo por ele depois de instalar.'
+    'gate_source_abort'     = 'Instalacao cancelada. Instale o Minecraft pelo Xbox App e rode o instalador de novo.'
+    'gate_decline_hint'     = 'Instalacao cancelada. Atualize o Minecraft pelo Xbox App e rode o instalador de novo.'
+    'gate_store_blocked'    = 'Instalacao BLOQUEADA: este Minecraft foi instalado pela Microsoft Store, e essa versao NAO e compativel com o desbloqueio. A copia da Store fica em C:\Program Files\WindowsApps, uma pasta que o Windows mantem protegida e que o instalador nao consegue modificar.'
+    'gate_store_hint'       = 'Desinstale esta copia em Configuracoes > Aplicativos > Aplicativos instalados > Minecraft for Windows > Desinstalar, instale o Minecraft pelo Xbox App (essa copia fica em C:\XboxGames) e rode este instalador de novo. Faca backup dos seus mundos antes: eles ficam em %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds.'
     'crash_offer'           = 'O Minecraft fechou logo depois de abrir.'
     'crash_hint_gaming_services' = 'O Minecraft nao abriu porque falta no Windows um componente que ele usa (o Gaming Services) ou ele esta danificado, e nao por causa do unlock. Abra a Microsoft Store, reinstale o Gaming Services e rode o instalador de novo.'
-    'crash_hint_pkg_unregistered' = 'O Minecraft nao abriu porque o Windows nao conseguiu ativar o app (codigo 0x87E50035), e nao por causa do unlock. No caso mais comum o pacote do jogo esta instalado mas nao esta registrado para a sua conta, e sem isso o jogo nao abre por caminho nenhum. Reinstale ou repare o Minecraft na conta que tem o jogo (Microsoft Store ou Xbox App) e rode o instalador outra vez.'
-    'crash_hint_dll_missing' = 'O Minecraft nao abriu porque o Windows nao conseguiu carregar um arquivo que esta copia do jogo precisa (codigo 0xC0000135), e nao por causa do unlock. Esta copia nao funciona nesta conta do Windows: o mais comum e o jogo pertencer (ou estar registrado) a outro usuario do PC, ou a instalacao estar incompleta. Instale ou repare o Minecraft na Microsoft Store ou no Xbox App conectado na conta que tem o jogo, abra o jogo uma vez e rode o instalador de novo.'
+    'crash_hint_pkg_unregistered' = 'O Minecraft nao abriu porque o Windows nao conseguiu ativar o app (codigo 0x87E50035), e nao por causa do unlock. No caso mais comum o pacote do jogo esta instalado mas nao esta registrado para a sua conta, e sem isso o jogo nao abre por caminho nenhum. Reinstale ou repare o Minecraft na conta que tem o jogo (Xbox App) e rode o instalador outra vez.'
+    'crash_hint_dll_missing' = 'O Minecraft nao abriu porque o Windows nao conseguiu carregar um arquivo que esta copia do jogo precisa (codigo 0xC0000135), e nao por causa do unlock. Esta copia nao funciona nesta conta do Windows: o mais comum e o jogo pertencer (ou estar registrado) a outro usuario do PC, ou a instalacao estar incompleta. Instale ou repare o Minecraft no Xbox App conectado na conta que tem o jogo, abra o jogo uma vez e rode o instalador de novo.'
     'crash_hint_winmm'      = 'A falha foi registrada dentro do arquivo do unlock (winmm.dll), e nao no jogo. Remova o unlock com a opcao [1] do menu para voltar a jogar agora. O relatorio enviado vai ajudar a corrigir isso.'
     'crash_ask'             = 'Remover o unlock agora e deixar o jogo como estava antes? (S para sim, N para nao)'
     'crash_kept'            = 'Unlock mantido. Se o jogo continuar fechando, use a opcao [1] do menu para remover o unlock.'
@@ -1097,13 +1099,13 @@ $Script:I18N = @{
         ru='Версия игры: {0} (поддерживается)'
     }
     'gate_untested_hint' = @{
-        en='Update Minecraft from the Microsoft Store to the supported version and run the installer again.'
-        es='Actualiza Minecraft desde la Microsoft Store a la versión compatible y vuelve a ejecutar el instalador.'
-        zh='请通过 Microsoft Store 将 Minecraft 更新到受支持的版本，然后重新运行安装程序。'
-        hi='Microsoft Store से Minecraft को समर्थित संस्करण में अपडेट करें और इंस्टॉलर फिर से चलाएँ।'
-        fr='Mettez à jour Minecraft depuis le Microsoft Store vers la version prise en charge, puis relancez l''installateur.'
-        ar='حدّث Minecraft من متجر Microsoft إلى الإصدار المدعوم ثم شغّل المثبّت مرة أخرى.'
-        ru='Обновите Minecraft через Microsoft Store до поддерживаемой версии и снова запустите установщик.'
+        en='Update Minecraft from the Xbox app to the supported version and run the installer again.'
+        es='Actualiza Minecraft desde la app Xbox a la versión compatible y vuelve a ejecutar el instalador.'
+        zh='请通过 Xbox 应用将 Minecraft 更新到受支持的版本，然后重新运行安装程序。'
+        hi='Xbox ऐप से Minecraft को समर्थित संस्करण में अपडेट करें और इंस्टॉलर फिर से चलाएँ।'
+        fr='Mettez à jour Minecraft depuis l''application Xbox vers la version prise en charge, puis relancez l''installateur.'
+        ar='حدّث Minecraft من تطبيق Xbox إلى الإصدار المدعوم ثم شغّل المثبّت مرة أخرى.'
+        ru='Обновите Minecraft через приложение Xbox до поддерживаемой версии и снова запустите установщик.'
     }
     'cache_used' = @{
         en='Offline: using the local validated copy of the binary ({0}).'
@@ -1889,31 +1891,49 @@ $Script:I18N = @{
         ru='Продолжить установку в любом случае? (Y да, N нет)'
     }
     'gate_source_warn' = @{
-        en='Warning: this Minecraft folder is not the official installation (Microsoft Store or Xbox App): {0}. The unlock was tested on the official build only, so in a third-party launcher it may not work and may break that launcher. If you installed the game with a launcher, open the game through it after installing.'
-        es='Atencion: esta carpeta de Minecraft no es la instalacion oficial (Microsoft Store o Xbox App): {0}. El desbloqueo se probo solo en el build oficial, asi que en un launcher de terceros puede no funcionar y puede romper ese launcher. Si instalaste el juego con un launcher, abrelo desde ese launcher despues de instalar.'
-        fr='Attention : ce dossier Minecraft n''est pas l''installation officielle (Microsoft Store ou Xbox App) : {0}. Le deblocage a ete teste uniquement sur le build officiel, donc dans un launcher tiers il peut ne pas fonctionner et peut casser ce launcher. Si vous avez installe le jeu avec un launcher, ouvrez le jeu depuis ce launcher apres l''installation.'
-        zh='注意：这个 Minecraft 文件夹不是官方安装（Microsoft Store 或 Xbox App）：{0}。解锁只在官方版本上测试过，在第三方启动器中可能无法工作，并且可能破坏该启动器。如果你用启动器安装了游戏，请在安装后通过该启动器打开游戏。'
-        hi='ध्यान दें: यह Minecraft फ़ोल्डर आधिकारिक इंस्टॉलेशन नहीं है (Microsoft Store या Xbox App): {0}. अनलॉक केवल आधिकारिक बिल्ड पर परीक्षित है, इसलिए किसी तीसरे पक्ष के लॉन्चर में यह काम नहीं कर सकता और उस लॉन्चर को तोड़ सकता है। अगर आपने गेम किसी लॉन्चर से इंस्टॉल किया है, तो इंस्टॉल के बाद उसी लॉन्चर से गेम खोलें।'
-        ar='تنبيه: مجلد Minecraft هذا ليس التثبيت الرسمي (Microsoft Store أو Xbox App): {0}. تم اختبار فتح القفل على الإصدار الرسمي فقط، لذا في مشغّل طرف ثالث قد لا يعمل وقد يُفسد ذلك المشغّل. إذا ثبّتت اللعبة بواسطة مشغّل، فافتح اللعبة منه بعد التثبيت.'
-        ru='Внимание: эта папка Minecraft не является официальной установкой (Microsoft Store или Xbox App): {0}. Разблокировка проверялась только на официальной сборке, поэтому в стороннем лаунчере она может не работать и может сломать этот лаунчер. Если вы установили игру через лаунчер, открывайте игру из него после установки.'
+        en='Warning: this Minecraft folder is not the official installation (Xbox app): {0}. The unlock was tested on the official build only, so in a third-party launcher it may not work and may break that launcher. If you installed the game with a launcher, open the game through it after installing.'
+        es='Atencion: esta carpeta de Minecraft no es la instalacion oficial (app Xbox): {0}. El desbloqueo se probo solo en el build oficial, asi que en un launcher de terceros puede no funcionar y puede romper ese launcher. Si instalaste el juego con un launcher, abrelo desde ese launcher despues de instalar.'
+        fr='Attention : ce dossier Minecraft n''est pas l''installation officielle (application Xbox) : {0}. Le deblocage a ete teste uniquement sur le build officiel, donc dans un launcher tiers il peut ne pas fonctionner et peut casser ce launcher. Si vous avez installe le jeu avec un launcher, ouvrez le jeu depuis ce launcher apres l''installation.'
+        zh='注意：这个 Minecraft 文件夹不是官方安装（Xbox 应用）：{0}。解锁只在官方版本上测试过，在第三方启动器中可能无法工作，并且可能破坏该启动器。如果你用启动器安装了游戏，请在安装后通过该启动器打开游戏。'
+        hi='ध्यान दें: यह Minecraft फ़ोल्डर आधिकारिक इंस्टॉलेशन नहीं है (Xbox ऐप): {0}. अनलॉक केवल आधिकारिक बिल्ड पर परीक्षित है, इसलिए किसी तीसरे पक्ष के लॉन्चर में यह काम नहीं कर सकता और उस लॉन्चर को तोड़ सकता है। अगर आपने गेम किसी लॉन्चर से इंस्टॉल किया है, तो इंस्टॉल के बाद उसी लॉन्चर से गेम खोलें।'
+        ar='تنبيه: مجلد Minecraft هذا ليس التثبيت الرسمي (تطبيق Xbox): {0}. تم اختبار فتح القفل على الإصدار الرسمي فقط، لذا في مشغّل طرف ثالث قد لا يعمل وقد يُفسد ذلك المشغّل. إذا ثبّتت اللعبة بواسطة مشغّل، فافتح اللعبة منه بعد التثبيت.'
+        ru='Внимание: эта папка Minecraft не является официальной установкой (приложение Xbox): {0}. Разблокировка проверялась только на официальной сборке, поэтому в стороннем лаунчере она может не работать и может сломать этот лаунчер. Если вы установили игру через лаунчер, открывайте игру из него после установки.'
     }
     'gate_source_abort' = @{
-        en='Install cancelled. Install Minecraft from the Microsoft Store or the Xbox App and run the installer again.'
-        es='Instalacion cancelada. Instala Minecraft desde Microsoft Store o Xbox App y vuelve a ejecutar el instalador.'
-        fr='Installation annulee. Installez Minecraft depuis le Microsoft Store ou l''Xbox App, puis relancez l''installateur.'
-        zh='安装已取消。请从 Microsoft Store 或 Xbox App 安装 Minecraft，然后重新运行安装程序。'
-        hi='इंस्टॉल रद्द कर दिया गया। Minecraft को Microsoft Store या Xbox App से इंस्टॉल करें और इंस्टॉलर फिर से चलाएँ।'
-        ar='تم إلغاء التثبيت. ثبّت Minecraft من Microsoft Store أو Xbox App ثم أعد تشغيل المثبّت.'
-        ru='Установка отменена. Установите Minecraft из Microsoft Store или Xbox App и снова запустите установщик.'
+        en='Install cancelled. Install Minecraft from the Xbox app and run the installer again.'
+        es='Instalacion cancelada. Instala Minecraft desde la app Xbox y vuelve a ejecutar el instalador.'
+        fr='Installation annulee. Installez Minecraft depuis l''application Xbox, puis relancez l''installateur.'
+        zh='安装已取消。请从 Xbox 应用安装 Minecraft，然后重新运行安装程序。'
+        hi='इंस्टॉल रद्द कर दिया गया। Minecraft को Xbox ऐप से इंस्टॉल करें और इंस्टॉलर फिर से चलाएँ।'
+        ar='تم إلغاء التثبيت. ثبّت Minecraft من تطبيق Xbox ثم أعد تشغيل المثبّت.'
+        ru='Установка отменена. Установите Minecraft из приложения Xbox и снова запустите установщик.'
     }
     'gate_decline_hint' = @{
-        en='Installation cancelled. Update Minecraft from the Microsoft Store and run the installer again.'
-        es='Instalacion cancelada. Actualiza Minecraft desde la Microsoft Store y ejecuta el instalador otra vez.'
-        fr='Installation annulee. Mettez Minecraft a jour depuis le Microsoft Store et relancez l''installateur.'
-        zh='安装已取消。请从 Microsoft Store 更新 Minecraft，然后再次运行安装程序。'
-        hi='इंस्टॉलेशन रद्द कर दिया गया। Minecraft को Microsoft Store से अपडेट करें और इंस्टॉलर फिर से चलाएं।'
-        ar='تم إلغاء التثبيت. حدّث Minecraft من Microsoft Store وشغّل المثبّت مرة أخرى.'
-        ru='Установка отменена. Обновите Minecraft из Microsoft Store и запустите установщик заново.'
+        en='Installation cancelled. Update Minecraft from the Xbox app and run the installer again.'
+        es='Instalacion cancelada. Actualiza Minecraft desde la app Xbox y ejecuta el instalador otra vez.'
+        fr='Installation annulee. Mettez Minecraft a jour depuis l''application Xbox et relancez l''installateur.'
+        zh='安装已取消。请通过 Xbox 应用更新 Minecraft，然后再次运行安装程序。'
+        hi='इंस्टॉलेशन रद्द कर दिया गया। Minecraft को Xbox ऐप से अपडेट करें और इंस्टॉलर फिर से चलाएं।'
+        ar='تم إلغاء التثبيت. حدّث Minecraft من تطبيق Xbox وشغّل المثبّت مرة أخرى.'
+        ru='Установка отменена. Обновите Minecraft через приложение Xbox и запустите установщик заново.'
+    }
+    'gate_store_blocked' = @{
+        en='Installation BLOCKED: this Minecraft was installed by the Microsoft Store, and that version is NOT compatible with the unlock. The Store copy lives in C:\Program Files\WindowsApps, a folder Windows keeps protected and the installer cannot modify.'
+        es='Instalacion BLOQUEADA: este Minecraft se instalo desde la Microsoft Store, y esa version NO es compatible con el desbloqueo. La copia de la Store esta en C:\Program Files\WindowsApps, una carpeta que Windows mantiene protegida y que el instalador no puede modificar.'
+        fr='Installation BLOQUEE : ce Minecraft a ete installe depuis le Microsoft Store, et cette version n''est PAS compatible avec le deblocage. La copie du Store se trouve dans C:\Program Files\WindowsApps, un dossier que Windows protege et que l''installateur ne peut pas modifier.'
+        zh='安装已阻止：此 Minecraft 由 Microsoft Store 安装，该版本与解锁不兼容。Store 副本位于 C:\Program Files\WindowsApps，Windows 会保护该文件夹，安装程序无法修改。'
+        hi='इंस्टॉलेशन अवरुद्ध: यह Minecraft Microsoft Store से इंस्टॉल किया गया है और वह संस्करण अनलॉक के साथ संगत नहीं है। Store की कॉपी C:\Program Files\WindowsApps में रहती है, जिसे Windows सुरक्षित रखता है और इंस्टॉलर उसे बदल नहीं सकता।'
+        ar='تم حظر التثبيت: تم تثبيت Minecraft من Microsoft Store، وهذا الإصدار غير متوافق مع فتح اللعبة. نسخة المتجر توجد في C:\Program Files\WindowsApps، وهو مجلد يحميه Windows ولا يستطيع المثبّت تعديله.'
+        ru='Установка ЗАБЛОКИРОВАНА: этот Minecraft установлен из Microsoft Store, и эта версия НЕ совместима с разблокировкой. Копия из Store находится в C:\Program Files\WindowsApps, папке, которую Windows защищает и которую установщик не может изменить.'
+    }
+    'gate_store_hint' = @{
+        en='Uninstall this copy in Settings > Apps > Installed apps > Minecraft for Windows > Uninstall, then install Minecraft from the Xbox app (that copy lives in C:\XboxGames) and run this installer again. Back up your worlds first: they are in %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds.'
+        es='Desinstala esta copia en Configuracion > Aplicaciones > Aplicaciones instaladas > Minecraft for Windows > Desinstalar, instala Minecraft desde la app Xbox (esa copia queda en C:\XboxGames) y vuelve a ejecutar este instalador. Haz una copia de seguridad de tus mundos antes: estan en %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds.'
+        fr='Desinstallez cette copie dans Parametres > Applications > Applications installees > Minecraft for Windows > Desinstaller, installez Minecraft via l''application Xbox (cette copie se trouve dans C:\XboxGames) puis relancez cet installateur. Sauvegardez vos mondes avant : ils sont dans %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds.'
+        zh='请在“设置 > 应用 > 已安装的应用 > Minecraft for Windows > 卸载”中卸载此副本，然后通过 Xbox 应用安装 Minecraft（该副本位于 C:\XboxGames），再重新运行此安装程序。更换前请先备份存档，存档在 %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds。'
+        hi='इस कॉपी को सेटिंग्स > ऐप्स > इंस्टॉल किए गए ऐप्स > Minecraft for Windows > अनइंस्टॉल में हटाएँ, फिर Xbox ऐप से Minecraft इंस्टॉल करें (वह कॉपी C:\XboxGames में रहती है) और यह इंस्टॉलर फिर से चलाएँ। बदलने से पहले अपने वर्ल्ड का बैकअप लें: वे %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds में हैं।'
+        ar='أزل هذه النسخة من الإعدادات > التطبيقات > التطبيقات المثبّتة > Minecraft for Windows > إلغاء التثبيت، ثم ثبّت Minecraft من تطبيق Xbox (تلك النسخة توجد في C:\XboxGames) وشغّل هذا المثبّت مرة أخرى. خذ نسخة احتياطية من عوالمك أولاً: فهي في %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds.'
+        ru='Удалите эту копию: Параметры > Приложения > Установленные приложения > Minecraft for Windows > Удалить, затем установите Minecraft через приложение Xbox (эта копия находится в C:\XboxGames) и снова запустите этот установщик. Сначала сделайте резервную копию миров: они лежат в %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds.'
     }
     'crash_hint_gaming_services' = @{
         en='Minecraft did not open because a Windows component it needs (Gaming Services) is missing or damaged, not because of the unlock. Open the Microsoft Store, reinstall Gaming Services and run the installer again.'
@@ -1925,22 +1945,22 @@ $Script:I18N = @{
         ru='Minecraft не запустился, потому что в Windows отсутствует или повреждён нужный ему компонент Gaming Services, а не из-за анлока. Откройте Microsoft Store, переустановите Gaming Services и запустите установщик заново.'
     }
     'crash_hint_pkg_unregistered' = @{
-        en='Minecraft did not open because Windows could not activate the app (code 0x87E50035), and not because of the unlock. Most of the time the game package is installed but not registered for your account, and without that the game cannot start at all. Reinstall or repair Minecraft on the account that owns the game (Microsoft Store or Xbox App) and run the installer again.'
-        es='Minecraft no se abrio porque Windows no pudo activar la aplicacion (codigo 0x87E50035), y no por el unlock. Lo mas comun es que el paquete del juego este instalado pero no registrado para tu cuenta, y sin eso el juego no abre de ninguna forma. Reinstala o repara Minecraft en la cuenta que tiene el juego (Microsoft Store o Xbox App) y ejecuta el instalador otra vez.'
-        fr='Minecraft ne s''est pas ouvert parce que Windows n''a pas pu activer l''application (code 0x87E50035), et non a cause de l''unlock. Le plus souvent le paquet du jeu est installe mais n''est pas enregistre pour votre compte, et sans cela le jeu ne peut pas demarrer. Reinstallez ou reparez Minecraft sur le compte qui possede le jeu (Microsoft Store ou Xbox App) et relancez l''installateur.'
-        zh='Minecraft 未能打开，是因为 Windows 无法激活该应用（代码 0x87E50035），而不是因为解锁。最常见的情况是游戏包已安装但没有为你的账户注册，没有注册游戏就无法启动。请在拥有该游戏的账户上重新安装或修复 Minecraft（Microsoft Store 或 Xbox App），然后再次运行安装程序。'
-        hi='Minecraft नहीं खुला क्योंकि Windows ऐप को सक्रिय नहीं कर सका (कोड 0x87E50035), और यह अनलॉक की वजह से नहीं है। अक्सर गेम का पैकेज इंस्टॉल होता है पर आपके खाते के लिए रजिस्टर नहीं होता, और उसके बिना गेम शुरू नहीं हो सकता। जिस खाते के पास गेम है उस पर Minecraft फिर से इंस्टॉल या रिपेयर करें (Microsoft Store या Xbox App) और इंस्टॉलर दोबारा चलाएँ।'
-        ar='لم يُفتح Minecraft لأن Windows لم يتمكن من تفعيل التطبيق (الرمز 0x87E50035)، وليس بسبب الأنلوك. في أغلب الحالات تكون حزمة اللعبة مثبّتة لكنها غير مسجّلة لحسابك، وبدون ذلك لا تستطيع اللعبة أن تبدأ. أعد تثبيت Minecraft أو أصلحه على الحساب الذي يملك اللعبة (Microsoft Store أو Xbox App) ثم شغّل المثبّت مرة أخرى.'
-        ru='Minecraft не запустился, потому что Windows не смог активировать приложение (код 0x87E50035), а не из-за анлока. Чаще всего пакет игры установлен, но не зарегистрирован для вашей учётной записи, и без этого игра не запускается. Переустановите или восстановите Minecraft в учётной записи, которой принадлежит игра (Microsoft Store или Xbox App), и запустите установщик заново.'
+        en='Minecraft did not open because Windows could not activate the app (code 0x87E50035), and not because of the unlock. Most of the time the game package is installed but not registered for your account, and without that the game cannot start at all. Reinstall or repair Minecraft on the account that owns the game (Xbox app) and run the installer again.'
+        es='Minecraft no se abrio porque Windows no pudo activar la aplicacion (codigo 0x87E50035), y no por el unlock. Lo mas comun es que el paquete del juego este instalado pero no registrado para tu cuenta, y sin eso el juego no abre de ninguna forma. Reinstala o repara Minecraft en la cuenta que tiene el juego (app Xbox) y ejecuta el instalador otra vez.'
+        fr='Minecraft ne s''est pas ouvert parce que Windows n''a pas pu activer l''application (code 0x87E50035), et non a cause de l''unlock. Le plus souvent le paquet du jeu est installe mais n''est pas enregistre pour votre compte, et sans cela le jeu ne peut pas demarrer. Reinstallez ou reparez Minecraft sur le compte qui possede le jeu (application Xbox) et relancez l''installateur.'
+        zh='Minecraft 未能打开，是因为 Windows 无法激活该应用（代码 0x87E50035），而不是因为解锁。最常见的情况是游戏包已安装但没有为你的账户注册，没有注册游戏就无法启动。请在拥有该游戏的账户上重新安装或修复 Minecraft（Xbox 应用），然后再次运行安装程序。'
+        hi='Minecraft नहीं खुला क्योंकि Windows ऐप को सक्रिय नहीं कर सका (कोड 0x87E50035), और यह अनलॉक की वजह से नहीं है। अक्सर गेम का पैकेज इंस्टॉल होता है पर आपके खाते के लिए रजिस्टर नहीं होता, और उसके बिना गेम शुरू नहीं हो सकता। जिस खाते के पास गेम है उस पर Minecraft फिर से इंस्टॉल या रिपेयर करें (Xbox ऐप) और इंस्टॉलर दोबारा चलाएँ।'
+        ar='لم يُفتح Minecraft لأن Windows لم يتمكن من تفعيل التطبيق (الرمز 0x87E50035)، وليس بسبب الأنلوك. في أغلب الحالات تكون حزمة اللعبة مثبّتة لكنها غير مسجّلة لحسابك، وبدون ذلك لا تستطيع اللعبة أن تبدأ. أعد تثبيت Minecraft أو أصلحه على الحساب الذي يملك اللعبة (تطبيق Xbox) ثم شغّل المثبّت مرة أخرى.'
+        ru='Minecraft не запустился, потому что Windows не смог активировать приложение (код 0x87E50035), а не из-за анлока. Чаще всего пакет игры установлен, но не зарегистрирован для вашей учётной записи, и без этого игра не запускается. Переустановите или восстановите Minecraft в учётной записи, которой принадлежит игра (приложение Xbox), и запустите установщик заново.'
     }
     'crash_hint_dll_missing' = @{
-        en='Minecraft did not start because Windows could not load a file this copy of the game needs (code 0xC0000135), and not because of the unlock. This copy cannot run for this Windows account: most of the time the game belongs to (or is registered for) another user of the PC, or the installation is incomplete. Install or repair Minecraft from the Microsoft Store or the Xbox App signed in to the account that owns the game, open the game once, then run this installer again.'
-        es='Minecraft no se abrio porque Windows no pudo cargar un archivo que esta copia del juego necesita (codigo 0xC0000135), y no por el unlock. Esta copia no funciona en esta cuenta de Windows: lo mas comun es que el juego pertenezca (o este registrado) a otro usuario del PC, o que la instalacion este incompleta. Instala o repara Minecraft desde la Microsoft Store o la Xbox App con la cuenta que tiene el juego, abre el juego una vez y ejecuta el instalador otra vez.'
-        fr='Minecraft ne s''est pas lance parce que Windows n''a pas pu charger un fichier dont cette copie du jeu a besoin (code 0xC0000135), et non a cause de l''unlock. Cette copie ne peut pas fonctionner sur ce compte Windows : le plus souvent le jeu appartient a (ou est enregistre pour) un autre utilisateur du PC, ou l''installation est incomplete. Installez ou reparez Minecraft depuis le Microsoft Store ou l''application Xbox connecte au compte qui possede le jeu, ouvrez le jeu une fois, puis relancez cet installateur.'
-        zh='Minecraft 未能启动，因为 Windows 无法加载这份游戏副本需要的文件（代码 0xC0000135），而不是解锁的问题。这份副本无法在此 Windows 账户下运行：最常见的情况是游戏属于（或注册在）电脑上的另一个用户，或者安装不完整。请登录拥有游戏的账户，从 Microsoft Store 或 Xbox 应用重新安装或修复 Minecraft，先打开游戏一次，然后再次运行本安装程序。'
-        hi='Minecraft शुरू नहीं हुआ क्योंकि Windows गेम की इस कॉपी के लिए ज़रूरी फ़ाइल लोड नहीं कर सका (कोड 0xC0000135), और यह अनलॉक की वजह से नहीं है। यह कॉपी इस Windows खाते के लिए काम नहीं करती: अक्सर गेम PC के किसी दूसरे उपयोगकर्ता का होता है (या उसके लिए रजिस्टर होता है), या इंस्टॉलेशन अधूरा होता है। जिस खाते के पास गेम है उससे साइन इन करके Microsoft Store या Xbox ऐप से Minecraft इंस्टॉल या रिपेयर करें, गेम एक बार खोलें, फिर यह इंस्टॉलर दोबारा चलाएँ।'
-        ar='لم يبدأ Minecraft لأن Windows لم يتمكن من تحميل ملف تحتاجه هذه النسخة من اللعبة (الرمز 0xC0000135)، وليس بسبب الأنلوك. هذه النسخة لا تعمل على حساب Windows الحالي: في أغلب الحالات تكون اللعبة مملوكة (أو مسجّلة) لمستخدم آخر على الجهاز، أو يكون التثبيت غير مكتمل. سجّل الدخول بالحساب الذي يملك اللعبة، ثم أعد تثبيت Minecraft أو أصلحه من Microsoft Store أو تطبيق Xbox، وافتح اللعبة مرة واحدة، ثم شغّل هذا المثبّت مرة أخرى.'
-        ru='Minecraft не запустился, потому что Windows не смог загрузить файл, нужный этой копии игры (код 0xC0000135), а не из-за анлока. Эта копия не работает для текущей учётной записи Windows: чаще всего игра принадлежит (или зарегистрирована) другому пользователю ПК, либо установка неполная. Войдите в учётную запись, которой принадлежит игра, установите или восстановите Minecraft из Microsoft Store или приложения Xbox, откройте игру один раз и запустите этот установщик снова.'
+        en='Minecraft did not start because Windows could not load a file this copy of the game needs (code 0xC0000135), and not because of the unlock. This copy cannot run for this Windows account: most of the time the game belongs to (or is registered for) another user of the PC, or the installation is incomplete. Install or repair Minecraft from the Xbox app signed in to the account that owns the game, open the game once, then run this installer again.'
+        es='Minecraft no se abrio porque Windows no pudo cargar un archivo que esta copia del juego necesita (codigo 0xC0000135), y no por el unlock. Esta copia no funciona en esta cuenta de Windows: lo mas comun es que el juego pertenezca (o este registrado) a otro usuario del PC, o que la instalacion este incompleta. Instala o repara Minecraft desde la app Xbox con la cuenta que tiene el juego, abre el juego una vez y ejecuta el instalador otra vez.'
+        fr='Minecraft ne s''est pas lance parce que Windows n''a pas pu charger un fichier dont cette copie du jeu a besoin (code 0xC0000135), et non a cause de l''unlock. Cette copie ne peut pas fonctionner sur ce compte Windows : le plus souvent le jeu appartient a (ou est enregistre pour) un autre utilisateur du PC, ou l''installation est incomplete. Installez ou reparez Minecraft depuis l''application Xbox connecte au compte qui possede le jeu, ouvrez le jeu une fois, puis relancez cet installateur.'
+        zh='Minecraft 未能启动，因为 Windows 无法加载这份游戏副本需要的文件（代码 0xC0000135），而不是解锁的问题。这份副本无法在此 Windows 账户下运行：最常见的情况是游戏属于（或注册在）电脑上的另一个用户，或者安装不完整。请登录拥有游戏的账户，从 Xbox 应用重新安装或修复 Minecraft，先打开游戏一次，然后再次运行本安装程序。'
+        hi='Minecraft शुरू नहीं हुआ क्योंकि Windows गेम की इस कॉपी के लिए ज़रूरी फ़ाइल लोड नहीं कर सका (कोड 0xC0000135), और यह अनलॉक की वजह से नहीं है। यह कॉपी इस Windows खाते के लिए काम नहीं करती: अक्सर गेम PC के किसी दूसरे उपयोगकर्ता का होता है (या उसके लिए रजिस्टर होता है), या इंस्टॉलेशन अधूरा होता है। जिस खाते के पास गेम है उससे साइन इन करके Xbox ऐप से Minecraft इंस्टॉल या रिपेयर करें, गेम एक बार खोलें, फिर यह इंस्टॉलर दोबारा चलाएँ।'
+        ar='لم يبدأ Minecraft لأن Windows لم يتمكن من تحميل ملف تحتاجه هذه النسخة من اللعبة (الرمز 0xC0000135)، وليس بسبب الأنلوك. هذه النسخة لا تعمل على حساب Windows الحالي: في أغلب الحالات تكون اللعبة مملوكة (أو مسجّلة) لمستخدم آخر على الجهاز، أو يكون التثبيت غير مكتمل. سجّل الدخول بالحساب الذي يملك اللعبة، ثم أعد تثبيت Minecraft أو أصلحه من تطبيق Xbox، وافتح اللعبة مرة واحدة، ثم شغّل هذا المثبّت مرة أخرى.'
+        ru='Minecraft не запустился, потому что Windows не смог загрузить файл, нужный этой копии игры (код 0xC0000135), а не из-за анлока. Эта копия не работает для текущей учётной записи Windows: чаще всего игра принадлежит (или зарегистрирована) другому пользователю ПК, либо установка неполная. Войдите в учётную запись, которой принадлежит игра, установите или восстановите Minecraft из приложения Xbox, откройте игру один раз и запустите этот установщик снова.'
     }
     'crash_hint_winmm' = @{
         en='The fault was recorded inside the unlock file (winmm.dll), not in the game. Remove the unlock with menu option [1] to play again now. The report sent will help fix this.'
@@ -2754,6 +2774,13 @@ function Test-OfficialContentSource {
 function Test-InstallGate {
     param([string]$Content)
     $Script:GateDiag = New-Object System.Collections.Generic.List[string]
+    if (Test-StorePackageFolder -Content $Content) {
+        $Script:GateDiag.Add('source=store result=blocked')
+        Write-Host ''
+        Write-Host (T 'gate_store_blocked') -ForegroundColor Red
+        Write-Host (T 'gate_store_hint') -ForegroundColor Yellow
+        return $false
+    }
     if (-not (Test-OfficialContentSource -Content $Content)) {
         $Script:GateDiag.Add('source=unrecognized')
         Write-Host ''
@@ -2990,6 +3017,39 @@ function Get-PathRealTarget {
     return $null
 }
 
+function Get-PathRealBase {
+    param([string]$Path)
+    $full = ([string]$Path).TrimEnd('\')
+    if (-not $full) {
+        return $null
+    }
+    $p = $full
+    $rel = ''
+    $level = 0
+    while ($p -and $level -lt 4) {
+        $real = Get-PathRealTarget -Path $p
+        if ($real) {
+            if ($rel) {
+                return (($real.TrimEnd('\') + '\' + $rel).TrimEnd('\'))
+            }
+            return ([string]$real).TrimEnd('\')
+        }
+        $idx = $p.LastIndexOf('\')
+        if ($idx -le 2) {
+            return $null
+        }
+        $leaf = $p.Substring($idx + 1)
+        if ($rel) {
+            $rel = $leaf + '\' + $rel
+        } else {
+            $rel = $leaf
+        }
+        $p = $p.Substring(0, $idx)
+        $level = $level + 1
+    }
+    return $null
+}
+
 function Add-DefenderExclusions {
     param([string[]]$Paths)
     $effective = @()
@@ -3114,7 +3174,15 @@ function Test-StorePackageFolder {
     if (-not $Content) {
         return $false
     }
-    return (([string]$Content).TrimEnd('\') -like '*\WindowsApps\Microsoft.MinecraftUWP_*')
+    $path = ([string]$Content).TrimEnd('\')
+    if ($path -notlike '*\WindowsApps\Microsoft.MinecraftUWP_*') {
+        return $false
+    }
+    $base = Get-PathRealBase -Path $path
+    if ($base) {
+        return (([string]$base).TrimEnd('\') -like '*\WindowsApps\*')
+    }
+    return $true
 }
 
 function Get-WriteBlockedMessage {
@@ -3468,7 +3536,7 @@ function Install-Unlocker {
         if (-not $isArm -and -not $env:MBU_BASE_URL) {
             $dllSources.Add(@{ Url = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll'
                                Tries = 1 })
-            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.41/release/winmm.dll'
+            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.42/release/winmm.dll'
                                Tries = 1 })
         }
         Start-Sleep -Seconds 2

@@ -19,6 +19,42 @@ project maintainer through a Cloudflare Worker. Nothing leaves your machine
 without your confirmation, and declining changes nothing about how the
 installer behaves.
 
+## The Microsoft Store version is not supported (v4.9.42+)
+
+Minecraft installed by the **Microsoft Store** is the copy whose game files live
+inside `C:\Program Files\WindowsApps`, the folder Windows keeps protected, and the
+unlock is not compatible with it. Since v4.9.42 the installer recognises that
+copy, shows the message below and stops **before** downloading the binary, so
+nothing is written to the game folder and nothing has to be undone afterwards:
+
+> The installer does not judge the folder by its name: it follows the links the
+> Store uses (the package folder in `WindowsApps` is often a link to the real
+> files in `C:\XboxGames`) and only refuses the copy whose files really live
+> inside `WindowsApps`. An installation whose files are in `C:\XboxGames`, which
+> is where the Xbox app puts them, is not blocked.
+
+> Installation BLOCKED: this Minecraft was installed by the Microsoft Store,
+> and that version is NOT compatible with the unlock. The Store copy lives in
+> C:\Program Files\WindowsApps, a folder Windows keeps protected and the
+> installer cannot modify.
+
+**What to do:** uninstall that copy and install the game from the Xbox app.
+
+1. Back up your worlds first. They live in
+   `%LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds`
+   (copy that folder somewhere else, for example into Documents).
+2. Uninstall the current copy: **Settings > Apps > Installed apps > Minecraft
+   for Windows > Uninstall**. The Settings page is the reliable path. In an
+   administrator PowerShell the same thing is done with
+   `Get-AppxPackage Microsoft.MinecraftUWP | Remove-AppxPackage`.
+3. Install Minecraft again from the **Xbox app**. That installation lands in
+   `C:\XboxGames`, the folder this project supports.
+4. Open the game once, close it, then run the installer again.
+
+The failure report marks this case with `source=store result=blocked` in the
+`[gate]` line, which tells the developer the block worked and the game stayed
+untouched.
+
 ## The Store page only offers "Buy" and I need the trial
 
 **What it means:** the free trial was not removed. The Microsoft Store listing
@@ -250,12 +286,11 @@ almost always happens *after* a successful install, for one of two reasons:
    - **Windows Defender:** Settings → Privacy & security → Windows Security →
      Virus & threat protection → Manage settings → Exclusions → Add an
      exclusion → Folder → select `C:\XboxGames\Minecraft for Windows\Content`
-     (Xbox App) or the `Microsoft.MinecraftUWP_*` folder inside
-     `C:\Program Files\WindowsApps` (Microsoft Store).
+     (the Xbox App installation, the copy this project supports).
    - Other AVs: add the same folder to their exclusion/whitelist.
 3. Launch Minecraft. The "Desbloquear Jogo Completo" button should be gone.
 
-If you no longer have the original DLL, reinstalling the game from the Store
+If you no longer have the original DLL, reinstalling the game from the Xbox app
 restores it, then run the installer again.
 
 **Still crashing and the error path does not match the installer output?** Since
@@ -338,8 +373,8 @@ Three lines of the report show this state:
 
 **How to fix:** the game needs a registration for the account that owns it.
 
-1. Open the **Xbox App** (or the **Microsoft Store**) signed in with the account
-   that owns Minecraft and install, reinstall or repair the game from there.
+1. Open the **Xbox App** signed in with the account that owns Minecraft and
+   install, reinstall or repair the game from there.
 2. If the game is already on disk and only the registration is missing, open
    PowerShell **as administrator** and register the package again:
 
@@ -383,8 +418,8 @@ dependencies are not available to it. The report shows it:
 account that will play it.
 
 1. Sign in to Windows with the account that owns Minecraft (or install the game
-   for your account). Open the **Xbox App** or the **Microsoft Store** signed in
-   with that account and install, reinstall or repair Minecraft from there.
+   for your account). Open the **Xbox App** signed in with that account and
+   install, reinstall or repair Minecraft from there.
 2. If the game was installed by the official Minecraft launcher, open that
    launcher and start the game once so it repairs its own files, then close it.
 3. Open the game once to confirm it starts, then run this installer again.
@@ -443,14 +478,13 @@ or run. Repair does not apply in that state because there is nothing to repair.
 
 **How to fix:**
 
-1. If the report shows `pkg=no` with `exe-read=denied`, open the **Xbox App** (or
-   the **Microsoft Store**), select Minecraft and choose **Uninstall** to clear
-   the leftover, then install the game again from there. Do not delete the game
-   folder by hand: a missing folder is a different failure the installer also has
-   to explain.
-2. Otherwise open the **Xbox App** (or the **Microsoft Store**), use **Repair**,
-   or reinstall Minecraft. Do not run the installer against a folder the Xbox app
-   still shows as *installing*, *paused* or *needs attention*.
+1. If the report shows `pkg=no` with `exe-read=denied`, open the **Xbox App**,
+   select Minecraft and choose **Uninstall** to clear the leftover, then install
+   the game again from there. Do not delete the game folder by hand: a missing
+   folder is a different failure the installer also has to explain.
+2. Otherwise open the **Xbox App**, use **Repair**, or reinstall Minecraft. Do
+   not run the installer against a folder the Xbox app still shows as
+   *installing*, *paused* or *needs attention*.
 3. Confirm the game opens on its own once, close it, then run this installer
    again.
 
@@ -541,20 +575,18 @@ change will help: a product with a filter in the disk stack (antivirus,
 endpoint security or a system hardening tool) is blocking the write to the
 game folder, and the filter names in the report usually identify it.
 
-If the game is the old Microsoft Store (UWP) installation (the game folder is
-inside `C:\Program Files\WindowsApps`), Windows may deny the permission change
-even to an administrator, and no antivirus exclusion will help. Since v4.9.36
-the installer gives that folder its own error message instead of the generic
-one that blames an antivirus: it names the Store (UWP) installation as the
-cause, states that an antivirus exclusion does not help, and points to the
-Xbox app version. The same message replaces the antivirus wording when the
-copy step inside the folder fails, and the report marks the case with
-`aclVerdict=acl-clean-still-denied`. The current Minecraft
-version, installed through the Xbox app (GDK), uses a folder the installer can
-write to (`C:\XboxGames`), so moving the game to that version is the way out on
-a PC where the Store folder stays blocked. If the Store does not offer a newer
-version, uninstall the game and install it again from the Store or the Xbox
-app. Back up your worlds first: they live in
+If the game is the Microsoft Store (UWP) installation (the game folder is
+inside `C:\Program Files\WindowsApps`), the installer no longer tries to unlock
+it: since v4.9.42 it recognises that copy at the start of the installation,
+explains that the Store version is not supported and stops before downloading
+anything. See
+[The Microsoft Store version is not supported](#the-microsoft-store-version-is-not-supported-v4942).
+Releases up to v4.9.41 tried anyway and ended with a message that named the
+Store (UWP) installation as the cause, said that an antivirus exclusion does not
+help and pointed to the Xbox app version, which is the same advice. The current
+Minecraft version, installed through the Xbox app (GDK), uses a folder the
+installer can write to (`C:\XboxGames`). Back up your worlds before switching:
+they live in
 `%LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds`.
 
 If you are still stuck after the steps above, sending that report tells the
@@ -618,8 +650,8 @@ anything, with the message
 "Installation BLOCKED: game version ... is older than the minimum supported
 version (...)".
 
-**How to fix:** update Minecraft from the Microsoft Store, then run the
-installer again.
+**How to fix:** update Minecraft from the Xbox app, then run the installer
+again.
 
 **If your game is NEWER than the `tested` list:** nothing to do, it is not a
 block. Since v4.9.23 a build newer than the verified one installs normally.
@@ -732,11 +764,11 @@ really is installed.
 
 **How to fix:** open the launcher you installed the game with, let it finish the
 installation (or use its verify/repair option), start the game once and close it,
-then run the installer again. If your copy comes from the Microsoft Store or the
-Xbox App, install it from there instead. Until v4.9.37 the missing-executable
-case showed only "Minecraft package found but the game executable is missing",
-which sent users to a full reinstall that was usually not necessary. Since
-v4.9.38 that message names the Xbox app / Microsoft Store repair path instead.
+then run the installer again. If your copy comes from the Xbox app, install it
+from there instead. Until v4.9.37 the missing-executable case showed only
+"Minecraft package found but the game executable is missing", which sent users
+to a full reinstall that was usually not necessary. Since v4.9.38 that message
+names the Xbox app repair path instead.
 
 Since v4.9.30 that list also covers the folder the registered package really
 points to and every `XboxGames` folder on the fixed drives of the PC. So a game
@@ -769,10 +801,14 @@ said only `exists, no Minecraft.Windows.exe`, which reads like a problem inside
 the protected package folder. The installer stops because there is no game
 folder to write the unlock into.
 
-**How to fix:** in the Xbox app (or the Microsoft Store) select Minecraft and
-use Repair, or reinstall it, start the game once and then run this installer
-again. A cleanup tool that deletes the `XboxGames` folder can cause this, so
-keep that folder out of automatic cleaners.
+Since v4.9.42 the installer refuses a Microsoft Store installation, so the
+supported way out is to install the game from the Xbox app (or repair that
+Xbox app installation) instead of repairing the Store copy.
+
+**How to fix:** in the Xbox app select Minecraft and use Repair, or reinstall
+it, start the game once and then run this installer again. A cleanup tool that
+deletes the `XboxGames` folder can cause this, so keep that folder out of
+automatic cleaners.
 
 **How to tell this apart in a report:** the `[pkg]` line carries
 `target-exists=no`, and the linked `[candidate]` line says
@@ -819,8 +855,8 @@ exclusions the installer added and deletes the local binary cache.
 
 ### Does it work with a third-party launcher / version switcher?
 
-No. The unlock only works with the official **Microsoft Store / Xbox App**
-build. It does nothing in other launchers - and can break them. Do not copy
+No. The unlock only works with the official **Xbox App** build (the Microsoft
+Store copy is not supported and the installer refuses it). It does nothing in other launchers - and can break them. Do not copy
 it into another launcher.
 
 Since v4.9.26 the installer checks the folder it is about to use. When that

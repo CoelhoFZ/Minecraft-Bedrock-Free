@@ -13,17 +13,20 @@
 Desbloqueie a versão completa do **Minecraft Bedrock Edition (GDK)** no
 Windows 10/11.
 
-**Funciona com instalações via Xbox App (GDK) e Microsoft Store** no
-Windows 10/11.
+**Funciona com a instalação do Xbox App (GDK)** no Windows 10/11. A instalação
+da Microsoft Store **não** é suportada, veja
+[Microsoft Store nao e suportada](#microsoft-store-nao-e-suportada).
 
 > ⚠️ Projeto educacional. Apoie os desenvolvedores comprando o jogo.
 
 ## Requisitos
 
-- **Apenas o build oficial.** Funciona exclusivamente com o build oficial da
-  **Microsoft Store** ou do **Xbox App** do Minecraft Bedrock para Windows.
-  NÃO funciona com launchers de terceiros nem seletor de versão (eles não usam
-  a API de licença GDK que o unlock intercepta).
+- **Apenas o build oficial do Xbox App.** Funciona exclusivamente com o build
+  oficial do **Xbox App** (GDK) do Minecraft Bedrock para Windows. A cópia
+  instalada pela **Microsoft Store** não é suportada: o instalador detecta,
+  explica e para em vez de instalar. NÃO funciona com launchers de terceiros
+  nem seletor de versão (eles não usam a API de licença GDK que o unlock
+  intercepta).
 - **Build 1.21 ou mais novo.** Funciona com qualquer build do Minecraft for
   Windows a partir da 1.21, inclusive uma build mais nova que a desta release.
   Builds mais antigas são recusadas. A Microsoft não permite instalar versões
@@ -41,9 +44,32 @@ Windows 10/11.
   deixou em Downloads, na Área de Trabalho ou junto de outro jogo: apague essa
   cópia extra e rode o instalador de novo.
 
+## Microsoft Store nao e suportada
+
+O Minecraft cujos arquivos do jogo ficam dentro de `C:\Program Files\WindowsApps`
+foi instalado pela **Microsoft Store** na pasta que o Windows mantém protegida, e o
+unlock não é compatível com essa cópia. O instalador segue os links que a Store usa
+para descobrir onde os arquivos realmente estão, identifica a cópia, avisa e para
+**antes** de baixar qualquer coisa, então nada é alterado no seu PC. A instalação
+cujos arquivos ficam de fato em `C:\XboxGames` (onde o Xbox App coloca, e onde
+muitas instalações da Store terminam por um link) **não** é bloqueada.
+
+Para usar este projeto, desinstale essa cópia e instale o jogo pelo Xbox App:
+
+1. Faça backup dos seus mundos antes. Eles ficam em
+   `%LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds`.
+2. Desinstale a cópia atual: **Configurações > Aplicativos > Aplicativos
+   instalados > Minecraft for Windows > Desinstalar**.
+3. Instale o Minecraft de novo pelo **Xbox App**. Essa cópia fica em
+   `C:\XboxGames` e é a que este projeto suporta.
+4. Rode o instalador de novo.
+
+Passo a passo, com o que cada um faz:
+[TROUBLESHOOTING.md](TROUBLESHOOTING.md#the-microsoft-store-version-is-not-supported-v4942).
+
 ## Instalação
 
-1. Instale o Minecraft pelo **Xbox App** ou pela **Microsoft Store** e abra uma
+1. Instale o Minecraft pelo **Xbox App** (não pela Microsoft Store) e abra uma
    vez. A versão de teste serve, o instalador desbloqueia ela. Se a página da
    Store só oferecer "Comprar", leia
    [A página da Store só oferece "Comprar" e eu preciso do teste](TROUBLESHOOTING.md#the-store-page-only-offers-buy-and-i-need-the-trial)
@@ -127,7 +153,7 @@ Windows a partir da 1.21 é aceita**, inclusive uma build **mais nova** que a
 verificada nesta release. O menu baixa o `tested-versions.json` deste
 repositório para ler o piso de versão; se o seu jogo for **mais antigo** que
 esse piso, o instalador para antes de baixar qualquer coisa e pede para
-atualizar o Minecraft pela Microsoft Store.
+atualizar o Minecraft pelo Xbox App.
 A lista `tested` desse arquivo é só o registro das builds verificadas na mão:
 estar mais novo que ela não bloqueia nem muda nada.
 
