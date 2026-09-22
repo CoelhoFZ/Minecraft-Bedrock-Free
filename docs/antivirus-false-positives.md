@@ -122,9 +122,13 @@ The DLL it needs is no longer a valid file. To fix it:
      Virus & threat protection → Manage settings → Exclusions → Add an
      exclusion → Folder → select `C:\XboxGames\Minecraft for Windows\Content`
      (the Xbox App installation, the copy this project supports).
-   - Other AVs: add the same folder to their exclusion/whitelist.
-2. Run the installer again. It writes a verified copy and checks the hash
-   again after copying.
+   - **Other AVs:** add the same folder to their exclusion/whitelist, and check
+     the product's own quarantine list. A quarantine done by a third-party
+     antivirus does not appear in Windows Security, and the Defender exclusions
+     do not apply to other products.
+2. Run the installer again. It writes a verified copy, checks the hash again
+   after copying, and names the active third-party antivirus when the file
+   disappears right after the install.
 
 ### If Defender blocks the command you typed instead of a file
 

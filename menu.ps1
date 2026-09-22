@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.42'
+$Script:Version = '4.9.43'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -20,7 +20,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c' = '4.9.42'
+    'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c' = '4.9.43'
     'e44230e539e5ec2378c1937746cfb34846ae1e21f9d4f2739f0d4d8c1e37d8da' = '4.9.34'
     '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.28'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
@@ -386,9 +386,9 @@ $Script:PT = @{
     'greet_afternoon'    = 'Boa tarde'
     'greet_evening'      = 'Boa noite'
     'banner_build_note'  = 'Suporte apenas ao build OFICIAL (Store/Xbox App) na versao ATUAL. Launchers de terceiros e versoes antigas NAO sao suportados.'
-    'err_content_not_found' = 'Content do Minecraft nao encontrado. Instale o Minecraft pelo Xbox App ou pela Microsoft Store e tente de novo.'
-    'err_package_incomplete' = 'O Minecraft esta registrado, mas o executavel do jogo esta faltando na pasta dele. No Xbox App (ou na Microsoft Store), use Reparar no Minecraft ou reinstale, e rode este instalador de novo.'
-    'err_package_content_missing' = 'O Minecraft esta registrado, mas a pasta para onde o pacote aponta nao existe: {0}. E nessa pasta que ficam os arquivos do jogo. No Xbox App (ou na Microsoft Store), use Reparar no Minecraft ou reinstale, abra o jogo uma vez e rode este instalador de novo.'
+    'err_content_not_found' = 'Content do Minecraft nao encontrado. Instale o Minecraft pelo Xbox App e tente de novo.'
+    'err_package_incomplete' = 'O Minecraft esta registrado, mas o executavel do jogo esta faltando na pasta dele. No Xbox App, use Reparar no Minecraft ou reinstale, e rode este instalador de novo.'
+    'err_package_content_missing' = 'O Minecraft esta registrado, mas a pasta para onde o pacote aponta nao existe: {0}. E nessa pasta que ficam os arquivos do jogo. No Xbox App, use Reparar no Minecraft ou reinstale, abra o jogo uma vez e rode este instalador de novo.'
     'err_package_launcher' = 'Pacote do Minecraft Launcher encontrado, mas os arquivos do jogo estao faltando. Abra o Minecraft Launcher, deixe ele terminar ou verificar a instalacao, e rode o instalador de novo.'
     'probe_list'         = 'Pastas verificadas: {0}'
     'closing_mc'         = 'Fechando Minecraft...'
@@ -407,6 +407,7 @@ $Script:PT = @{
     'err_av_blocked'     = 'O antivirus bloqueou o download do winmm.dll mesmo com a exclusao automatica. Abra a Seguranca do Windows, va em Protecao contra virus e ameacas, abra o Historico de protecao, localize o winmm.dll bloqueado e escolha Permitir ou Restaurar. Depois adicione manualmente as exclusoes para: {0}. Se voce usa outro antivirus, adicione as mesmas exclusoes nele. Rode o instalador de novo.'
     'av_retrying'        = 'O antivirus pode ter removido o arquivo baixado. Tentando novamente ({0}/{1})...'
     'warn_third_party_av' = 'Atencao: antivirus de terceiros ativo ({0}). Ele pode bloquear a copia do winmm.dll para a pasta do Minecraft. Se a instalacao falhar, adicione a pasta do Minecraft nas exclusoes (ou pastas protegidas) desse antivirus e rode de novo.'
+    'av_removed_hint'       = 'O winmm.dll sumiu logo apos a instalacao. Causa provavel: {0}. Adicione a pasta do Minecraft nas exclusoes dele (e restaure o winmm.dll da quarentena, se estiver la) e rode este instalador de novo.'
     'err_write_blocked'  = 'Acesso negado ao gravar o winmm.dll na pasta do Minecraft, mesmo com a pasta liberada como administrador. Isso quase sempre e um antivirus bloqueando a gravacao. Antivirus detectado: {0}. Adicione a pasta do Minecraft nas exclusoes (ou pastas protegidas) desse antivirus e rode o instalador de novo.'
     'av_generic_name'    = 'um antivirus ou protecao de pasta'
     'av_exclusion_ok'    = 'Exclusao do Windows Defender adicionada para: {0}'
@@ -420,7 +421,7 @@ $Script:PT = @{
     'mc_started'         = 'Minecraft iniciado.'
     'mc_start_failed'    = 'Nao foi possivel iniciar o Minecraft automaticamente. Abra pelo menu Iniciar.'
     'mc_start_failed_launcher' = 'Nao foi possivel iniciar o Minecraft automaticamente. Esta pasta nao e a instalacao oficial, entao abra o jogo pelo launcher que voce usou para instalar.'
-    'mc_start_failed_broken' = 'O Minecraft nao abriu porque a instalacao do proprio jogo esta incompleta, danificada ou sem registro neste PC: o Windows nao conseguiu executar o Minecraft.Windows.exe da pasta do jogo. Isso nao tem relacao com o desbloqueio. Abra o Xbox App (ou a Microsoft Store), repare ou reinstale o Minecraft, confirme que o jogo abre uma vez e rode este instalador de novo.'
+    'mc_start_failed_broken' = 'O Minecraft nao abriu porque a instalacao do proprio jogo esta incompleta, danificada ou sem registro neste PC: o Windows nao conseguiu executar o Minecraft.Windows.exe da pasta do jogo. Isso nao tem relacao com o desbloqueio. Abra o Xbox App, repare ou reinstale o Minecraft, confirme que o jogo abre uma vez e rode este instalador de novo.'
     'state_unlocked_hint'= 'Se quiser, escolha [1] para remover o desbloqueio e voltar a Trial.'
     'state_trial'        = 'O Minecraft esta na versao TRIAL.'
     'state_trial_hint'   = 'Escolha [1] para desbloquear o jogo completo.'
@@ -536,6 +537,8 @@ $Script:PT = @{
     'gate_decline_hint'     = 'Instalacao cancelada. Atualize o Minecraft pelo Xbox App e rode o instalador de novo.'
     'gate_store_blocked'    = 'Instalacao BLOQUEADA: este Minecraft foi instalado pela Microsoft Store, e essa versao NAO e compativel com o desbloqueio. A copia da Store fica em C:\Program Files\WindowsApps, uma pasta que o Windows mantem protegida e que o instalador nao consegue modificar.'
     'gate_store_hint'       = 'Desinstale esta copia em Configuracoes > Aplicativos > Aplicativos instalados > Minecraft for Windows > Desinstalar, instale o Minecraft pelo Xbox App (essa copia fica em C:\XboxGames) e rode este instalador de novo. Faca backup dos seus mundos antes: eles ficam em %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds.'
+    'gate_game_broken'      = 'Instalacao BLOQUEADA: o Minecraft nao esta pronto neste PC. A pasta tem os arquivos do jogo, mas o Windows nao consegue executar o Minecraft.Windows.exe dela e o jogo nao esta registrado, entao o desbloqueio nao tem como funcionar.'
+    'gate_game_broken_hint' = 'Abra o Xbox App, remova a instalacao antiga do Minecraft se ela ainda aparecer la, instale o Minecraft de novo, abra o jogo uma vez para confirmar que ele funciona e rode este instalador de novo. Faca backup dos seus mundos antes: eles ficam em %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds.'
     'crash_offer'           = 'O Minecraft fechou logo depois de abrir.'
     'crash_hint_gaming_services' = 'O Minecraft nao abriu porque falta no Windows um componente que ele usa (o Gaming Services) ou ele esta danificado, e nao por causa do unlock. Abra a Microsoft Store, reinstale o Gaming Services e rode o instalador de novo.'
     'crash_hint_pkg_unregistered' = 'O Minecraft nao abriu porque o Windows nao conseguiu ativar o app (codigo 0x87E50035), e nao por causa do unlock. No caso mais comum o pacote do jogo esta instalado mas nao esta registrado para a sua conta, e sem isso o jogo nao abre por caminho nenhum. Reinstale ou repare o Minecraft na conta que tem o jogo (Xbox App) e rode o instalador outra vez.'
@@ -628,6 +631,15 @@ $Script:I18N = @{
         ar='تنبيه: يوجد برنامج مكافحة فيروسات تابع لجهة خارجية قيد التشغيل ({0}). قد يمنع نسخ winmm.dll إلى مجلد Minecraft. إذا فشل التثبيت، فأضف مجلد Minecraft إلى الاستثناءات (أو المجلدات المحمية) في ذلك البرنامج وأعد التشغيل.'
         ru='Внимание: активен сторонний антивирус ({0}). Он может блокировать копирование winmm.dll в папку Minecraft. Если установка не удалась, добавьте папку Minecraft в исключения (или защищённые папки) этого антивируса и запустите снова.'
     }
+    'av_removed_hint' = @{
+        en='The winmm.dll disappeared right after installation. Likely cause: {0}. Add the Minecraft folder to its exclusions (and restore winmm.dll from quarantine, if it is there), then run this installer again.'
+        es='El winmm.dll desaparecio justo despues de la instalacion. Causa probable: {0}. Anade la carpeta de Minecraft a sus exclusiones (y restaura winmm.dll de la cuarentena, si esta alli) y vuelve a ejecutar este instalador.'
+        fr='winmm.dll a disparu juste apres l''installation. Cause probable : {0}. Ajoutez le dossier Minecraft a ses exclusions (et restaurez winmm.dll depuis la quarantaine, s''il y est), puis relancez cet installateur.'
+        zh='winmm.dll 在安装后立即消失了。可能原因：{0}。请将 Minecraft 文件夹加入其排除项（如果 winmm.dll 在隔离区，请将其恢复），然后再次运行此安装程序。'
+        hi='इंस्टॉल के तुरंत बाद winmm.dll गायब हो गया। संभावित कारण: {0}। Minecraft फ़ोल्डर को उसके बहिष्करणों में जोड़ें (और अगर winmm.dll क्वारंटीन में है तो उसे बहाल करें), फिर यह इंस्टॉलर दोबारा चलाएँ।'
+        ar='اختفى winmm.dll مباشرة بعد التثبيت. السبب المحتمل: {0}. أضف مجلد Minecraft إلى استثناءاته (واستعد winmm.dll من الحجر إن وُجد هناك)، ثم شغّل هذا المثبّت مرة أخرى.'
+        ru='winmm.dll исчез сразу после установки. Вероятная причина: {0}. Добавьте папку Minecraft в его исключения (и восстановите winmm.dll из карантина, если он там), затем снова запустите этот установщик.'
+    }
     'err_write_blocked' = @{
         en='Access denied when writing winmm.dll into the Minecraft folder, even with the folder released as administrator. This is almost always an antivirus blocking the write. Detected antivirus: {0}. Add the Minecraft folder to that antivirus exclusions (or protected folders) and run the installer again.'
         es='Acceso denegado al escribir winmm.dll en la carpeta de Minecraft, incluso con la carpeta liberada como administrador. Casi siempre es un antivirus bloqueando la escritura. Antivirus detectado: {0}. Anade la carpeta de Minecraft a las exclusiones (o carpetas protegidas) de ese antivirus y vuelve a ejecutar el instalador.'
@@ -703,7 +715,7 @@ $Script:I18N = @{
         ru='Только официальная сборка Store/Xbox App (текущая версия). Без сторонних лаунчеров и старых версий.'
     }
     'err_content_not_found' = @{
-        en='Minecraft Content folder not found. Install Minecraft from the Xbox App or the Microsoft Store and try again.'
+        en='Minecraft Content folder not found. Install Minecraft from the Xbox App and try again.'
         zh='未找到 Minecraft Content 文件夹。请从 Xbox 应用安装 Minecraft。'
         hi='Minecraft Content फ़ोल्डर नहीं मिला। Xbox App से Minecraft इंस्टॉल करें।'
         es='No se encontró la carpeta Content de Minecraft. Instala Minecraft desde la Xbox App.'
@@ -712,22 +724,22 @@ $Script:I18N = @{
         ru='Папка Content Minecraft не найдена. Установите Minecraft из приложения Xbox.'
     }
     'err_package_incomplete' = @{
-        en='Minecraft is registered, but the game executable is missing from its folder. In the Xbox app (or the Microsoft Store), choose Repair for Minecraft or reinstall it, then run this installer again.'
-        zh='Minecraft 已注册，但其文件夹中缺少游戏可执行文件。请在 Xbox 应用（或 Microsoft Store）中对 Minecraft 选择“修复”或重新安装，然后再次运行此安装程序。'
-        hi='Minecraft पंजीकृत है, लेकिन उसके फ़ोल्डर में गेम का एक्ज़ीक्यूटेबल मौजूद नहीं है। Xbox App (या Microsoft Store) में Minecraft के लिए Repair चुनें या उसे फिर से इंस्टॉल करें, फिर यह इंस्टॉलर दोबारा चलाएँ।'
-        es='Minecraft esta registrado, pero falta el ejecutable del juego en su carpeta. En la Xbox App (o en Microsoft Store), usa Reparar en Minecraft o reinstalalo, y ejecuta este instalador de nuevo.'
-        fr='Minecraft est enregistre, mais l''executable du jeu est absent de son dossier. Dans l''application Xbox (ou le Microsoft Store), choisissez Reparer pour Minecraft ou reinstallez-le, puis relancez cet installateur.'
-        ar='Minecraft مسجَّل، لكن ملف تشغيل اللعبة مفقود من مجلده. في تطبيق Xbox (أو Microsoft Store) اختر "إصلاح" (Repair) للعبة Minecraft أو أعد تثبيتها، ثم شغّل هذا المثبّت مرة أخرى.'
-        ru='Minecraft зарегистрирован, но исполняемый файл игры отсутствует в его папке. В приложении Xbox (или Microsoft Store) выберите "Восстановить"/Repair для Minecraft или переустановите её, затем снова запустите этот установщик.'
+        en='Minecraft is registered, but the game executable is missing from its folder. In the Xbox app, choose Repair for Minecraft or reinstall it, then run this installer again.'
+        zh='Minecraft 已注册，但其文件夹中缺少游戏可执行文件。请在 Xbox 应用中对 Minecraft 选择“修复”或重新安装，然后再次运行此安装程序。'
+        hi='Minecraft पंजीकृत है, लेकिन उसके फ़ोल्डर में गेम का एक्ज़ीक्यूटेबल मौजूद नहीं है। Xbox App में Minecraft के लिए Repair चुनें या उसे फिर से इंस्टॉल करें, फिर यह इंस्टॉलर दोबारा चलाएँ।'
+        es='Minecraft esta registrado, pero falta el ejecutable del juego en su carpeta. En la Xbox App, usa Reparar en Minecraft o reinstalalo, y ejecuta este instalador de nuevo.'
+        fr='Minecraft est enregistre, mais l''executable du jeu est absent de son dossier. Dans l''application Xbox, choisissez Reparer pour Minecraft ou reinstallez-le, puis relancez cet installateur.'
+        ar='Minecraft مسجَّل، لكن ملف تشغيل اللعبة مفقود من مجلده. في تطبيق Xbox اختر "إصلاح" (Repair) للعبة Minecraft أو أعد تثبيتها، ثم شغّل هذا المثبّت مرة أخرى.'
+        ru='Minecraft зарегистрирован, но исполняемый файл игры отсутствует в его папке. В приложении Xbox выберите "Восстановить"/Repair для Minecraft или переустановите её, затем снова запустите этот установщик.'
     }
     'err_package_content_missing' = @{
-        en='Minecraft is registered, but the folder the package points to does not exist: {0}. That folder holds the game files. In the Xbox app (or the Microsoft Store), choose Repair for Minecraft or reinstall it, start the game once, then run this installer again.'
-        zh='Minecraft 已注册，但程序包指向的文件夹不存在：{0}。游戏文件就在该文件夹中。请在 Xbox 应用（或 Microsoft Store）中对 Minecraft 选择“修复”或重新安装，启动游戏一次，然后再次运行此安装程序。'
-        hi='Minecraft पंजीकृत है, लेकिन पैकेज जिस फ़ोल्डर की ओर इशारा करता है वह मौजूद नहीं है: {0}। गेम फ़ाइलें उसी फ़ोल्डर में रहती हैं। Xbox App (या Microsoft Store) में Minecraft के लिए Repair चुनें या उसे फिर से इंस्टॉल करें, गेम एक बार चलाएँ, फिर यह इंस्टॉलर दोबारा चलाएँ।'
-        es='Minecraft esta registrado, pero la carpeta a la que apunta el paquete no existe: {0}. En esa carpeta estan los archivos del juego. En la Xbox App (o en Microsoft Store), usa Reparar en Minecraft o reinstalalo, abre el juego una vez y ejecuta este instalador de nuevo.'
-        fr='Minecraft est enregistre, mais le dossier vers lequel pointe le package n''existe pas : {0}. C''est dans ce dossier que se trouvent les fichiers du jeu. Dans l''application Xbox (ou le Microsoft Store), choisissez Reparer pour Minecraft ou reinstallez-le, lancez le jeu une fois, puis relancez cet installateur.'
-        ar='Minecraft مسجَّل، لكن المجلد الذي تشير إليه الحزمة غير موجود: {0}. ملفات اللعبة موجودة في ذلك المجلد. في تطبيق Xbox (أو Microsoft Store) اختر "إصلاح" (Repair) للعبة Minecraft أو أعد تثبيتها، ثم شغّل اللعبة مرة واحدة وشغّل هذا المثبّت مرة أخرى.'
-        ru='Minecraft зарегистрирован, но папка, на которую указывает пакет, не существует: {0}. Именно в этой папке находятся файлы игры. В приложении Xbox (или Microsoft Store) выберите "Восстановить"/Repair для Minecraft или переустановите её, запустите игру один раз и снова запустите этот установщик.'
+        en='Minecraft is registered, but the folder the package points to does not exist: {0}. That folder holds the game files. In the Xbox app, choose Repair for Minecraft or reinstall it, start the game once, then run this installer again.'
+        zh='Minecraft 已注册，但程序包指向的文件夹不存在：{0}。游戏文件就在该文件夹中。请在 Xbox 应用中对 Minecraft 选择“修复”或重新安装，启动游戏一次，然后再次运行此安装程序。'
+        hi='Minecraft पंजीकृत है, लेकिन पैकेज जिस फ़ोल्डर की ओर इशारा करता है वह मौजूद नहीं है: {0}। गेम फ़ाइलें उसी फ़ोल्डर में रहती हैं। Xbox App में Minecraft के लिए Repair चुनें या उसे फिर से इंस्टॉल करें, गेम एक बार चलाएँ, फिर यह इंस्टॉलर दोबारा चलाएँ।'
+        es='Minecraft esta registrado, pero la carpeta a la que apunta el paquete no existe: {0}. En esa carpeta estan los archivos del juego. En la Xbox App, usa Reparar en Minecraft o reinstalalo, abre el juego una vez y ejecuta este instalador de nuevo.'
+        fr='Minecraft est enregistre, mais le dossier vers lequel pointe le package n''existe pas : {0}. C''est dans ce dossier que se trouvent les fichiers du jeu. Dans l''application Xbox, choisissez Reparer pour Minecraft ou reinstallez-le, lancez le jeu une fois, puis relancez cet installateur.'
+        ar='Minecraft مسجَّل، لكن المجلد الذي تشير إليه الحزمة غير موجود: {0}. ملفات اللعبة موجودة في ذلك المجلد. في تطبيق Xbox اختر "إصلاح" (Repair) للعبة Minecraft أو أعد تثبيتها، ثم شغّل اللعبة مرة واحدة وشغّل هذا المثبّت مرة أخرى.'
+        ru='Minecraft зарегистрирован, но папка, на которую указывает пакет, не существует: {0}. Именно в этой папке находятся файлы игры. В приложении Xbox выберите "Восстановить"/Repair для Minecraft или переустановите её, запустите игру один раз и снова запустите этот установщик.'
     }
     'err_package_launcher' = @{
         en='Minecraft Launcher package found, but the game files are missing. Open the Minecraft Launcher, let it finish or verify the installation, then run this installer again.'
@@ -901,13 +913,13 @@ $Script:I18N = @{
         ru='Не удалось запустить Minecraft автоматически. Эта папка не является официальной установкой, поэтому откройте игру из лаунчера, через который вы её установили.'
     }
     'mc_start_failed_broken' = @{
-        en='Minecraft did not open because the game installation itself is incomplete, damaged or not registered on this PC: Windows could not run Minecraft.Windows.exe from the game folder. This is not caused by the unlock. Open the Xbox App (or the Microsoft Store), repair or reinstall Minecraft, confirm the game opens once, then run this installer again.'
-        es='Minecraft no se abrio porque la instalacion del propio juego esta incompleta, danada o sin registro en este PC: Windows no pudo ejecutar Minecraft.Windows.exe desde la carpeta del juego. Esto no tiene relacion con el desbloqueo. Abre la Xbox App (o la Microsoft Store), repara o reinstala Minecraft, confirma que el juego abre una vez y vuelve a ejecutar este instalador.'
-        fr='Minecraft ne s''est pas ouvert car l''installation du jeu elle-meme est incomplete, endommagee ou non enregistree sur ce PC : Windows n''a pas pu executer Minecraft.Windows.exe depuis le dossier du jeu. Cela n''a aucun rapport avec le deblocage. Ouvrez l''application Xbox (ou le Microsoft Store), reparez ou reinstallez Minecraft, verifiez que le jeu s''ouvre une fois, puis relancez cet installateur.'
-        zh='Minecraft 没有打开，是因为游戏本身的安装不完整、损坏或未在此电脑上注册：Windows 无法运行游戏文件夹中的 Minecraft.Windows.exe。这与解锁无关。请打开 Xbox 应用（或 Microsoft Store），修复或重新安装 Minecraft，确认游戏能打开一次，然后再次运行此安装程序。'
-        hi='Minecraft नहीं खुला क्योंकि गेम का इंस्टॉलेशन ही अधूरा, खराब या इस PC पर पंजीकृत नहीं है: Windows गेम फ़ोल्डर से Minecraft.Windows.exe चला नहीं सका। इसका अनलॉक से कोई संबंध नहीं है। Xbox ऐप (या Microsoft Store) खोलें, Minecraft को रिपेयर या फिर से इंस्टॉल करें, सुनिश्चित करें कि गेम एक बार खुल जाए, फिर यह इंस्टॉलर दोबारा चलाएँ।'
-        ar='لم يفتح Minecraft لأن تثبيت اللعبة نفسه غير مكتمل أو تالف أو غير مسجّل على هذا الكمبيوتر: لم يتمكن Windows من تشغيل Minecraft.Windows.exe من مجلد اللعبة. هذا لا علاقة له بفتح القفل. افتح تطبيق Xbox (أو Microsoft Store)، وأصلح أو أعد تثبيت Minecraft، وتأكد من فتح اللعبة مرة واحدة، ثم شغّل هذا المثبّت مرة أخرى.'
-        ru='Minecraft не запустился, потому что сама установка игры неполная, повреждена или не зарегистрирована на этом ПК: Windows не смогла запустить Minecraft.Windows.exe из папки игры. К разблокировке это отношения не имеет. Откройте приложение Xbox (или Microsoft Store), восстановите или переустановите Minecraft, убедитесь, что игра запускается, и запустите установщик снова.'
+        en='Minecraft did not open because the game installation itself is incomplete, damaged or not registered on this PC: Windows could not run Minecraft.Windows.exe from the game folder. This is not caused by the unlock. Open the Xbox App, repair or reinstall Minecraft, confirm the game opens once, then run this installer again.'
+        es='Minecraft no se abrio porque la instalacion del propio juego esta incompleta, danada o sin registro en este PC: Windows no pudo ejecutar Minecraft.Windows.exe desde la carpeta del juego. Esto no tiene relacion con el desbloqueo. Abre la Xbox App, repara o reinstala Minecraft, confirma que el juego abre una vez y vuelve a ejecutar este instalador.'
+        fr='Minecraft ne s''est pas ouvert car l''installation du jeu elle-meme est incomplete, endommagee ou non enregistree sur ce PC : Windows n''a pas pu executer Minecraft.Windows.exe depuis le dossier du jeu. Cela n''a aucun rapport avec le deblocage. Ouvrez l''application Xbox, reparez ou reinstallez Minecraft, verifiez que le jeu s''ouvre une fois, puis relancez cet installateur.'
+        zh='Minecraft 没有打开，是因为游戏本身的安装不完整、损坏或未在此电脑上注册：Windows 无法运行游戏文件夹中的 Minecraft.Windows.exe。这与解锁无关。请打开 Xbox 应用，修复或重新安装 Minecraft，确认游戏能打开一次，然后再次运行此安装程序。'
+        hi='Minecraft नहीं खुला क्योंकि गेम का इंस्टॉलेशन ही अधूरा, खराब या इस PC पर पंजीकृत नहीं है: Windows गेम फ़ोल्डर से Minecraft.Windows.exe चला नहीं सका। इसका अनलॉक से कोई संबंध नहीं है। Xbox ऐप खोलें, Minecraft को रिपेयर या फिर से इंस्टॉल करें, सुनिश्चित करें कि गेम एक बार खुल जाए, फिर यह इंस्टॉलर दोबारा चलाएँ।'
+        ar='لم يفتح Minecraft لأن تثبيت اللعبة نفسه غير مكتمل أو تالف أو غير مسجّل على هذا الكمبيوتر: لم يتمكن Windows من تشغيل Minecraft.Windows.exe من مجلد اللعبة. هذا لا علاقة له بفتح القفل. افتح تطبيق Xbox، وأصلح أو أعد تثبيت Minecraft، وتأكد من فتح اللعبة مرة واحدة، ثم شغّل هذا المثبّت مرة أخرى.'
+        ru='Minecraft не запустился, потому что сама установка игры неполная, повреждена или не зарегистрирована на этом ПК: Windows не смогла запустить Minecraft.Windows.exe из папки игры. К разблокировке это отношения не имеет. Откройте приложение Xbox, восстановите или переустановите Minecraft, убедитесь, что игра запускается, и запустите установщик снова.'
     }
     'state_unlocked_hint' = @{
         en='If you want, choose [1] to remove the unlock and go back to Trial.'
@@ -1935,6 +1947,24 @@ $Script:I18N = @{
         ar='أزل هذه النسخة من الإعدادات > التطبيقات > التطبيقات المثبّتة > Minecraft for Windows > إلغاء التثبيت، ثم ثبّت Minecraft من تطبيق Xbox (تلك النسخة توجد في C:\XboxGames) وشغّل هذا المثبّت مرة أخرى. خذ نسخة احتياطية من عوالمك أولاً: فهي في %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds.'
         ru='Удалите эту копию: Параметры > Приложения > Установленные приложения > Minecraft for Windows > Удалить, затем установите Minecraft через приложение Xbox (эта копия находится в C:\XboxGames) и снова запустите этот установщик. Сначала сделайте резервную копию миров: они лежат в %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds.'
     }
+    'gate_game_broken' = @{
+        en='Installation BLOCKED: Minecraft is not ready on this PC. The folder has the game files, but Windows cannot run its Minecraft.Windows.exe and the game is not registered, so the unlock cannot work.'
+        es='Instalacion BLOQUEADA: Minecraft no esta listo en este PC. La carpeta tiene los archivos del juego, pero Windows no puede ejecutar su Minecraft.Windows.exe y el juego no esta registrado, asi que el desbloqueo no puede funcionar.'
+        fr='Installation BLOQUEE : Minecraft n''est pas pret sur ce PC. Le dossier contient les fichiers du jeu, mais Windows ne peut pas executer son Minecraft.Windows.exe et le jeu n''est pas enregistre, donc le deverrouillage ne peut pas fonctionner.'
+        zh='安装已阻止：Minecraft 在这台电脑上尚未就绪。文件夹里有游戏文件，但 Windows 无法运行其中的 Minecraft.Windows.exe，且游戏未注册，因此解锁无法生效。'
+        hi='इंस्टॉलेशन अवरुद्ध: Minecraft इस PC पर तैयार नहीं है। फ़ोल्डर में गेम फ़ाइलें हैं, लेकिन Windows उसका Minecraft.Windows.exe नहीं चला सकता और गेम पंजीकृत नहीं है, इसलिए अनलॉक काम नहीं कर सकता।'
+        ar='تم حظر التثبيت: Minecraft غير جاهز على هذا الكمبيوتر. يحتوي المجلد على ملفات اللعبة، لكن Windows لا يستطيع تشغيل Minecraft.Windows.exe الخاص به واللعبة غير مسجّلة، لذا لا يمكن أن يعمل فتح القفل.'
+        ru='Установка ЗАБЛОКИРОВАНА: Minecraft не готов на этом ПК. В папке есть файлы игры, но Windows не может запустить её Minecraft.Windows.exe, и игра не зарегистрирована, поэтому разблокировка не сможет работать.'
+    }
+    'gate_game_broken_hint' = @{
+        en='Open the Xbox App, remove the old Minecraft installation if it is still listed there, install Minecraft again, open the game once to confirm it works, then run this installer again. Back up your worlds first: they are in %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds.'
+        es='Abre la Xbox App, elimina la instalacion antigua de Minecraft si todavia aparece alli, instala Minecraft de nuevo, abre el juego una vez para confirmar que funciona y vuelve a ejecutar este instalador. Haz una copia de seguridad de tus mundos antes: estan en %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds.'
+        fr='Ouvrez l''application Xbox, supprimez l''ancienne installation de Minecraft si elle apparait encore, installez Minecraft a nouveau, ouvrez le jeu une fois pour verifier qu''il fonctionne, puis relancez cet installateur. Sauvegardez vos mondes avant : ils sont dans %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds.'
+        zh='打开 Xbox 应用，如果旧版 Minecraft 安装仍在那里，请先将其移除，重新安装 Minecraft，启动游戏一次以确认其可以运行，然后再次运行此安装程序。请先备份你的存档：位于 %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds。'
+        hi='Xbox ऐप खोलें, पुराना Minecraft इंस्टॉलेशन वहाँ अब भी दिखे तो उसे हटाएँ, Minecraft दोबारा इंस्टॉल करें, गेम को एक बार खोलकर पुष्टि करें कि वह चलता है, फिर यह इंस्टॉलर दोबारा चलाएँ। पहले अपने वर्ल्ड का बैकअप लें: वे %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds में हैं।'
+        ar='افتح تطبيق Xbox، وأزل تثبيت Minecraft القديم إن كان ما زال يظهر هناك، ثم أعد تثبيت Minecraft، وافتح اللعبة مرة واحدة للتأكد من أنها تعمل، ثم شغّل هذا المثبّت مرة أخرى. خذ نسخة احتياطية من عوالمك أولاً: فهي في %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds.'
+        ru='Откройте приложение Xbox, удалите старую установку Minecraft, если она всё ещё отображается там, установите Minecraft заново, запустите игру один раз, чтобы убедиться, что она работает, и снова запустите этот установщик. Сначала сделайте резервную копию миров: они лежат в %LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds.'
+    }
     'crash_hint_gaming_services' = @{
         en='Minecraft did not open because a Windows component it needs (Gaming Services) is missing or damaged, not because of the unlock. Open the Microsoft Store, reinstall Gaming Services and run the installer again.'
         es='Minecraft no se abrio porque falta en Windows un componente que necesita (Gaming Services) o esta danado, y no por el unlock. Abre la Microsoft Store, reinstala Gaming Services y ejecuta el instalador otra vez.'
@@ -2771,6 +2801,54 @@ function Test-OfficialContentSource {
     return $false
 }
 
+function Get-GameContentState {
+    param([string]$Content)
+    $state = @{
+        exe  = 'missing'
+        read = 'unknown'
+        pe   = 0
+        pkg  = 'unknown'
+    }
+    try {
+        $exe = Join-Path $Content 'Minecraft.Windows.exe'
+        if (Test-Path -LiteralPath $exe) {
+            $state.exe = 'present'
+            $state.read = Get-FileReadState -Path $exe
+            try {
+                $state.pe = Get-PeMachineType -Path $exe
+            } catch {
+                $state.pe = 0
+            }
+        }
+    } catch { }
+    try {
+        $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction Stop | Select-Object -First 1
+        if ($appx) {
+            $state.pkg = 'registered'
+        } else {
+            $state.pkg = 'no'
+        }
+    } catch { }
+    return $state
+}
+
+function Test-GameContentBlocked {
+    param($State)
+    if (-not $State) {
+        return $false
+    }
+    if ($State.exe -ne 'present') {
+        return $false
+    }
+    if ($State.pkg -ne 'no') {
+        return $false
+    }
+    if (($State.read -eq 'ok') -and ($State.pe -ne 0)) {
+        return $false
+    }
+    return $true
+}
+
 function Test-InstallGate {
     param([string]$Content)
     $Script:GateDiag = New-Object System.Collections.Generic.List[string]
@@ -2792,6 +2870,14 @@ function Test-InstallGate {
             return $false
         }
         $Script:GateDiag.Add('source=confirmed')
+    }
+    $gameState = Get-GameContentState -Content $Content
+    if ((Test-GameContentBlocked -State $gameState) -and (Test-OfficialContentSource -Content $Content)) {
+        $Script:GateDiag.Add('game=not-registered pkg=no exe-read=' + [string]$gameState.read + ' exe-pe=0x' + ('{0:X4}' -f ([int]$gameState.pe)) + ' result=blocked')
+        Write-Host ''
+        Write-Host (T 'gate_game_broken') -ForegroundColor Red
+        Write-Host (T 'gate_game_broken_hint') -ForegroundColor Yellow
+        return $false
     }
     if ((Get-GameMachineType -Content $Content).machine -eq 0xAA64) {
         $Script:GateDiag.Add('arch=arm64 result=skipped')
@@ -3536,7 +3622,7 @@ function Install-Unlocker {
         if (-not $isArm -and -not $env:MBU_BASE_URL) {
             $dllSources.Add(@{ Url = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll'
                                Tries = 1 })
-            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.42/release/winmm.dll'
+            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.43/release/winmm.dll'
                                Tries = 1 })
         }
         Start-Sleep -Seconds 2
@@ -3792,6 +3878,14 @@ function Install-Unlocker {
         try {
             $after = Get-SafeFileHash -Path (Join-Path $content 'winmm.dll')
             if ($checkHash -and ($after -ne $checkHash)) {
+                $avNames = @(Get-ThirdPartyAvNames)
+                $avLabel = if ($avNames.Count -gt 0) {
+                    ($avNames -join ', ')
+                } else {
+                    (T 'av_generic_name')
+                }
+                Write-Host ''
+                Write-Host ('  ' + ((T 'av_removed_hint') -replace '\{0\}', $avLabel)) -ForegroundColor Red
                 Send-MbuFailureReport -Trigger 'install_error' -Reason (T 'report_av_removed')
                 return
             }

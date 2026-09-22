@@ -287,7 +287,10 @@ almost always happens *after* a successful install, for one of two reasons:
      Virus & threat protection → Manage settings → Exclusions → Add an
      exclusion → Folder → select `C:\XboxGames\Minecraft for Windows\Content`
      (the Xbox App installation, the copy this project supports).
-   - Other AVs: add the same folder to their exclusion/whitelist.
+   - **Other AVs:** add the same folder to their exclusion/whitelist, and check
+     the product's own quarantine list. A file quarantined by a third-party
+     antivirus does not appear in Windows Security, and the Defender exclusions
+     do not apply to other products.
 3. Launch Minecraft. The "Desbloquear Jogo Completo" button should be gone.
 
 If you no longer have the original DLL, reinstalling the game from the Xbox app
@@ -491,6 +494,11 @@ or run. Repair does not apply in that state because there is nothing to repair.
 In this state the menu shows a message in your language that names the incomplete
 or unregistered game installation, instead of the generic "could not start
 Minecraft automatically".
+
+Since v4.9.43 the installer detects this state at the start and stops **before
+downloading or writing anything**, with `Installation BLOCKED: Minecraft is not
+ready on this PC` (the report records the block on the `[gate]` line). The fix is
+the same as above.
 
 ## "Access to the path '...winmm.dll.new' is denied" during install
 
