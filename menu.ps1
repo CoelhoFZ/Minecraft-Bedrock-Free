@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.43'
+$Script:Version = '4.9.44'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -20,7 +20,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c' = '4.9.43'
+    'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c' = '4.9.44'
     'e44230e539e5ec2378c1937746cfb34846ae1e21f9d4f2739f0d4d8c1e37d8da' = '4.9.34'
     '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.28'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
@@ -408,7 +408,7 @@ $Script:PT = @{
     'av_retrying'        = 'O antivirus pode ter removido o arquivo baixado. Tentando novamente ({0}/{1})...'
     'warn_third_party_av' = 'Atencao: antivirus de terceiros ativo ({0}). Ele pode bloquear a copia do winmm.dll para a pasta do Minecraft. Se a instalacao falhar, adicione a pasta do Minecraft nas exclusoes (ou pastas protegidas) desse antivirus e rode de novo.'
     'av_removed_hint'       = 'O winmm.dll sumiu logo apos a instalacao. Causa provavel: {0}. Adicione a pasta do Minecraft nas exclusoes dele (e restaure o winmm.dll da quarentena, se estiver la) e rode este instalador de novo.'
-    'err_write_blocked'  = 'Acesso negado ao gravar o winmm.dll na pasta do Minecraft, mesmo com a pasta liberada como administrador. Isso quase sempre e um antivirus bloqueando a gravacao. Antivirus detectado: {0}. Adicione a pasta do Minecraft nas exclusoes (ou pastas protegidas) desse antivirus e rode o instalador de novo.'
+    'err_write_blocked'  = 'Acesso negado ao gravar o winmm.dll na pasta do Minecraft, mesmo com a pasta liberada como administrador. Isso quase sempre e um antivirus bloqueando a gravacao. Antivirus detectado: {0}. Adicione esta pasta do Minecraft nas exclusoes (ou pastas protegidas) desse antivirus e rode o instalador de novo: {1}'
     'av_generic_name'    = 'um antivirus ou protecao de pasta'
     'av_exclusion_ok'    = 'Exclusao do Windows Defender adicionada para: {0}'
     'av_exclusion_fail'  = 'Nao foi possivel adicionar a exclusao do Windows Defender automaticamente. Rode como administrador ou adicione manualmente: {0}'
@@ -641,13 +641,13 @@ $Script:I18N = @{
         ru='winmm.dll исчез сразу после установки. Вероятная причина: {0}. Добавьте папку Minecraft в его исключения (и восстановите winmm.dll из карантина, если он там), затем снова запустите этот установщик.'
     }
     'err_write_blocked' = @{
-        en='Access denied when writing winmm.dll into the Minecraft folder, even with the folder released as administrator. This is almost always an antivirus blocking the write. Detected antivirus: {0}. Add the Minecraft folder to that antivirus exclusions (or protected folders) and run the installer again.'
-        es='Acceso denegado al escribir winmm.dll en la carpeta de Minecraft, incluso con la carpeta liberada como administrador. Casi siempre es un antivirus bloqueando la escritura. Antivirus detectado: {0}. Anade la carpeta de Minecraft a las exclusiones (o carpetas protegidas) de ese antivirus y vuelve a ejecutar el instalador.'
-        fr='Acces refuse lors de l''ecriture de winmm.dll dans le dossier Minecraft, meme avec le dossier libere en administrateur. C''est presque toujours un antivirus qui bloque l''ecriture. Antivirus detecte : {0}. Ajoutez le dossier Minecraft aux exclusions (ou dossiers proteges) de cet antivirus et relancez l''installateur.'
-        zh='写入 winmm.dll 到 Minecraft 文件夹时被拒绝访问，即使已以管理员身份释放该文件夹。这几乎总是杀毒软件阻止了写入。检测到的杀毒软件：{0}。请把 Minecraft 文件夹加入该杀毒软件的排除项（或受保护文件夹），然后重新运行安装程序。'
-        hi='Minecraft फ़ोल्डर में winmm.dll लिखते समय पहुँच अस्वीकृत, फ़ोल्डर को व्यवस्थापक के रूप में मुक्त करने के बाद भी। यह लगभग हमेशा किसी एंटीवायरस द्वारा लेखन रोकने के कारण होता है। पाया गया एंटीवायरस: {0}। उस एंटीवायरस के बहिष्करण (या संरक्षित फ़ोल्डर) में Minecraft फ़ोल्डर जोड़ें और इंस्टॉलर फिर से चलाएँ।'
-        ar='تم رفض الوصول عند كتابة winmm.dll في مجلد Minecraft، حتى بعد تحرير المجلد كمسؤول. هذا دائمًا تقريبًا بسبب برنامج مكافحة فيروسات يمنع الكتابة. البرنامج المكتشف: {0}. أضف مجلد Minecraft إلى الاستثناءات (أو المجلدات المحمية) في ذلك البرنامج وأعد تشغيل المثبّت.'
-        ru='Отказано в доступе при записи winmm.dll в папку Minecraft, даже после освобождения папки от имени администратора. Почти всегда это антивирус блокирует запись. Обнаруженный антивирус: {0}. Добавьте папку Minecraft в исключения (или защищённые папки) этого антивируса и снова запустите установщик.'
+        en='Access denied when writing winmm.dll into the Minecraft folder, even with the folder released as administrator. This is almost always an antivirus blocking the write. Detected antivirus: {0}. Add this Minecraft folder to that antivirus exclusions (or protected folders) and run the installer again: {1}'
+        es='Acceso denegado al escribir winmm.dll en la carpeta de Minecraft, incluso con la carpeta liberada como administrador. Casi siempre es un antivirus bloqueando la escritura. Antivirus detectado: {0}. Anade esta carpeta de Minecraft a las exclusiones (o carpetas protegidas) de ese antivirus y vuelve a ejecutar el instalador: {1}'
+        fr='Acces refuse lors de l''ecriture de winmm.dll dans le dossier Minecraft, meme avec le dossier libere en administrateur. C''est presque toujours un antivirus qui bloque l''ecriture. Antivirus detecte : {0}. Ajoutez ce dossier Minecraft aux exclusions (ou dossiers proteges) de cet antivirus et relancez l''installateur : {1}'
+        zh='写入 winmm.dll 到 Minecraft 文件夹时被拒绝访问，即使已以管理员身份释放该文件夹。这几乎总是杀毒软件阻止了写入。检测到的杀毒软件：{0}。请把这个 Minecraft 文件夹加入该杀毒软件的排除项（或受保护文件夹），然后重新运行安装程序：{1}'
+        hi='Minecraft फ़ोल्डर में winmm.dll लिखते समय पहुँच अस्वीकृत, फ़ोल्डर को व्यवस्थापक के रूप में मुक्त करने के बाद भी। यह लगभग हमेशा किसी एंटीवायरस द्वारा लेखन रोकने के कारण होता है। पाया गया एंटीवायरस: {0}। उस एंटीवायरस के बहिष्करण (या संरक्षित फ़ोल्डर) में यह Minecraft फ़ोल्डर जोड़ें और इंस्टॉलर फिर से चलाएँ: {1}'
+        ar='تم رفض الوصول عند كتابة winmm.dll في مجلد Minecraft، حتى بعد تحرير المجلد كمسؤول. هذا دائمًا تقريبًا بسبب برنامج مكافحة فيروسات يمنع الكتابة. البرنامج المكتشف: {0}. أضف مجلد Minecraft هذا إلى الاستثناءات (أو المجلدات المحمية) في ذلك البرنامج وأعد تشغيل المثبّت: {1}'
+        ru='Отказано в доступе при записи winmm.dll в папку Minecraft, даже после освобождения папки от имени администратора. Почти всегда это антивирус блокирует запись. Обнаруженный антивирус: {0}. Добавьте эту папку Minecraft в исключения (или защищённые папки) этого антивируса и снова запустите установщик: {1}'
     }
     'av_generic_name' = @{
         en='an antivirus or folder protection'
@@ -2360,19 +2360,45 @@ function Test-LauncherPayloadPath {
     return ($Path -like '*\.minecraft_bedrock\*')
 }
 
+function Get-SupportedContentPath {
+    param([string]$Path)
+    if (-not $Path) {
+        return $Path
+    }
+    $full = ([string]$Path).TrimEnd('\')
+    if ($full -notlike '*\WindowsApps\*') {
+        return $Path
+    }
+    $real = Get-PathRealTarget -Path $Path
+    if (-not $real) {
+        return $Path
+    }
+    $realFull = ([string]$real).TrimEnd('\')
+    if ($realFull -like '*\WindowsApps\*') {
+        return $Path
+    }
+    if (-not (Test-Path -LiteralPath $real)) {
+        return $Path
+    }
+    if (-not (Test-Path -LiteralPath (Join-Path $real 'Minecraft.Windows.exe'))) {
+        return $Path
+    }
+    return $realFull
+}
+
 function Find-MinecraftContent {
     try {
         $proc = Get-Process Minecraft.Windows -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($proc -and $proc.Path) {
             $dir = Split-Path $proc.Path -Parent
             if ((Test-Path $dir) -and (Test-Path (Join-Path $dir 'Minecraft.Windows.exe'))) {
-                return $dir
+                return (Get-SupportedContentPath -Path $dir)
             }
         }
     } catch { }
     foreach ($c in Get-MinecraftCandidates) {
         if ((Test-Path $c) -and (Test-Path (Join-Path $c 'Minecraft.Windows.exe'))) {
-            return $c
+            return (Get-SupportedContentPath -Path $c)
         }
     }
     $seen = New-Object System.Collections.Generic.List[string]
@@ -3288,7 +3314,7 @@ function Get-WriteBlockedMessage {
     } else {
         T 'av_generic_name'
     }
-    return ((T 'err_write_blocked') -replace '\{0\}', $who)
+    return (((T 'err_write_blocked') -replace '\{0\}', $who) -replace '\{1\}', $Content)
 }
 
 function Write-UnlockDllAtomic {
@@ -3313,6 +3339,9 @@ function Write-UnlockDllAtomic {
     $Script:SwapDiag.Add("prev=$prevSeen")
     $swapDone = $false
     $lastErr = $null
+    $publishVia = 'none'
+    $moveKind = 'none'
+    $copyKind = 'none'
     for ($attempt = 1; $attempt -le 3; $attempt++) {
         $stagedDll = Join-Path $Content ('winmm.dll.new-' + [guid]::NewGuid().ToString('N').Substring(0, 8))
         $prevDll = Join-Path $Content ('winmm.dll.mbu-prev-' + [guid]::NewGuid().ToString('N').Substring(0, 8))
@@ -3348,7 +3377,49 @@ function Write-UnlockDllAtomic {
             if (Test-Path $winmm) {
                 throw (T 'err_replace')
             }
-            Move-Item $stagedDll $winmm -Force -ErrorAction Stop
+            $published = $false
+            $moveErr = $null
+            try {
+                Move-Item -LiteralPath $stagedDll -Destination $winmm -Force -ErrorAction Stop
+                $published = $true
+                $publishVia = 'move'
+            } catch {
+                $moveErr = $_
+                $moveKind = $_.Exception.GetType().Name
+            }
+            if (-not $published) {
+                try {
+                    Copy-Item -LiteralPath $stagedDll -Destination $winmm -Force -ErrorAction Stop
+                    $finalHash = Get-SafeFileHash -Path $winmm
+                    if ($CheckHash -and ($finalHash -ne $CheckHash)) {
+                        for ($finalTry = 1; $finalTry -le 3 -and ($finalHash -ne $CheckHash); $finalTry++) {
+                            Start-Sleep -Milliseconds 400
+                            $finalHash = Get-SafeFileHash -Path $winmm
+                        }
+                    }
+                    if ($CheckHash -and ($finalHash -ne $CheckHash)) {
+                        $copyKind = 'hash-mismatch'
+                        Remove-Item -LiteralPath $winmm -Force -ErrorAction SilentlyContinue
+                    } else {
+                        $published = $true
+                        $publishVia = 'copy'
+                        Remove-Item -LiteralPath $stagedDll -Force -ErrorAction SilentlyContinue
+                    }
+                } catch {
+                    $copyKind = $_.Exception.GetType().Name
+                    try {
+                        if ((Test-Path -LiteralPath $winmm) -and ((-not $CheckHash) -or ((Get-SafeFileHash -Path $winmm) -ne $CheckHash))) {
+                            Remove-Item -LiteralPath $winmm -Force -ErrorAction SilentlyContinue
+                        }
+                    } catch { }
+                }
+            }
+            if (-not $published) {
+                if ($moveErr) {
+                    throw $moveErr
+                }
+                throw (T 'err_replace')
+            }
             $swapDone = $true
             break
         } catch {
@@ -3379,7 +3450,7 @@ function Write-UnlockDllAtomic {
         if ($Script:SwapPrevDll -and (Test-Path -LiteralPath $Script:SwapPrevDll)) {
             $kept = 'yes'
         }
-        $Script:SwapDiag.Add("published=$attempt prev-kept=$kept")
+        $Script:SwapDiag.Add("published=$attempt via=$publishVia prev-kept=$kept")
         return
     }
     $finalState = if (Test-Path $winmm) {
@@ -3387,7 +3458,7 @@ function Write-UnlockDllAtomic {
     } else {
         'no-winmm'
     }
-    $Script:SwapDiag.Add("failed attempts=3 final=$finalState")
+    $Script:SwapDiag.Add("failed attempts=3 final=$finalState move=$moveKind copy=$copyKind")
     $denied = $false
     try {
         $denied = ($lastErr -is [System.UnauthorizedAccessException])
@@ -4019,7 +4090,15 @@ function Start-Minecraft {
         $content = Find-MinecraftContent
         $Script:RunContent = $content
         $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction SilentlyContinue | Select-Object -First 1
-        $isStore = $appx -and ($content -eq $appx.InstallLocation)
+        $isStore = $false
+        if ($appx) {
+            $pkgLoc = [string]$appx.InstallLocation
+            $pkgReal = ''
+            if ($pkgLoc) {
+                $pkgReal = Get-PathRealTarget -Path $pkgLoc
+            }
+            $isStore = ($content -eq $pkgLoc) -or ($pkgReal -and ($content -eq $pkgReal))
+        }
         if ($isStore) {
             $appId = 'Game'
             try {
@@ -4407,7 +4486,15 @@ function Get-DiagReportText {
             throw (T 'err_content_not_found')
         }
         $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction SilentlyContinue | Select-Object -First 1
-        $source = if ($appx -and ($content -eq $appx.InstallLocation)) {
+        $pkgLoc = ''
+        $pkgReal = ''
+        if ($appx) {
+            $pkgLoc = [string]$appx.InstallLocation
+            if ($pkgLoc) {
+                $pkgReal = Get-PathRealTarget -Path $pkgLoc
+            }
+        }
+        $source = if ($appx -and (($content -eq $pkgLoc) -or ($pkgReal -and ($content -eq $pkgReal)))) {
             T 'diag_source_store'
         }
                   elseif ($content -like 'C:\XboxGames*') {
@@ -4454,7 +4541,15 @@ function Get-DiagReportText {
             } else {
                 ''
             }
-            $lines.Add("$(T 'diag_cand_label') $cand  ($(T $cstateKey))$cmark")
+            $cnote = ''
+            $creal = Get-PathRealTarget -Path $cand
+            if ($creal) {
+                $cnote = ' (junction -> ' + $creal + ')'
+                if (-not (Test-Path -LiteralPath $creal)) {
+                    $cnote += ' link target is missing'
+                }
+            }
+            $lines.Add("$(T 'diag_cand_label') $cand  ($(T $cstateKey))$cnote$cmark")
         }
         $lines.Add((Get-MbuScanLine))
         $wst = Get-WinmmDiskState -Content $content

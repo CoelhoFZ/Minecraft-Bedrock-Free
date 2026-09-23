@@ -307,9 +307,11 @@ If the crash message names a `WINMM.dll` under
 the game is loading an old or broken `winmm.dll` from the package folder. On
 those machines:
 
-1. Run the installer again. It prints the Content folder it will use (the
-   registered package in WindowsApps comes first). If Minecraft crashes right
-   after opening, the menu offers to send the failure report to the developer.
+1. Run the installer again. It prints the Content folder it will use. When the
+   package folder in `WindowsApps` is a link to the real files (which is the
+   usual case), the folder printed is the **real** one, for example
+   `C:\XboxGames\...`, and that is where the unlock is written. If Minecraft
+   crashes right after opening, the menu offers to send the failure report.
    The report lists every game folder candidate found and marks the one the
    installer used. When the registered package folder (WindowsApps) differs
    from `C:\XboxGames`, that is the case below.
@@ -500,7 +502,7 @@ downloading or writing anything**, with `Installation BLOCKED: Minecraft is not
 ready on this PC` (the report records the block on the `[gate]` line). The fix is
 the same as above.
 
-## "Access to the path '...winmm.dll.new' is denied" during install
+## "Access to the path '...winmm.dll.new' is denied" during install (antivirus blocked the write)
 
 ```
 Access to the path 'C:\Program Files\WindowsApps\...\winmm.dll.new' is denied.
@@ -547,6 +549,14 @@ If it still fails, your antivirus is the likely blocker:
    passive). If the installer still fails with **Administrator: yes** in the
    report, that feature is the blocker: allow the Minecraft Content folder in
    it, then retry.
+4. **360 Total Security** is the product most often seen blocking this write.
+   Adding the folder to its exclusions is not always enough, because its file
+   guard also refuses the DLL rename inside a folder it watches. Open its
+   **Trust List** (Settings > Antivirus > Trusted Files, or the trusted zone of
+   the version you have) and add the Minecraft folder printed by the installer,
+   or turn its real-time protection off for the duration of the install. Since
+   v4.9.44 the error message itself prints that folder, so you do not have to
+   guess which one to add.
 
 The failure report you can send from the menu includes an `[acl]` line with
 the result of every permission step (takeown, grants and the write probe).
@@ -642,6 +652,27 @@ Since v4.9.10 a denied write no longer destroys the unlock you already had:
 - `[threat]` and `[cfa]` now say when a third-party antivirus is active: those
   two lines read the Windows Defender log only, so `[threat] none` with another
   antivirus running means "not covered here", not "nothing blocked it".
+
+Since v4.9.44 the installer also tries a second way to publish the DLL and
+reports the folder it is really writing to:
+
+- The game folder shown on screen and in the report is the folder the files
+  really live in. When the registered package folder in `WindowsApps` is a link
+  to `C:\XboxGames\...`, the installer works with the real folder instead of the
+  link, so the folder named in the error message is the same one an antivirus
+  exclusion has to cover.
+- If moving the staged copy into place is denied but the folder still accepts a
+  new file (which is what a filter in the disk stack usually allows), the
+  installer publishes the DLL by **copying** it under the final name instead of
+  renaming it, then reads the hash of the result back. Either way the previous
+  `winmm.dll` goes back to its place if the install does not complete.
+- The `[swap]` line records which way it worked (`published=1 via=move` or
+  `via=copy`) and, when both fail, what denied each one:
+  `failed attempts=3 final=no-winmm move=<error kind> copy=<error kind>`.
+  `UnauthorizedAccessException` in both means the write itself is being denied,
+  not a file held open by a scanner.
+- The access denied message names the folder to add to the antivirus exclusions
+  (or protected folders), in all 8 menu languages.
 
 ## Installer blocks an old game version (v4.9.5+, version floor since v4.9.23)
 

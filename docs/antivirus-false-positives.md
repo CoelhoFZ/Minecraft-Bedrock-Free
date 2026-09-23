@@ -130,6 +130,24 @@ The DLL it needs is no longer a valid file. To fix it:
    after copying, and names the active third-party antivirus when the file
    disappears right after the install.
 
+### If the antivirus blocks the write instead of quarantining the file
+
+Some products block the write while the installer is running, without removing
+anything: the install ends with *access denied writing winmm.dll*, and the
+report shows the antivirus by name. **360 Total Security** is the one reported
+most often. Adding the folder to its exclusion list does not always stop its
+file guard from refusing the DLL, so also add the folder to its **Trust List**
+(Settings > Antivirus > Trusted Files, or the trusted zone in the version you
+have), or turn its real-time protection off for the duration of the install.
+Since v4.9.44 the error message prints the exact folder to add, which is the
+folder the game files really live in (`C:\XboxGames\...` for an Xbox app
+installation, even when the package folder in `WindowsApps` points there).
+
+Since v4.9.44 the installer also retries the publish by copying the DLL under
+the final name when the rename is refused, so a product that only blocks the
+rename no longer fails the install. The `[swap]` line of the report tells the
+developer which way worked.
+
 ### If Defender blocks the command you typed instead of a file
 
 This one is not about the binary. If you start the installer by wrapping the
