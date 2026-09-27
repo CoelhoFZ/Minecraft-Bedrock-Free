@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.45'
+$Script:Version = '4.9.46'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -20,7 +20,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c' = '4.9.45'
+    'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c' = '4.9.46'
     'e44230e539e5ec2378c1937746cfb34846ae1e21f9d4f2739f0d4d8c1e37d8da' = '4.9.34'
     '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.28'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
@@ -3693,7 +3693,7 @@ function Install-Unlocker {
         if (-not $isArm -and -not $env:MBU_BASE_URL) {
             $dllSources.Add(@{ Url = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll'
                                Tries = 1 })
-            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.45/release/winmm.dll'
+            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.46/release/winmm.dll'
                                Tries = 1 })
         }
         Start-Sleep -Seconds 2
@@ -3941,6 +3941,12 @@ function Install-Unlocker {
             if (-not $sfReason -and $mc.broken) {
                 $sfReason = 'the game installation is incomplete or not registered (Minecraft.Windows.exe not runnable: exe=' + $mc.exeState + ' size=' + $mc.exeSize + 'B pe=0x' + ('{0:X4}' -f $mc.exePe) + ' read=' + $mc.exeRead + ' attrs=' + $mc.exeAttrs + ' pkg=' + $mc.pkgState + ')'
             }
+            if (-not $sfReason) {
+                $sfReason = 'the game did not open after the unlock was installed'
+                if ($Script:LaunchDiag) {
+                    $sfReason = $sfReason + ' (' + $Script:LaunchDiag + ')'
+                }
+            }
             Send-MbuFailureReport -Trigger 'start_failed' -Reason $sfReason
             return
         }
@@ -4156,10 +4162,20 @@ function Start-Minecraft {
     }
     $exeBroken = (-not $opened) -and ($exeState -eq 'present') -and (($exeSize -le 0) -or ($exePe -eq 0))
     $brokenInstall = ($official -eq 'yes') -and (($pkgState -eq 'no') -or $exeBroken)
-    $Script:LaunchDiag = if ($isStore) {
+    $Script:LaunchDiag = if ($isStore -and $opened) {
         'mode=store content=' + $content
     } elseif ($opened) {
         'mode=exe official=' + $official + ' content=' + $content
+    } elseif ($isStore) {
+        $parts = New-Object System.Collections.Generic.List[string]
+        $parts.Add('mode=store')
+        $parts.Add('opened=no')
+        $parts.Add('official=' + $official)
+        $parts.Add('pkg=' + $pkgState)
+        $parts.Add('uri=' + $uriState)
+        $parts.Add('start-err=' + $startErr)
+        $parts.Add('content=' + $content)
+        ($parts -join ' ')
     } else {
         $parts = New-Object System.Collections.Generic.List[string]
         $parts.Add('mode=failed')
@@ -5242,6 +5258,9 @@ function Send-MbuFailureReport {
     try {
         if ($Trigger -eq 'install_error' -and $Reason -eq (T 'err_content_not_found') -and -not (Test-PriorUnlockEvidence)) {
             return
+        }
+        if (-not $Reason) {
+            $Reason = 'no failure detail was recorded (trigger=' + $Trigger + ')'
         }
         Write-Host ''
         if ($Title) {
