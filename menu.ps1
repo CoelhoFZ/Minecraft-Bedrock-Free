@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.46'
+$Script:Version = '4.9.47'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -20,7 +20,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c' = '4.9.46'
+    'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c' = '4.9.47'
     'e44230e539e5ec2378c1937746cfb34846ae1e21f9d4f2739f0d4d8c1e37d8da' = '4.9.34'
     '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.28'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
@@ -116,6 +116,7 @@ $Script:CrashDiag = New-Object System.Collections.Generic.List[string]
 $Script:LaunchDiag = $null
 $Script:DefenderExclAttempted = @()
 $Script:DefenderExclEffective = @()
+$Script:DefenderExclPruned = @()
 $Script:ThirdPartyAv = @()
 $Script:DownloadDiag = $null
 $urls = @{
@@ -388,6 +389,7 @@ $Script:PT = @{
     'banner_build_note'  = 'Suporte apenas ao build OFICIAL (Store/Xbox App) na versao ATUAL. Launchers de terceiros e versoes antigas NAO sao suportados.'
     'err_content_not_found' = 'Content do Minecraft nao encontrado. Instale o Minecraft pelo Xbox App e tente de novo.'
     'err_package_incomplete' = 'O Minecraft esta registrado, mas o executavel do jogo esta faltando na pasta dele. No Xbox App, use Reparar no Minecraft ou reinstale, e rode este instalador de novo.'
+    'err_package_old' = 'O Minecraft registrado neste PC e uma versao antiga ({0}), mais antiga que a versao minima suportada ({1}). Desinstale essa versao em Configuracoes > Aplicativos > Aplicativos instalados (Minecraft for Windows) e instale a versao atual pelo Xbox App, depois rode este instalador de novo.'
     'err_package_content_missing' = 'O Minecraft esta registrado, mas a pasta para onde o pacote aponta nao existe: {0}. E nessa pasta que ficam os arquivos do jogo. No Xbox App, use Reparar no Minecraft ou reinstale, abra o jogo uma vez e rode este instalador de novo.'
     'err_package_launcher' = 'Pacote do Minecraft Launcher encontrado, mas os arquivos do jogo estao faltando. Abra o Minecraft Launcher, deixe ele terminar ou verificar a instalacao, e rode o instalador de novo.'
     'probe_list'         = 'Pastas verificadas: {0}'
@@ -412,6 +414,7 @@ $Script:PT = @{
     'av_generic_name'    = 'um antivirus ou protecao de pasta'
     'av_exclusion_ok'    = 'Exclusao do Windows Defender adicionada para: {0}'
     'av_exclusion_fail'  = 'Nao foi possivel adicionar a exclusao do Windows Defender automaticamente. Rode como administrador ou adicione manualmente: {0}'
+    'av_exclusion_cleaned' = 'Exclusao antiga do Windows Defender removida (a pasta nao existe mais): {0}'
     'backup_orig'        = 'Backup do winmm original em winmm.dll.orig'
     'install_ok'         = 'OK - unlock instalado.'
     'restored_ok'        = 'winmm original restaurado.'
@@ -678,6 +681,15 @@ $Script:I18N = @{
         ar='تعذّر إضافة استثناء Windows Defender تلقائيًا. شغّل كمسؤول أو أضفه يدويًا: {0}'
         ru='Не удалось автоматически добавить исключение Защитника Windows. Запустите от имени администратора или добавьте вручную: {0}'
     }
+    'av_exclusion_cleaned' = @{
+        en='Removed an old Windows Defender exclusion (the folder no longer exists): {0}'
+        es='Se elimino una exclusion antigua de Windows Defender (la carpeta ya no existe): {0}'
+        zh='已删除过时的 Windows Defender 排除项（文件夹已不存在）：{0}'
+        hi='पुराना Windows Defender अपवाद हटाया गया (फ़ोल्डर अब मौजूद नहीं है): {0}'
+        fr='Ancienne exclusion Windows Defender supprimee (le dossier n''existe plus) : {0}'
+        ar='تمت إزالة استثناء قديم في Windows Defender (المجلد لم يعد موجوداً): {0}'
+        ru='Удалено устаревшее исключение Защитника Windows (папка больше не существует): {0}'
+    }
     'greet_morning' = @{
         en='Good morning'
         zh='早上好'
@@ -731,6 +743,15 @@ $Script:I18N = @{
         fr='Minecraft est enregistre, mais l''executable du jeu est absent de son dossier. Dans l''application Xbox, choisissez Reparer pour Minecraft ou reinstallez-le, puis relancez cet installateur.'
         ar='Minecraft مسجَّل، لكن ملف تشغيل اللعبة مفقود من مجلده. في تطبيق Xbox اختر "إصلاح" (Repair) للعبة Minecraft أو أعد تثبيتها، ثم شغّل هذا المثبّت مرة أخرى.'
         ru='Minecraft зарегистрирован, но исполняемый файл игры отсутствует в его папке. В приложении Xbox выберите "Восстановить"/Repair для Minecraft или переустановите её, затем снова запустите этот установщик.'
+    }
+    'err_package_old' = @{
+        en='The Minecraft registered on this PC is an old version ({0}), older than the minimum supported version ({1}). Uninstall it in Settings > Apps > Installed apps (Minecraft for Windows) and install the current version from the Xbox App, then run this installer again.'
+        zh='这台电脑上注册的 Minecraft 版本过旧（{0}），低于支持的最低版本（{1}）。请在“设置”>“应用”>“已安装的应用”中卸载它，从 Xbox 应用安装当前版本，然后重新运行此安装程序。'
+        hi='इस PC पर पंजीकृत Minecraft एक पुराना संस्करण ({0}) है, जो समर्थित न्यूनतम संस्करण ({1}) से पुराना है। इसे Settings > Apps > Installed apps में अनइंस्टॉल करें और Xbox App से वर्तमान संस्करण इंस्टॉल करें, फिर यह इंस्टॉलर दोबारा चलाएँ।'
+        es='El Minecraft registrado en este PC es una version antigua ({0}), anterior a la version minima soportada ({1}). Desinstala esa version en Configuracion > Aplicaciones > Aplicaciones instaladas (Minecraft for Windows) e instala la version actual desde la Xbox App, y ejecuta este instalador de nuevo.'
+        fr='Le Minecraft enregistre sur ce PC est une ancienne version ({0}), plus ancienne que la version minimale prise en charge ({1}). Desinstallez cette version dans Parametres > Applications > Applications installees (Minecraft for Windows), installez la version actuelle depuis l''application Xbox, puis relancez cet installateur.'
+        ar='نسخة Minecraft المسجَّلة على هذا الجهاز قديمة ({0})، أقدم من الحد الأدنى المدعوم ({1}). أزل تثبيتها من الإعدادات > التطبيقات > التطبيقات المثبَّتة، وثبّت النسخة الحالية من تطبيق Xbox، ثم شغّل هذا المثبّت مرة أخرى.'
+        ru='Зарегистрированная на этом ПК версия Minecraft устарела ({0}): она старше минимальной поддерживаемой версии ({1}). Удалите её в разделе Параметры > Приложения > Установленные приложения и установите текущую версию из приложения Xbox, затем снова запустите этот установщик.'
     }
     'err_package_content_missing' = @{
         en='Minecraft is registered, but the folder the package points to does not exist: {0}. That folder holds the game files. In the Xbox app, choose Repair for Minecraft or reinstall it, start the game once, then run this installer again.'
@@ -2413,15 +2434,26 @@ function Find-MinecraftContent {
     }
     $hasAppx = $false
     $appxLoc = ''
+    $appxVer = ''
     try {
         $appx = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($appx -and $appx.InstallLocation) {
             $hasAppx = $true
             $appxLoc = [string]$appx.InstallLocation
+            $appxVer = [string]$appx.Version
         }
     } catch { }
     if ($hasAppx -and (Test-LauncherPayloadPath -Path $appxLoc)) {
         throw (T 'err_package_launcher')
+    }
+    if ($hasAppx -and $appxVer) {
+        $floorVer = Get-SupportedFloorVersion
+        if ($floorVer) {
+            $oldCmp = Compare-GameVersion -Version $appxVer -Other $floorVer
+            if ($null -ne $oldCmp -and $oldCmp -lt 0) {
+                throw (((T 'err_package_old') -replace '\{0\}', $appxVer) -replace '\{1\}', $floorVer)
+            }
+        }
     }
     if ($hasAppx) {
         $appxReal = Get-PathRealTarget -Path $appxLoc
@@ -3198,6 +3230,35 @@ function Add-DefenderExclusions {
     return $effective
 }
 
+function Remove-StaleDefenderExclusions {
+    $removed = New-Object System.Collections.Generic.List[string]
+    try {
+        $pref = Get-MpPreference -ErrorAction Stop
+        foreach ($p in @($pref.ExclusionPath)) {
+            if (-not $p) {
+                continue
+            }
+            $item = ([string]$p).TrimEnd('\')
+            if (-not $item) {
+                continue
+            }
+            $ours = ($item -like '*\WindowsApps\Microsoft.MinecraftUWP_*') -or ($item -like '*\XboxGames\*Minecraft*') -or ($item -like '*\mbu-cache') -or ($item -like '*\Temp\mbu')
+            if (-not $ours) {
+                continue
+            }
+            if (Test-Path -LiteralPath $item) {
+                continue
+            }
+            try {
+                Remove-MpPreference -ExclusionPath $p -ErrorAction Stop
+                $removed.Add($item)
+            } catch { }
+        }
+    } catch { }
+    $Script:DefenderExclPruned = @(@($Script:DefenderExclPruned) + @($removed) | Select-Object -Unique)
+    return @($removed)
+}
+
 function Repair-UnlockSwapSidecars {
     param([string]$Content)
     $winmm = Join-Path $Content 'winmm.dll'
@@ -3555,6 +3616,12 @@ function Install-Unlocker {
     $Script:SacNeedsReboot = $false
     $Script:SacWriteFailed = $false
     $Script:LastOpErrorRecord = $null
+    $Script:GateDiag = $null
+    $Script:RunContent = $null
+    $pruned = @(Remove-StaleDefenderExclusions)
+    if ($pruned.Count -gt 0) {
+        Write-Host ('  ' + ((T 'av_exclusion_cleaned') -replace '\{0\}', ($pruned -join ', '))) -ForegroundColor DarkGray
+    }
     Show-ThirdPartyAvWarning
     $sac = Get-SmartAppControlState
     if ($sac -eq 1 -or $sac -eq 2) {
@@ -3693,7 +3760,7 @@ function Install-Unlocker {
         if (-not $isArm -and -not $env:MBU_BASE_URL) {
             $dllSources.Add(@{ Url = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll'
                                Tries = 1 })
-            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.46/release/winmm.dll'
+            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.47/release/winmm.dll'
                                Tries = 1 })
         }
         Start-Sleep -Seconds 2
@@ -4313,15 +4380,20 @@ function Get-DiagReportText {
     } catch { }
     try {
         $att = @($Script:DefenderExclAttempted)
+        $pru = @($Script:DefenderExclPruned)
+        $pruTxt = 'none'
+        if ($pru.Count -gt 0) {
+            $pruTxt = ($pru -join ', ')
+        }
         if ($att.Count -gt 0) {
             $eff = @($Script:DefenderExclEffective)
             $effTxt = 'none'
             if ($eff.Count -gt 0) {
                 $effTxt = ($eff -join ', ')
             }
-            $lines.Add('[defender] auto-exclusion attempted=' + ($att -join ', ') + ' effective=' + $effTxt)
+            $lines.Add('[defender] auto-exclusion attempted=' + ($att -join ', ') + ' effective=' + $effTxt + ' pruned=' + $pruTxt)
         } else {
-            $lines.Add('[defender] auto-exclusion not attempted')
+            $lines.Add('[defender] auto-exclusion not attempted pruned=' + $pruTxt)
         }
     } catch { }
     try {

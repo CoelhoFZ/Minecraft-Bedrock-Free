@@ -234,6 +234,16 @@ $Script:Msg = @{
         ar='لم تُفتح نافذة المثبّت بعد UAC. إذا طلب UAC اسم مستخدم وكلمة مرور مسؤول، فلا تُفتح النافذة إلا بعد إدخال بيانات صحيحة. إذا لم يطلب UAC بيانات الدخول، أو أُدخلت ولم تُفتح النافذة، فبرنامج مكافحة فيروسات أو سياسة Windows يمنع المثبّت.'
         ru='Окно установщика не открылось после запроса UAC. Если UAC запросил имя и пароль администратора, окно откроется только после ввода верных данных. Если UAC не запрашивал данные или они были введены, а окно так и не открылось, установщик блокирует антивирус или политика Windows.'
     }
+    'err_child_never_started_stduser' = @{
+        pt='A janela do instalador nao abriu depois do UAC. Sua conta do Windows nao esta no grupo de administradores deste PC, entao o UAC precisa do usuario e da senha de uma conta administradora: a janela so abre depois que credenciais validas forem digitadas. Se elas ja foram digitadas e a janela continua sem abrir, um antivirus ou uma politica do Windows esta bloqueando o instalador.'
+        en='The installer window did not open after the UAC prompt. Your Windows account is not in this PC administrators group, so the UAC prompt needs the username and password of an administrator account: the window only opens after valid credentials are entered. If they were entered and the window still did not open, an antivirus or a Windows policy is blocking the installer.'
+        es='La ventana del instalador no se abrio despues del UAC. Tu cuenta de Windows no esta en el grupo de administradores de este PC, asi que el UAC necesita el usuario y la contrasena de una cuenta administradora: la ventana solo se abre despues de escribir credenciales validas. Si ya se escribieron y la ventana sigue sin abrirse, un antivirus o una politica de Windows esta bloqueando el instalador.'
+        fr='La fenetre de l''installateur ne s''est pas ouverte apres l''UAC. Votre compte Windows ne fait pas partie du groupe des administrateurs de ce PC, donc l''UAC demande le nom d''utilisateur et le mot de passe d''un compte administrateur : la fenetre ne s''ouvre qu''apres la saisie d''identifiants valides. S''ils ont ete saisis et que la fenetre ne s''ouvre toujours pas, un antivirus ou une strategie Windows bloque l''installateur.'
+        zh='UAC 之后安装程序窗口没有打开。你的 Windows 帐户不在本机管理员组中，因此 UAC 需要管理员帐户的用户名和密码：只有输入有效凭据后窗口才会打开。如果已输入凭据但窗口仍未打开，则是杀毒软件或 Windows 策略阻止了安装程序。'
+        hi='UAC के बाद इंस्टॉलर विंडो नहीं खुली। आपका Windows खाता इस PC के प्रशासक समूह में नहीं है, इसलिए UAC को व्यवस्थापक खाते का उपयोगकर्ता नाम और पासवर्ड चाहिए: मान्य क्रेडेंशियल डालने के बाद ही विंडो खुलती है। यदि वे डाल दिए गए और विंडो फिर भी नहीं खुली, तो एंटीवायरस या Windows नीति इंस्टॉलर को रोक रही है।'
+        ar='لم تُفتح نافذة المثبّت بعد UAC. حسابك في Windows ليس ضمن مجموعة المسؤولين على هذا الجهاز، لذا يطلب UAC اسم مستخدم وكلمة مرور حساب مسؤول: لا تُفتح النافذة إلا بعد إدخال بيانات صحيحة. إذا أُدخلت ولم تُفتح النافذة، فبرنامج مكافحة فيروسات أو سياسة Windows يمنع المثبّت.'
+        ru='Окно установщика не открылось после запроса UAC. Ваша учетная запись Windows не входит в группу администраторов этого ПК, поэтому UAC запрашивает имя и пароль учетной записи администратора: окно откроется только после ввода верных данных. Если они введены, а окно так и не открылось, установщик блокирует антивирус или политика Windows.'
+    }
     'err_elev_denied' = @{
         pt='O Windows recusou a permissao de administrador para esta conta. Se voce nao esta em uma conta de administrador deste PC, entre com uma e rode o instalador de novo. Se a janela do UAC nem chega a aparecer, a elevacao esta bloqueada por politica do Windows.'
         en='Windows refused administrator permission for this account. If you are not using an administrator account on this PC, sign in with one and run the installer again. If the UAC window never appears, elevation is blocked by a Windows policy.'
@@ -408,7 +418,7 @@ if (-not $downloaded) {
     Read-Host (L 'press_enter_close')
     exit 1
 }
-$menuHash = '40e83add0fca92aeb932603599a407450fed7a7b62df3360d8a6f2246b5a28b8'
+$menuHash = 'b9d1685116550957df41e37eb0d3f2ca6547bc3cdbd7ee6449aefd3bb209825e'
 $menuBytes = [IO.File]::ReadAllBytes($menu)
 $clean = New-Object System.Collections.Generic.List[byte]
 foreach ($b in $menuBytes) {
@@ -476,23 +486,26 @@ function Get-MbuElevationFailureKind {
 
 function Get-MbuInAdministrators {
     try {
-        $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
-        $target = New-Object Security.Principal.SecurityIdentifier('S-1-5-32-544')
-        foreach ($group in $identity.Groups) {
-            try {
-                if ($group.Value -eq $target.Value) {
-                    return $true
-                }
-            } catch { }
+        $who = Join-Path $env:SystemRoot 'System32\whoami.exe'
+        if (-not (Test-Path -LiteralPath $who)) {
+            $who = 'whoami.exe'
+        }
+        $out = @(& $who /groups 2>$null) -join [Environment]::NewLine
+        if ($out) {
+            return [bool]($out -match 'S-1-5-32-544')
         }
     } catch { }
-    return $false
+    return $null
 }
 
 $principal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
 $isAdmin = $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 $inAdminGroup = Get-MbuInAdministrators
-Add-MbuLog ("stage=admin isAdmin=$isAdmin inAdminGroup=$inAdminGroup version=$versionLabel menu=$menu")
+$inAdminGroupTxt = 'unknown'
+if ($null -ne $inAdminGroup) {
+    $inAdminGroupTxt = [string]$inAdminGroup
+}
+Add-MbuLog ("stage=admin isAdmin=$isAdmin inAdminGroup=$inAdminGroupTxt version=$versionLabel menu=$menu")
 
 function Get-MbuLogTail {
     try {
@@ -547,7 +560,7 @@ function Show-MbuLaunchFailure {
     if (-not $Kind) {
         $Kind = 'unknown'
     }
-    Add-MbuLog ("stage=launch-fail kind=" + $Kind + " inAdminGroup=" + $inAdminGroup + " reason=" + $Message)
+    Add-MbuLog ("stage=launch-fail kind=" + $Kind + " inAdminGroup=" + $inAdminGroupTxt + " reason=" + $Message)
     Write-Host ''
     Write-Host (L 'err_launch_title') -ForegroundColor Red
     if ($Kind -eq 'denied') {
@@ -695,7 +708,11 @@ if ($isAdmin) {
         if ($started -eq $null) {
             exit 0
         }
-        Show-MbuLaunchFailure -Message (L 'err_child_never_started') -Kind 'child-never-started'
+        if ($inAdminGroup -eq $false) {
+            Show-MbuLaunchFailure -Message (L 'err_child_never_started_stduser') -Kind 'child-never-started'
+        } else {
+            Show-MbuLaunchFailure -Message (L 'err_child_never_started') -Kind 'child-never-started'
+        }
     } catch {
         $elevationError = [string]$_.Exception.Message
         Show-MbuLaunchFailure -Message $elevationError -Kind (Get-MbuElevationFailureKind $elevationError)
