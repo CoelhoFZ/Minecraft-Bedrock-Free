@@ -255,6 +255,39 @@ a few minutes and run the installer again. The failure report carries a `[dl]`
 line with the HTTP code of every attempt, which is what tells a temporary
 server error from a block on your side.
 
+The third failure with this same title is local and has its own section below:
+the antivirus blocking the write of the temporary file (v4.9.48+).
+
+## "Could not write the temporary download file" during install (v4.9.48+, antivirus blocked the write)
+
+**What it means:** the installer could not create its own temporary file inside
+`%TEMP%\mbu`, so the binary never reached your machine. Access to that path
+being denied is almost always an antivirus blocking the write, and not a
+network problem.
+
+**What the report shows:** the `[dl]` line carries a `write-denied` entry for
+the attempts that failed this way, and the message names the antivirus product
+found on the machine.
+
+**Older versions:** before v4.9.48 this same failure came out as "Could not
+download winmm.dll. Check your internet connection", with the detail
+`Access to the path '...payload-x64.bin' is denied`. That text blamed your
+connection for a local block. If you see that wording, you are running an older
+version: run the official one-line command from the
+[Install](README.md#install) section again to get the current installer.
+
+**What the installer already does (v4.9.48+):** before downloading, it proves
+that it can create the temporary file. When the antivirus is already denying
+that name or folder, it moves to a new file name and to a second working folder
+on its own before giving up.
+
+**How to fix:** add `%TEMP%\mbu`, `%LOCALAPPDATA%\mbu-cache` and the game
+folder printed by the installer to the exclusions of your antivirus (some
+suites call them Protected folders or Ransomware protection, and some have a
+separate Trust list), restore the file from the quarantine if it is there, then
+run the installer again. Exclusions added in Windows Security do not cover a
+third-party antivirus.
+
 ## "Bad Image" error (status 0xc0e90007) for WINMM.dll when launching Minecraft
 
 ```

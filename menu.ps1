@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.47'
+$Script:Version = '4.9.48'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -20,7 +20,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c' = '4.9.47'
+    'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c' = '4.9.48'
     'e44230e539e5ec2378c1937746cfb34846ae1e21f9d4f2739f0d4d8c1e37d8da' = '4.9.34'
     '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.28'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
@@ -102,6 +102,63 @@ function Get-TempDir {
         $Script:MbuTempDir = $env:TEMP
     }
     return $Script:MbuTempDir
+}
+
+function Initialize-MbuWorkspace {
+    param([string]$Dir)
+    if (-not $Dir) {
+        return $null
+    }
+    try {
+        if (-not (Test-Path -LiteralPath $Dir -PathType Container)) {
+            New-Item -ItemType Directory -Force -Path $Dir | Out-Null
+        }
+        if (-not (Test-Path -LiteralPath $Dir -PathType Container)) {
+            return $null
+        }
+    } catch {
+        return $null
+    }
+    return $Dir
+}
+
+function Test-MbuStagePath {
+    param([string]$Path)
+    if (-not $Path) {
+        return $false
+    }
+    if (-not (Initialize-MbuWorkspace -Dir (Split-Path -Parent $Path))) {
+        return $false
+    }
+    if (Test-Path -LiteralPath $Path -PathType Container) {
+        return $false
+    }
+    try {
+        Remove-Item -LiteralPath $Path -Force -Confirm:$false -ErrorAction SilentlyContinue
+        $fs = [IO.File]::Open($Path, [IO.FileMode]::Create, [IO.FileAccess]::Write, [IO.FileShare]::None)
+        $fs.Dispose()
+        Remove-Item -LiteralPath $Path -Force -Confirm:$false -ErrorAction SilentlyContinue
+        return $true
+    } catch {
+        return $false
+    }
+}
+
+function Resolve-MbuStagePath {
+    param([string]$Name)
+    $stub = [IO.Path]::GetFileNameWithoutExtension($Name)
+    $root = (Get-TempDir).TrimEnd('\')
+    $cands = New-Object System.Collections.Generic.List[string]
+    $cands.Add((Join-Path (Join-Path $root 'mbu') $Name))
+    $cands.Add((Join-Path (Join-Path $root 'mbu') ($stub + '-' + [guid]::NewGuid().ToString('N').Substring(0, 8) + '.bin')))
+    $cands.Add((Join-Path (Join-Path $root 'mbu-run') $Name))
+    $cands.Add((Join-Path (Join-Path $root 'mbu-run') ($stub + '-' + [guid]::NewGuid().ToString('N').Substring(0, 8) + '.bin')))
+    foreach ($c in $cands) {
+        if (Test-MbuStagePath -Path $c) {
+            return $c
+        }
+    }
+    return $null
 }
 
 $cacheDir = Join-Path $env:LOCALAPPDATA 'mbu-cache'
@@ -400,6 +457,7 @@ $Script:PT = @{
     'err_download_unavailable' = 'Nao foi possivel baixar o winmm.dll: o servidor de download (GitHub) respondeu com erro temporario (503/502/504) varias vezes seguidas. Nao e um problema do instalador. Verifique sua conexao e rode o instalador de novo em alguns minutos.'
     'err_download_offline' = 'Nao foi possivel baixar o winmm.dll: o instalador nao conseguiu conectar ao servidor de download. Isso costuma ser internet instavel, DNS ou VPN bloqueando o acesso. Nao e um problema do instalador. Verifique sua conexao, desligue a VPN ou o proxy se estiver usando, e rode o instalador de novo.'
     'err_download_failed' = 'Nao foi possivel baixar o winmm.dll. Verifique sua conexao com a internet e rode o instalador de novo. Detalhe: {0}'
+    'err_download_write_blocked' = 'Nao foi possivel gravar o arquivo temporario do download em {0}, nem com outra pasta de trabalho. Acesso negado nesse caminho quase sempre e antivirus bloqueando a gravacao. Antivirus detectado: {1}. Adicione essas pastas nas exclusoes (ou nas pastas protegidas) do antivirus, restaure o arquivo da quarentena se ele estiver la, e rode o instalador de novo.'
     'err_hash_invalid'   = 'Nao foi possivel obter uma copia valida do winmm.dll: o arquivo baixado nao corresponde ao esperado (hash {0}), mesmo tentando todos os enderecos de download. Isso normalmente e um antivirus, um proxy/VPN ou um DNS alterando o download, e nao um problema do instalador. Verifique a conexao, desligue VPN ou proxy se estiver usando, adicione as exclusoes do antivirus e rode o instalador de novo. Se acontecer de novo, envie o relatorio.'
     'err_acl'            = 'Nao foi possivel tomar posse da pasta do Minecraft. Rode como administrador.'
     'err_copy_corrupt'   = 'Falha ao copiar winmm.dll (copia corrompida/bloqueada). Verifique se o antivirus nao bloqueou e tente de novo.'
@@ -842,6 +900,15 @@ $Script:I18N = @{
         hi='winmm.dll डाउनलोड नहीं हो सका। अपना इंटरनेट कनेक्शन जाँचें और इंस्टॉलर फिर से चलाएँ। विवरण: {0}'
         ar='تعذّر تنزيل winmm.dll. تحقق من اتصالك بالإنترنت وأعد تشغيل المثبّت. التفاصيل: {0}'
         ru='Не удалось загрузить winmm.dll. Проверьте подключение к интернету и снова запустите установщик. Подробности: {0}'
+    }
+    'err_download_write_blocked' = @{
+        en='Could not write the temporary download file to {0}, not even with another work folder. Access denied on that path is almost always an antivirus blocking the write. Detected antivirus: {1}. Add these folders to the antivirus exclusions (or protected folders), restore the file from quarantine if it is there, and run the installer again.'
+        es='No se pudo escribir el archivo temporal de la descarga en {0}, ni con otra carpeta de trabajo. El acceso denegado en esa ruta casi siempre es un antivirus bloqueando la escritura. Antivirus detectado: {1}. Anade esas carpetas a las exclusiones (o carpetas protegidas) del antivirus, restaura el archivo de la cuarentena si esta alli, y vuelve a ejecutar el instalador.'
+        fr='Impossible d ecrire le fichier temporaire du telechargement dans {0}, meme avec un autre dossier de travail. Un acces refuse sur ce chemin est presque toujours un antivirus qui bloque l ecriture. Antivirus detecte : {1}. Ajoutez ces dossiers aux exclusions (ou dossiers proteges) de l antivirus, restaurez le fichier depuis la quarantaine s il y est, puis relancez l installateur.'
+        zh='无法将下载的临时文件写入 {0}，改用其他工作文件夹也不行。该路径访问被拒绝几乎总是杀毒软件阻止写入。检测到的杀毒软件：{1}。请将这些文件夹加入该杀毒软件的排除项（或受保护文件夹），如果文件在隔离区请先恢复，然后重新运行安装程序。'
+        hi='{0} में डाउनलोड की अस्थायी फ़ाइल नहीं लिखी जा सकी, दूसरे कार्य फ़ोल्डर से भी नहीं। उस पथ पर पहुँच अस्वीकृत होना लगभग हमेशा एंटीवायरस के कारण होता है। पाया गया एंटीवायरस: {1}। इन फ़ोल्डरों को एंटीवायरस के बहिष्करण (या संरक्षित फ़ोल्डर) में जोड़ें, फ़ाइल क्वारंटीन में हो तो उसे बहाल करें, और इंस्टॉलर फिर से चलाएँ।'
+        ar='تعذّر كتابة ملف التنزيل المؤقت في {0}، وحتى باستخدام مجلد عمل آخر. رفض الوصول إلى ذلك المسار يعني غالبًا برنامج مكافحة فيروسات يمنع الكتابة. البرنامج المكتشف: {1}. أضف هذه المجلدات إلى استثناءات ذلك البرنامج (أو المجلدات المحمية)، واستعد الملف من الحجر الصحي إن كان موجودًا، ثم شغّل المثبّت مرة أخرى.'
+        ru='Не удалось записать временный файл загрузки в {0}, даже в другой рабочей папке. Отказ в доступе к этому пути почти всегда означает, что антивирус блокирует запись. Обнаруженный антивирус: {1}. Добавьте эти папки в исключения (или защищённые папки) антивируса, восстановите файл из карантина, если он там, и снова запустите установщик.'
     }
     'err_hash_invalid' = @{
         en='Could not get a valid copy of winmm.dll: the downloaded file does not match the expected one (hash {0}) even after trying every download address. This is usually an antivirus, a proxy/VPN or a DNS modifying the download, not a problem with the installer. Check your connection, turn off any VPN or proxy, add the antivirus exclusions and run the installer again. If it happens again, send the report.'
@@ -3693,13 +3760,25 @@ function Install-Unlocker {
         }
     }
 
-    $tmp = Join-Path (Get-TempDir) 'mbu'
-    if (Test-Path -LiteralPath $tmp) {
-        Remove-Item -Recurse -Force $tmp -ErrorAction SilentlyContinue
+    $wsAvs = Get-ThirdPartyAvNames
+    $wsAvLabel = if ($wsAvs.Count -gt 0) {
+        ($wsAvs -join ', ')
+    } else {
+        T 'av_generic_name'
     }
-    New-Item -ItemType Directory -Force -Path $tmp | Out-Null
-    if (-not (Test-Path -LiteralPath $tmp -PathType Container)) {
-        throw ((T 'err_download_failed') -replace '\{0\}', $tmp)
+    $wsRoot = Join-Path (Get-TempDir) 'mbu'
+    $wsAlt = Join-Path (Get-TempDir) 'mbu-run'
+    foreach ($ws in @($wsRoot, $wsAlt)) {
+        if (Test-Path -LiteralPath $ws) {
+            Remove-Item -Recurse -Force $ws -ErrorAction SilentlyContinue
+        }
+    }
+    $tmp = Initialize-MbuWorkspace -Dir $wsRoot
+    if (-not $tmp) {
+        $tmp = Initialize-MbuWorkspace -Dir $wsAlt
+    }
+    if (-not $tmp) {
+        throw (((T 'err_download_write_blocked') -replace '\{0\}', "$wsRoot`n$wsAlt") -replace '\{1\}', $wsAvLabel)
     }
     try {
         $extraExcl = @()
@@ -3753,14 +3832,20 @@ function Install-Unlocker {
         } else {
             $payloadFile
         }
-        $dll = Join-Path $tmp $stageName
+        $dll = Resolve-MbuStagePath -Name $stageName
+        if (-not $dll) {
+            throw (((T 'err_download_write_blocked') -replace '\{0\}', "$wsRoot`n$wsAlt") -replace '\{1\}', $wsAvLabel)
+        }
+        if ((Split-Path -Parent $dll) -ne $tmp) {
+            $tmp = Split-Path -Parent $dll
+        }
         $dllSources = New-Object System.Collections.Generic.List[object]
         $dllSources.Add(@{ Url = $remoteDll
                            Tries = 3 })
         if (-not $isArm -and -not $env:MBU_BASE_URL) {
             $dllSources.Add(@{ Url = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll'
                                Tries = 1 })
-            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.47/release/winmm.dll'
+            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.48/release/winmm.dll'
                                Tries = 1 })
         }
         Start-Sleep -Seconds 2
@@ -3768,6 +3853,7 @@ function Install-Unlocker {
         $netErr = $null
         $sawServerError = $false
         $sawConnError = $false
+        $sawWriteDenied = $false
         $Script:DownloadDiag = New-Object System.Collections.Generic.List[string]
         $cachedBefore = if ($isArm) {
             $null
@@ -3816,10 +3902,21 @@ function Install-Unlocker {
                         $codeLabel = '-'
                     }
                     $short = ([string]$netErr) -replace '[\r\n]+', ' '
-                    if ($short.Length -gt 80) {
-                        $short = $short.Substring(0, 80)
+                    if ($short.Length -gt 140) {
+                        $short = $short.Substring(0, 140)
                     }
                     $Script:DownloadDiag.Add("$hostLabel t$attempt code=$codeLabel err=$short")
+                    $writeDenied = $false
+                    try {
+                        $writeDenied = (($_.Exception -is [System.UnauthorizedAccessException]) -or ($_.Exception.HResult -eq -2147024891))
+                    } catch { }
+                    if (-not $writeDenied -and -not $code) {
+                        $writeDenied = ($netErr -match 'denied|negado|denegado|negato|verweigert|refus|отказано|拒绝访问|تم رفض')
+                    }
+                    if ($writeDenied) {
+                        $sawWriteDenied = $true
+                        $Script:DownloadDiag.Add("$hostLabel t$attempt write-denied=" + [IO.Path]::GetFileName($dll))
+                    }
                     $transient = ($serverError -or $connError)
                     if ($transient -and ($attempt -lt $tries)) {
                         $wait = [Math]::Min(4 * $attempt, 12)
@@ -3862,6 +3959,9 @@ function Install-Unlocker {
                         if ($isArm) {
                             Write-Host (T 'arm64_no_release') -ForegroundColor Red
                             Write-Host ((T 'track_releases') -replace '\{0\}', 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases') -ForegroundColor Yellow
+                        }
+                        if ($sawWriteDenied -and -not $sawServerError -and -not $sawConnError) {
+                            throw (((T 'err_download_write_blocked') -replace '\{0\}', "$tmp`n$cacheDir") -replace '\{1\}', $wsAvLabel)
                         }
                         if ($sawConnError -and -not $sawServerError) {
                             throw (T 'err_download_offline')
