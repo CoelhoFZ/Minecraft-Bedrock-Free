@@ -148,6 +148,15 @@ the final name when the rename is refused, so a product that only blocks the
 rename no longer fails the install. The `[swap]` line of the report tells the
 developer which way worked.
 
+The same products can block the installer earlier, while it writes its own
+temporary file in `%TEMP%\mbu`. Since v4.9.48 that case has its own message
+(*Could not write the temporary download file*), it names the antivirus found on
+the machine, and the installer first moves to a new file name and to a second
+working folder by itself. If it still fails, add `%TEMP%\mbu` and
+`%LOCALAPPDATA%\mbu-cache` to the exclusions (or trusted folders) of the product,
+restore the file from its quarantine if it is there, and run the installer again.
+The full instructions are in [TROUBLESHOOTING](../TROUBLESHOOTING.md).
+
 ### If Defender blocks the command you typed instead of a file
 
 This one is not about the binary. If you start the installer by wrapping the
