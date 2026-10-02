@@ -134,7 +134,8 @@ Get-FileHash .\release\winmm.dll -Algorithm SHA256
 ## Antivírus
 
 Alguns antivírus marcam o binário do unlock como falso positivo. Isso é
-esperado para um unlocker. Veja [Falsos positivos de antivírus](docs/antivirus-false-positives.md).
+esperado para um unlocker. Veja [Falsos positivos de antivírus](docs/antivirus-false-positives.md)
+e [Relatório do VirusTotal](docs/virustotal.md).
 
 ## Variaveis de ambiente (avancado)
 

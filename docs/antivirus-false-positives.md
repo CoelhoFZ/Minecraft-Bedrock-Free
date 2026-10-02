@@ -96,7 +96,8 @@ auditable:
   disposable VM, or with Sysinternals Process Monitor open, and see what it
   touches. Uploading the file to VirusTotal is also useful, but expect
   `hacktool`/`crack` labels from some engines (that is the category, see
-  above) and look for whether anything beyond that shows up.
+  above) and look for whether anything beyond that shows up. See
+  [VirusTotal](virustotal.md) for how to read that report.
 
 ### If you still do not trust it
 

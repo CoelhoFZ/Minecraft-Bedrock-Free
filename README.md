@@ -131,7 +131,8 @@ Get-FileHash .\release\winmm.dll -Algorithm SHA256
 ## Antivirus
 
 Some antivirus engines flag the unlock binary as a false positive. This is
-expected for an unlocker. See [Antivirus false positives](docs/antivirus-false-positives.md).
+expected for an unlocker. See [Antivirus false positives](docs/antivirus-false-positives.md)
+and [VirusTotal](docs/virustotal.md).
 
 ## Environment variables (advanced)
 
