@@ -236,6 +236,61 @@ already retries on temporary errors. If it keeps failing, download the newest
 `install.bat` from
 <https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/install.bat>.
 
+## "The request was aborted: The connection was closed unexpectedly" (`irm`)
+
+```
+irm : The request was aborted: The connection was closed unexpectedly.
+    + CategoryInfo          : InvalidOperation: (System.Net.HttpWebRequest:HttpWebRequest) [Invoke-RestMethod], WebException
+    + FullyQualifiedErrorId : WebCmdletWebResponseException,Microsoft.PowerShell.Commands.InvokeRestMethodCommand
+```
+
+**What it means:** the error comes from `Invoke-RestMethod` (`irm`) while it was
+downloading the bootstrap, and it is misleading: the usual cause is not your
+internet. The official bootstrap file is `i.ps1` (the letter **i**, as in
+"install"). There is no `e.ps1` in this repository, and requesting a file that
+does not exist on the `github.com/.../raw/...` address makes the request die
+with exactly this message, before any installer code runs. `1.ps1`, `l.ps1` and
+other typos end the same way. In Portuguese the same message reads `A solicitacao
+foi anulada: A conexao foi fechada de modo inesperado`. If your command was
+copied exactly from the [Install](README.md#install) section, this message can
+also come from a network filter (antivirus web shield, proxy or VPN) closing the
+connection.
+
+**How to fix:**
+
+1. Compare your command with the official one:
+
+   ```powershell
+   irm https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/i.ps1 | iex
+   ```
+
+   The file is `i.ps1`. Any other address (a short link, another server, a
+   Discord message) is not this project, see the scam alert in the
+   [README](README.md#-scam-alert).
+2. If the command was right, run it again. This failure happens before the
+   installer starts, so there is nothing on your machine to clean up first.
+3. If it keeps failing, use the official `install.bat` from the [newest
+   release](https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/install.bat).
+   It downloads the same bootstrap and retries on temporary errors.
+4. Still failing? Turn off any VPN or proxy you use and add an exclusion for
+   PowerShell in the web protection of your antivirus. Some suites block the
+   download and the error is reported exactly like this one.
+
+## "Access is denied" during install with a leftover old package folder (v4.9.49+)
+
+On PCs that still have an old Minecraft package folder left behind in
+`C:\Program Files\WindowsApps`, versions up to v4.9.48 could stop the install
+with `Access is denied` before writing anything. The error came from the
+installer probing that leftover folder, not from your Windows permissions.
+
+Since v4.9.49 the installer treats a folder it cannot read as absent and keeps
+looking, instead of stopping, so the install reaches the folder your game
+actually uses.
+
+**How to fix:** update to v4.9.49 or newer with the official one-line command
+from the [Install](README.md#install) section. The leftover folder does not
+need to be removed.
+
 ## "Could not download winmm.dll" during install (server error or no connection)
 
 **What it means:** the installer could not get the binary from the download
@@ -279,7 +334,9 @@ version: run the official one-line command from the
 **What the installer already does (v4.9.48+):** before downloading, it proves
 that it can create the temporary file. When the antivirus is already denying
 that name or folder, it moves to a new file name and to a second working folder
-on its own before giving up.
+on its own before giving up. Since v4.9.49 a write denied in the middle of the
+download itself moves to the next file name and folder the same way, instead of
+retrying the same blocked file until the sources run out.
 
 **How to fix:** add `%TEMP%\mbu`, `%LOCALAPPDATA%\mbu-cache` and the game
 folder printed by the installer to the exclusions of your antivirus (some
@@ -385,6 +442,40 @@ game exits with this code, and the failure report marks it as
 `0x80070424: Gaming Services missing/corrupt`, so it can be told apart from an
 unlock problem. If you send the report, the `[pkg]` line also tells whether the
 game package is registered in Windows and which folder is being used.
+
+## Minecraft closes right after launch with exit code 0x80070490 (v4.9.49+)
+
+```
+exit code: 0x80070490
+```
+
+**What it means:** `0x80070490` is the Windows error *"the element was not
+found"* (`ERROR_NOT_FOUND`). In Minecraft on Windows this code appears when the
+game cannot find a component it needs in order to run: the game license or its
+registration for the Windows account, or the **Gaming Services** component. It
+is **not** the unlock: a broken `winmm.dll` gives the *Bad Image* error
+`0xc0e90007` instead (see above).
+
+Three lines of the report show this state:
+
+- `[pkg] registered=yes allusers=yes` with a game folder found means the game
+  files are on the PC, so the unlock was written into a real installation.
+- `[launch] mode=exe official=yes` means the installer started
+  `Minecraft.Windows.exe` straight from the official folder, which only happens
+  when the registered package is not available to open through `shell:AppsFolder`.
+- `[crash] evidence=process-exit code=0x80070490` is the missing-component exit.
+
+**How to fix:**
+
+1. Open the **Microsoft Store** and the **Xbox app** and sign in with the SAME
+   account that owns the game.
+2. Repair or reinstall **Gaming Services**: in the Xbox app use the Gaming
+   Services Repair Tool, or reinstall it from the Microsoft Store.
+3. Restart the PC, open Minecraft once, close it, then run this installer again.
+
+Since v4.9.49 the menu shows this explanation on screen in your language when the
+game exits with this code, and the failure report marks it as
+`0x80070490: missing component (license or Gaming Services)`.
 
 ## Minecraft closes right after launch with exit code 0x87E50035 (v4.9.28+)
 
@@ -855,6 +946,27 @@ found: the `[pkg]` line adds `target=` and `target-exists=` when the package
 folder is a link, and each `[candidate]` line marks it as `(junction -> ...)`
 followed by where it points, or as `link target is missing` when the link points
 to a folder that is gone.
+
+## "Only the Minecraft Launcher was found, not the game" (v4.9.49+)
+
+On PCs where only the official **Minecraft Launcher** (the app that opens the
+games) is installed, the game files are not on the PC yet. The launcher lives in
+`<drive>:\XboxGames\Minecraft Launcher\Content` and that folder does not contain
+`Minecraft.Windows.exe`. Before v4.9.49 the installer listed that folder as
+checked and stopped with "Minecraft Content folder not found", which reads as if
+nothing Minecraft related was installed.
+
+Since v4.9.49 the installer names this case: it says the Minecraft Launcher was
+found but the game itself (Minecraft for Windows) was not found, and it tells you
+to install the game.
+
+**How to fix:** open the Minecraft Launcher and install **Minecraft for Windows**
+(the Bedrock game) there, or install it from the Xbox app, open the game once and
+run this installer again. The launcher alone is not the game.
+
+**How to tell this apart in a report:** the checked folders list contains a path
+under `XboxGames\Minecraft Launcher` and no folder was used, because none of the
+candidates has `Minecraft.Windows.exe`.
 
 ## "Minecraft is registered, but the folder the package points to does not exist" (v4.9.38+)
 

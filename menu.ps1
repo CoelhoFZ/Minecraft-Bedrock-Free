@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.48'
+$Script:Version = '4.9.49'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -20,7 +20,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c' = '4.9.48'
+    'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c' = '4.9.49'
     'e44230e539e5ec2378c1937746cfb34846ae1e21f9d4f2739f0d4d8c1e37d8da' = '4.9.34'
     '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.28'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
@@ -144,7 +144,7 @@ function Test-MbuStagePath {
     }
 }
 
-function Resolve-MbuStagePath {
+function Get-MbuStageCandidates {
     param([string]$Name)
     $stub = [IO.Path]::GetFileNameWithoutExtension($Name)
     $root = (Get-TempDir).TrimEnd('\')
@@ -153,7 +153,19 @@ function Resolve-MbuStagePath {
     $cands.Add((Join-Path (Join-Path $root 'mbu') ($stub + '-' + [guid]::NewGuid().ToString('N').Substring(0, 8) + '.bin')))
     $cands.Add((Join-Path (Join-Path $root 'mbu-run') $Name))
     $cands.Add((Join-Path (Join-Path $root 'mbu-run') ($stub + '-' + [guid]::NewGuid().ToString('N').Substring(0, 8) + '.bin')))
+    return $cands
+}
+
+function Resolve-MbuStagePath {
+    param([string]$Name, [string[]]$Exclude = @(), [string[]]$Candidates = @())
+    $cands = $Candidates
+    if (-not $cands -or @($cands).Count -eq 0) {
+        $cands = Get-MbuStageCandidates -Name $Name
+    }
     foreach ($c in $cands) {
+        if ($Exclude -contains $c) {
+            continue
+        }
         if (Test-MbuStagePath -Path $c) {
             return $c
         }
@@ -449,6 +461,7 @@ $Script:PT = @{
     'err_package_old' = 'O Minecraft registrado neste PC e uma versao antiga ({0}), mais antiga que a versao minima suportada ({1}). Desinstale essa versao em Configuracoes > Aplicativos > Aplicativos instalados (Minecraft for Windows) e instale a versao atual pelo Xbox App, depois rode este instalador de novo.'
     'err_package_content_missing' = 'O Minecraft esta registrado, mas a pasta para onde o pacote aponta nao existe: {0}. E nessa pasta que ficam os arquivos do jogo. No Xbox App, use Reparar no Minecraft ou reinstale, abra o jogo uma vez e rode este instalador de novo.'
     'err_package_launcher' = 'Pacote do Minecraft Launcher encontrado, mas os arquivos do jogo estao faltando. Abra o Minecraft Launcher, deixe ele terminar ou verificar a instalacao, e rode o instalador de novo.'
+    'err_launcher_only' = 'So o Minecraft Launcher foi encontrado ({0}), e o jogo em si (Minecraft for Windows) nao foi encontrado. O Minecraft Launcher e o programa que abre os jogos, nao o jogo. Abra o Minecraft Launcher e instale o Minecraft for Windows, ou instale o jogo pelo Xbox App, abra o jogo uma vez e rode este instalador de novo.'
     'probe_list'         = 'Pastas verificadas: {0}'
     'closing_mc'         = 'Fechando Minecraft...'
     'downloading_bin'    = 'Baixando o binario (winmm.dll)...'
@@ -604,6 +617,7 @@ $Script:PT = @{
     'crash_hint_gaming_services' = 'O Minecraft nao abriu porque falta no Windows um componente que ele usa (o Gaming Services) ou ele esta danificado, e nao por causa do unlock. Abra a Microsoft Store, reinstale o Gaming Services e rode o instalador de novo.'
     'crash_hint_pkg_unregistered' = 'O Minecraft nao abriu porque o Windows nao conseguiu ativar o app (codigo 0x87E50035), e nao por causa do unlock. No caso mais comum o pacote do jogo esta instalado mas nao esta registrado para a sua conta, e sem isso o jogo nao abre por caminho nenhum. Reinstale ou repare o Minecraft na conta que tem o jogo (Xbox App) e rode o instalador outra vez.'
     'crash_hint_dll_missing' = 'O Minecraft nao abriu porque o Windows nao conseguiu carregar um arquivo que esta copia do jogo precisa (codigo 0xC0000135), e nao por causa do unlock. Esta copia nao funciona nesta conta do Windows: o mais comum e o jogo pertencer (ou estar registrado) a outro usuario do PC, ou a instalacao estar incompleta. Instale ou repare o Minecraft no Xbox App conectado na conta que tem o jogo, abra o jogo uma vez e rode o instalador de novo.'
+    'crash_hint_not_found'  = 'O Minecraft abriu e saiu com o codigo 0x80070490 (componente nao encontrado), e nao por causa do unlock. Esse codigo aparece quando o Windows nao encontra a licenca ou o registro do jogo, ou quando o Gaming Services esta ausente ou danificado. Confira se voce esta conectado na mesma conta (Microsoft Store e Xbox App) que tem o jogo, repare ou reinstale o Gaming Services e rode o instalador de novo.'
     'crash_hint_winmm'      = 'A falha foi registrada dentro do arquivo do unlock (winmm.dll), e nao no jogo. Remova o unlock com a opcao [1] do menu para voltar a jogar agora. O relatorio enviado vai ajudar a corrigir isso.'
     'crash_ask'             = 'Remover o unlock agora e deixar o jogo como estava antes? (S para sim, N para nao)'
     'crash_kept'            = 'Unlock mantido. Se o jogo continuar fechando, use a opcao [1] do menu para remover o unlock.'
@@ -828,6 +842,15 @@ $Script:I18N = @{
         fr='Le package du Minecraft Launcher est présent, mais les fichiers du jeu sont manquants. Ouvrez le Minecraft Launcher, laissez-le terminer ou vérifier l''installation, puis relancez cet installateur.'
         ar='تم العثور على حزمة Minecraft Launcher، لكن ملفات اللعبة مفقودة. افتح Minecraft Launcher واتركه يكمل التثبيت أو يتحقق منه، ثم شغّل هذا المثبّت مرة أخرى.'
         ru='Найден пакет Minecraft Launcher, но файлы игры отсутствуют. Откройте Minecraft Launcher, дождитесь завершения или проверки установки и снова запустите этот установщик.'
+    }
+    'err_launcher_only' = @{
+        en='Only the Minecraft Launcher was found ({0}), and the game itself (Minecraft for Windows) was not found. The Minecraft Launcher is the program that opens the games, not the game. Open the Minecraft Launcher and install Minecraft for Windows, or install the game from the Xbox App, open the game once and run this installer again.'
+        zh='仅找到了 Minecraft Launcher（{0}），未找到游戏本体（Minecraft for Windows）。Minecraft Launcher 是打开游戏的程序，不是游戏本身。请打开 Minecraft Launcher 并安装 Minecraft for Windows，或从 Xbox 应用安装游戏，启动游戏一次，然后再次运行本安装程序。'
+        hi='केवल Minecraft Launcher मिला ({0}), और गेम स्वयं (Minecraft for Windows) नहीं मिला। Minecraft Launcher वह प्रोग्राम है जो गेम खोलता है, गेम नहीं। Minecraft Launcher खोलें और Minecraft for Windows इंस्टॉल करें, या Xbox ऐप से गेम इंस्टॉल करें, गेम एक बार खोलें और यह इंस्टॉलर दोबारा चलाएँ।'
+        es='Solo se encontro el Minecraft Launcher ({0}), y el juego en si (Minecraft for Windows) no se encontro. El Minecraft Launcher es el programa que abre los juegos, no el juego. Abre el Minecraft Launcher e instala Minecraft for Windows, o instala el juego desde la Xbox App, abre el juego una vez y ejecuta este instalador de nuevo.'
+        fr='Seul le Minecraft Launcher a ete trouve ({0}), et le jeu lui-meme (Minecraft for Windows) n''a pas ete trouve. Le Minecraft Launcher est le programme qui ouvre les jeux, pas le jeu. Ouvrez le Minecraft Launcher et installez Minecraft for Windows, ou installez le jeu depuis l''application Xbox, ouvrez le jeu une fois puis relancez cet installateur.'
+        ar='تم العثور على Minecraft Launcher فقط ({0})، ولم يتم العثور على اللعبة نفسها (Minecraft for Windows). Minecraft Launcher هو البرنامج الذي يفتح الألعاب، وليس اللعبة. افتح Minecraft Launcher وثبّت Minecraft for Windows، أو ثبّت اللعبة من تطبيق Xbox، وافتح اللعبة مرة واحدة ثم شغّل هذا المثبّت مرة أخرى.'
+        ru='Найден только Minecraft Launcher ({0}), а сама игра (Minecraft for Windows) не найдена. Minecraft Launcher это программа, которая запускает игры, а не игра. Откройте Minecraft Launcher и установите Minecraft for Windows либо установите игру из приложения Xbox, запустите игру один раз и снова запустите этот установщик.'
     }
     'probe_list' = @{
         en='Folders checked: {0}'
@@ -2080,6 +2103,15 @@ $Script:I18N = @{
         ar='لم يبدأ Minecraft لأن Windows لم يتمكن من تحميل ملف تحتاجه هذه النسخة من اللعبة (الرمز 0xC0000135)، وليس بسبب الأنلوك. هذه النسخة لا تعمل على حساب Windows الحالي: في أغلب الحالات تكون اللعبة مملوكة (أو مسجّلة) لمستخدم آخر على الجهاز، أو يكون التثبيت غير مكتمل. سجّل الدخول بالحساب الذي يملك اللعبة، ثم أعد تثبيت Minecraft أو أصلحه من تطبيق Xbox، وافتح اللعبة مرة واحدة، ثم شغّل هذا المثبّت مرة أخرى.'
         ru='Minecraft не запустился, потому что Windows не смог загрузить файл, нужный этой копии игры (код 0xC0000135), а не из-за анлока. Эта копия не работает для текущей учётной записи Windows: чаще всего игра принадлежит (или зарегистрирована) другому пользователю ПК, либо установка неполная. Войдите в учётную запись, которой принадлежит игра, установите или восстановите Minecraft из приложения Xbox, откройте игру один раз и запустите этот установщик снова.'
     }
+    'crash_hint_not_found' = @{
+        en='Minecraft opened and exited with code 0x80070490 (component not found), and not because of the unlock. This code appears when Windows cannot find the game license or registration, or when Gaming Services is missing or damaged. Make sure you are signed in to the same account (Microsoft Store and Xbox app) that owns the game, repair or reinstall Gaming Services and run the installer again.'
+        es='Minecraft se abrio y se cerro con el codigo 0x80070490 (componente no encontrado), y no por el unlock. Este codigo aparece cuando Windows no encuentra la licencia o el registro del juego, o cuando Gaming Services falta o esta danado. Confirma que estas conectado en la misma cuenta (Microsoft Store y Xbox App) que tiene el juego, repara o reinstala Gaming Services y ejecuta el instalador otra vez.'
+        fr='Minecraft s''est ouvert puis s''est ferme avec le code 0x80070490 (composant introuvable), et non a cause de l''unlock. Ce code apparait quand Windows ne trouve pas la licence ou l''enregistrement du jeu, ou quand Gaming Services est absent ou endommage. Verifiez que vous etes connecte au meme compte (Microsoft Store et application Xbox) qui possede le jeu, reparez ou reinstallez Gaming Services puis relancez l''installateur.'
+        zh='Minecraft 已打开但以代码 0x80070490（找不到组件）退出，并非解锁导致。当 Windows 找不到游戏许可证或注册信息，或 Gaming Services 缺失或损坏时会出现此代码。请确认你登录的账户（Microsoft Store 和 Xbox 应用）拥有该游戏，修复或重新安装 Gaming Services，然后再次运行安装程序。'
+        hi='Minecraft खुला और कोड 0x80070490 (घटक नहीं मिला) के साथ बंद हो गया, यह अनलॉक की वजह से नहीं है। यह कोड तब आता है जब Windows को गेम का लाइसेंस या रजिस्ट्रेशन नहीं मिलता, या Gaming Services गायब/क्षतिग्रस्त होता है। सुनिश्चित करें कि आप उसी खाते में साइन इन हैं (Microsoft Store और Xbox ऐप) जिसके पास गेम है, Gaming Services को रिपेयर या दोबारा इंस्टॉल करें और इंस्टॉलर दोबारा चलाएँ।'
+        ar='فتح Minecraft ثم خرج بالرمز 0x80070490 (لم يتم العثور على مكوّن)، وليس بسبب الأنلوك. يظهر هذا الرمز عندما لا يعثر Windows على ترخيص اللعبة أو تسجيلها، أو عندما يكون Gaming Services مفقودًا أو تالفًا. تأكد من تسجيل الدخول إلى نفس الحساب (Microsoft Store وتطبيق Xbox) الذي يملك اللعبة، وأصلح Gaming Services أو أعد تثبيته ثم شغّل المثبّت مرة أخرى.'
+        ru='Minecraft открылся и завершился с кодом 0x80070490 (компонент не найден), и это не из-за анлока. Этот код появляется, когда Windows не находит лицензию или регистрацию игры, либо когда Gaming Services отсутствует или повреждён. Убедитесь, что вы вошли в ту же учётную запись (Microsoft Store и приложение Xbox), которой принадлежит игра, восстановите или переустановите Gaming Services и запустите установщик заново.'
+    }
     'crash_hint_winmm' = @{
         en='The fault was recorded inside the unlock file (winmm.dll), not in the game. Remove the unlock with menu option [1] to play again now. The report sent will help fix this.'
         es='La falla se registro dentro del archivo del unlock (winmm.dll), no en el juego. Quita el unlock con la opcion [1] del menu para volver a jugar ahora. El informe enviado ayudara a corregir esto.'
@@ -2332,7 +2364,7 @@ function Get-MinecraftCandidates {
         if ($appx -and $appx.InstallLocation) {
             $found.Add($appx.InstallLocation)
             $found.Add((Join-Path $appx.InstallLocation 'Content'))
-            $real = Get-PathRealTarget -Path $appx.InstallLocation
+            $real = Get-PathFinalTarget -Path $appx.InstallLocation
             if ($real) {
                 $found.Add($real)
                 $found.Add((Join-Path $real 'Content'))
@@ -2448,6 +2480,26 @@ function Test-LauncherPayloadPath {
     return ($Path -like '*\.minecraft_bedrock\*')
 }
 
+function Test-MbuPath {
+    param([string]$Path)
+    if (-not $Path) {
+        return $false
+    }
+    try {
+        return [bool](Test-Path -LiteralPath ([string]$Path) -ErrorAction SilentlyContinue)
+    } catch {
+        return $false
+    }
+}
+
+function Test-MbuGameFolder {
+    param([string]$Path)
+    if (-not (Test-MbuPath -Path $Path)) {
+        return $false
+    }
+    return (Test-MbuPath -Path (Join-Path ([string]$Path) 'Minecraft.Windows.exe'))
+}
+
 function Get-SupportedContentPath {
     param([string]$Path)
     if (-not $Path) {
@@ -2457,7 +2509,7 @@ function Get-SupportedContentPath {
     if ($full -notlike '*\WindowsApps\*') {
         return $Path
     }
-    $real = Get-PathRealTarget -Path $Path
+    $real = Get-PathFinalTarget -Path $Path
     if (-not $real) {
         return $Path
     }
@@ -2465,10 +2517,10 @@ function Get-SupportedContentPath {
     if ($realFull -like '*\WindowsApps\*') {
         return $Path
     }
-    if (-not (Test-Path -LiteralPath $real)) {
+    if (-not (Test-MbuPath -Path $real)) {
         return $Path
     }
-    if (-not (Test-Path -LiteralPath (Join-Path $real 'Minecraft.Windows.exe'))) {
+    if (-not (Test-MbuPath -Path (Join-Path $real 'Minecraft.Windows.exe'))) {
         return $Path
     }
     return $realFull
@@ -2479,19 +2531,19 @@ function Find-MinecraftContent {
         $proc = Get-Process Minecraft.Windows -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($proc -and $proc.Path) {
             $dir = Split-Path $proc.Path -Parent
-            if ((Test-Path $dir) -and (Test-Path (Join-Path $dir 'Minecraft.Windows.exe'))) {
+            if (Test-MbuGameFolder -Path $dir) {
                 return (Get-SupportedContentPath -Path $dir)
             }
         }
     } catch { }
     foreach ($c in Get-MinecraftCandidates) {
-        if ((Test-Path $c) -and (Test-Path (Join-Path $c 'Minecraft.Windows.exe'))) {
+        if (Test-MbuGameFolder -Path $c) {
             return (Get-SupportedContentPath -Path $c)
         }
     }
     $seen = New-Object System.Collections.Generic.List[string]
     foreach ($c in Get-MinecraftCandidates) {
-        if ($c -and (Test-Path -LiteralPath $c)) {
+        if ($c -and (Test-MbuPath -Path $c)) {
             $seen.Add($c)
         }
     }
@@ -2523,7 +2575,7 @@ function Find-MinecraftContent {
         }
     }
     if ($hasAppx) {
-        $appxReal = Get-PathRealTarget -Path $appxLoc
+        $appxReal = Get-PathFinalTarget -Path $appxLoc
         if ($appxReal -and -not (Test-Path -LiteralPath $appxReal)) {
             throw ((T 'err_package_content_missing') -replace '\{0\}', $appxReal)
         }
@@ -2531,6 +2583,11 @@ function Find-MinecraftContent {
             throw ((T 'err_package_content_missing') -replace '\{0\}', $appxLoc)
         }
         throw (T 'err_package_incomplete')
+    }
+    foreach ($s in $seen) {
+        if ($s -match '(?i)\\XboxGames\\Minecraft Launcher') {
+            throw ((T 'err_launcher_only') -replace '\{0\}', $s)
+        }
     }
     throw (T 'err_content_not_found')
 }
@@ -3228,6 +3285,23 @@ function Get-PathRealTarget {
     return $null
 }
 
+function Get-PathFinalTarget {
+    param([string]$Path)
+    $cur = [string]$Path
+    $final = $null
+    $level = 0
+    while ($cur -and $level -lt 4) {
+        $real = Get-PathRealTarget -Path $cur
+        if (-not $real) {
+            break
+        }
+        $final = [string]$real
+        $cur = $final
+        $level = $level + 1
+    }
+    return $final
+}
+
 function Get-PathRealBase {
     param([string]$Path)
     $full = ([string]$Path).TrimEnd('\')
@@ -3273,7 +3347,7 @@ function Add-DefenderExclusions {
         if ($seen.Add($p)) {
             $targets.Add($p)
         }
-        $real = Get-PathRealTarget -Path $p
+        $real = Get-PathFinalTarget -Path $p
         if ($real -and (Test-Path -LiteralPath $real) -and $seen.Add($real)) {
             $targets.Add($real)
         }
@@ -3685,6 +3759,13 @@ function Install-Unlocker {
     $Script:LastOpErrorRecord = $null
     $Script:GateDiag = $null
     $Script:RunContent = $null
+    $Script:DownloadDiag = $null
+    $Script:SwapDiag = @()
+    $Script:LaunchDiag = $null
+    $Script:CrashDiag = New-Object System.Collections.Generic.List[string]
+    $Script:DefenderExclAttempted = @()
+    $Script:DefenderExclEffective = @()
+    $Script:DefenderExclPruned = @()
     $pruned = @(Remove-StaleDefenderExclusions)
     if ($pruned.Count -gt 0) {
         Write-Host ('  ' + ((T 'av_exclusion_cleaned') -replace '\{0\}', ($pruned -join ', '))) -ForegroundColor DarkGray
@@ -3783,7 +3864,7 @@ function Install-Unlocker {
     try {
         $extraExcl = @()
         foreach ($cand in Get-MinecraftCandidates) {
-            if ($cand -and ($cand -ne $content) -and (Test-Path $cand) -and (Test-Path (Join-Path $cand 'Minecraft.Windows.exe'))) {
+            if ($cand -and ($cand -ne $content) -and (Test-MbuGameFolder -Path $cand)) {
                 $extraExcl += $cand
             }
         }
@@ -3832,10 +3913,13 @@ function Install-Unlocker {
         } else {
             $payloadFile
         }
-        $dll = Resolve-MbuStagePath -Name $stageName
+        $stageCands = Get-MbuStageCandidates -Name $stageName
+        $dll = Resolve-MbuStagePath -Name $stageName -Candidates $stageCands
         if (-not $dll) {
             throw (((T 'err_download_write_blocked') -replace '\{0\}', "$wsRoot`n$wsAlt") -replace '\{1\}', $wsAvLabel)
         }
+        $stageSeen = New-Object System.Collections.Generic.List[string]
+        $stageSeen.Add($dll)
         if ((Split-Path -Parent $dll) -ne $tmp) {
             $tmp = Split-Path -Parent $dll
         }
@@ -3845,7 +3929,7 @@ function Install-Unlocker {
         if (-not $isArm -and -not $env:MBU_BASE_URL) {
             $dllSources.Add(@{ Url = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll'
                                Tries = 1 })
-            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.48/release/winmm.dll'
+            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.49/release/winmm.dll'
                                Tries = 1 })
         }
         Start-Sleep -Seconds 2
@@ -3916,6 +4000,17 @@ function Install-Unlocker {
                     if ($writeDenied) {
                         $sawWriteDenied = $true
                         $Script:DownloadDiag.Add("$hostLabel t$attempt write-denied=" + [IO.Path]::GetFileName($dll))
+                        $nextStage = Resolve-MbuStagePath -Name $stageName -Candidates $stageCands -Exclude $stageSeen.ToArray()
+                        if ($nextStage) {
+                            $stageSeen.Add($nextStage)
+                            $dll = $nextStage
+                            if ((Split-Path -Parent $dll) -ne $tmp) {
+                                $tmp = Split-Path -Parent $dll
+                            }
+                            $Script:DownloadDiag.Add("$hostLabel t$attempt stage-switched=" + [IO.Path]::GetFileName([IO.Path]::GetDirectoryName($dll)) + '\' + [IO.Path]::GetFileName($dll))
+                            $attempt = $attempt - 1
+                            continue
+                        }
                     }
                     $transient = ($serverError -or $connError)
                     if ($transient -and ($attempt -lt $tries)) {
@@ -3961,7 +4056,17 @@ function Install-Unlocker {
                             Write-Host ((T 'track_releases') -replace '\{0\}', 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases') -ForegroundColor Yellow
                         }
                         if ($sawWriteDenied -and -not $sawServerError -and -not $sawConnError) {
-                            throw (((T 'err_download_write_blocked') -replace '\{0\}', "$tmp`n$cacheDir") -replace '\{1\}', $wsAvLabel)
+                            $wsList = New-Object System.Collections.Generic.List[string]
+                            foreach ($sp in $stageSeen) {
+                                $sr = Split-Path -Parent $sp
+                                if ($sr -and -not ($wsList -contains $sr)) {
+                                    $wsList.Add($sr)
+                                }
+                            }
+                            if (-not ($wsList -contains $cacheDir)) {
+                                $wsList.Add($cacheDir)
+                            }
+                            throw (((T 'err_download_write_blocked') -replace '\{0\}', ($wsList -join "`n")) -replace '\{1\}', $wsAvLabel)
                         }
                         if ($sawConnError -and -not $sawServerError) {
                             throw (T 'err_download_offline')
@@ -4199,6 +4304,14 @@ function Remove-MbuLocalTraces {
 function Restore-Original {
     param([switch]$NoLaunch)
     $Script:LastOpErrorRecord = $null
+    $Script:GateDiag = $null
+    $Script:DownloadDiag = $null
+    $Script:SwapDiag = @()
+    $Script:LaunchDiag = $null
+    $Script:CrashDiag = New-Object System.Collections.Generic.List[string]
+    $Script:DefenderExclAttempted = @()
+    $Script:DefenderExclEffective = @()
+    $Script:DefenderExclPruned = @()
     $content = Find-MinecraftContent
     Close-Minecraft
 
@@ -4268,7 +4381,7 @@ function Start-Minecraft {
             $pkgLoc = [string]$appx.InstallLocation
             $pkgReal = ''
             if ($pkgLoc) {
-                $pkgReal = Get-PathRealTarget -Path $pkgLoc
+                $pkgReal = Get-PathFinalTarget -Path $pkgLoc
             }
             $isStore = ($content -eq $pkgLoc) -or ($pkgReal -and ($content -eq $pkgReal))
         }
@@ -4452,7 +4565,7 @@ function Get-DiagReportText {
         $appxPkg = Get-AppxPackage -Name 'Microsoft.MinecraftUWP*' -ErrorAction SilentlyContinue | Select-Object -First 1
         if ($appxPkg) {
             $pkgLine = '[pkg] registered=yes allusers=' + $allUsers + ' version=' + $appxPkg.Version + ' loc=' + $appxPkg.InstallLocation
-            $pkgReal = Get-PathRealTarget -Path $appxPkg.InstallLocation
+            $pkgReal = Get-PathFinalTarget -Path $appxPkg.InstallLocation
             if ($pkgReal) {
                 $pkgLine += ' target=' + $pkgReal
                 $pkgLine += ' target-exists=' + $(if (Test-Path -LiteralPath $pkgReal) {
@@ -4679,7 +4792,7 @@ function Get-DiagReportText {
         if ($appx) {
             $pkgLoc = [string]$appx.InstallLocation
             if ($pkgLoc) {
-                $pkgReal = Get-PathRealTarget -Path $pkgLoc
+                $pkgReal = Get-PathFinalTarget -Path $pkgLoc
             }
         }
         $source = if ($appx -and (($content -eq $pkgLoc) -or ($pkgReal -and ($content -eq $pkgReal)))) {
@@ -4712,10 +4825,7 @@ function Get-DiagReportText {
         }
         $lines.Add("$(T 'diag_game_arch'): $arch (Machine=$(if ($machine) { '0x{0:X4}' -f $machine } else { T 'diag_machine_unreadable' }))")
         foreach ($cand in Get-MinecraftCandidates) {
-            if (-not (Test-Path $cand)) {
-                continue
-            }
-            if (-not (Test-Path (Join-Path $cand 'Minecraft.Windows.exe'))) {
+            if (-not (Test-MbuGameFolder -Path $cand)) {
                 continue
             }
             $cwm = Join-Path $cand 'winmm.dll'
@@ -4730,7 +4840,7 @@ function Get-DiagReportText {
                 ''
             }
             $cnote = ''
-            $creal = Get-PathRealTarget -Path $cand
+            $creal = Get-PathFinalTarget -Path $cand
             if ($creal) {
                 $cnote = ' (junction -> ' + $creal + ')'
                 if (-not (Test-Path -LiteralPath $creal)) {
@@ -4779,7 +4889,7 @@ function Get-DiagReportText {
         foreach ($probe in Get-MinecraftCandidates) {
             try {
                 $probeLine = "  $(T 'diag_cand_label') $probe"
-                $probeReal = Get-PathRealTarget -Path $probe
+                $probeReal = Get-PathFinalTarget -Path $probe
                 if ($probeReal) {
                     $probeLine += ' (junction -> ' + $probeReal + ')'
                 }
@@ -5184,6 +5294,12 @@ function Get-CrashCodeHint {
             tag = '0x80070424: Gaming Services missing/corrupt'
         }
     }
+    if ($code32 -eq ([int64]0x80070490 -band 0xFFFFFFFFL)) {
+        return @{
+            key = 'crash_hint_not_found'
+            tag = '0x80070490: missing component (license or Gaming Services)'
+        }
+    }
     if ($code32 -eq ([int64]0x87E50035 -band 0xFFFFFFFFL)) {
         return @{
             key = 'crash_hint_pkg_unregistered'
@@ -5321,6 +5437,22 @@ function Test-PriorUnlockEvidence {
     return $false
 }
 
+function Test-NotFoundReasonText {
+    param([string]$Text)
+    if (-not $Text) {
+        return $false
+    }
+    if ($Text -eq (T 'err_content_not_found')) {
+        return $true
+    }
+    $launcherMsg = [string](T 'err_launcher_only')
+    $marker = ($launcherMsg -split '\{0\}')[0]
+    if ($marker -and ($marker -ne $launcherMsg)) {
+        return $Text.StartsWith($marker)
+    }
+    return $false
+}
+
 function Get-WinmmDiskState {
     param([string]$Content)
     $info = @{
@@ -5428,7 +5560,7 @@ function Get-LateCorruptReason {
 function Send-MbuFailureReport {
     param([string]$Trigger, [string]$Reason = '', [string]$Title = '', [System.Management.Automation.ErrorRecord]$ErrorRecord = $null)
     try {
-        if ($Trigger -eq 'install_error' -and $Reason -eq (T 'err_content_not_found') -and -not (Test-PriorUnlockEvidence)) {
+        if ($Trigger -eq 'install_error' -and (Test-NotFoundReasonText -Text $Reason) -and -not (Test-PriorUnlockEvidence)) {
             return
         }
         if (-not $Reason) {

@@ -153,7 +153,9 @@ The same products can block the installer earlier, while it writes its own
 temporary file in `%TEMP%\mbu`. Since v4.9.48 that case has its own message
 (*Could not write the temporary download file*), it names the antivirus found on
 the machine, and the installer first moves to a new file name and to a second
-working folder by itself. If it still fails, add `%TEMP%\mbu` and
+working folder by itself. Since v4.9.49 the same switch also happens when the
+denial arrives in the middle of a download attempt, instead of retrying the same
+blocked file until the sources run out. If it still fails, add `%TEMP%\mbu` and
 `%LOCALAPPDATA%\mbu-cache` to the exclusions (or trusted folders) of the product,
 restore the file from its quarantine if it is there, and run the installer again.
 The full instructions are in [TROUBLESHOOTING](../TROUBLESHOOTING.md).
