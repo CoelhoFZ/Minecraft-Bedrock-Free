@@ -1,0 +1,2 @@
+#define FILE_NAME "unlock-CoelhoFZ.dll"
+#include "version.rc"

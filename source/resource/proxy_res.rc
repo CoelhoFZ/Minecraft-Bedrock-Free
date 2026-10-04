@@ -1,0 +1,2 @@
+#define FILE_NAME "winmm.dll"
+#include "version.rc"

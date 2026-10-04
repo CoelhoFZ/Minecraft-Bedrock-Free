@@ -1,0 +1,23 @@
+# Build outputs and artifacts
+build/
+dist/
+logs/
+reconstructed/
+*.o
+*.obj
+*.dll
+
+# Hook logs and blobs (dev builds)
+coelhofz_*.log
+coelhofz_*.bin
+
+# Python
+__pycache__/
+*.pyc
+
+# OS and editors
+Thumbs.db
+.DS_Store
+desktop.ini
+.vscode/
+.idea/

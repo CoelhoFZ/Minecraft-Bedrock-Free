@@ -5,7 +5,7 @@
   <br>
   <a href="https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases"><img alt="GitHub release" src="https://img.shields.io/github/v/release/CoelhoFZ/Minecraft-Bedrock-Free?style=for-the-badge"></a>
   <img alt="Downloads" src="https://mbu-download-counter.xgobg2020.workers.dev/?v=2">
-  <img alt="License" src="https://img.shields.io/badge/license-GPLv3%20(scripts)-blue?style=for-the-badge">
+  <img alt="License" src="https://img.shields.io/badge/license-GPLv3%20(scripts%20%2B%20source)-blue?style=for-the-badge">
   <a href="https://buymeacoffee.com/coelhofz"><img alt="Buy Me a Coffee" src="https://img.shields.io/badge/Support-Buy%20Me%20a%20Coffee-FFDD00?style=for-the-badge"></a>
   <a href="https://discord.gg/u3S4gFgK6M"><img alt="Discord" src="https://img.shields.io/badge/Discord-Join%20community-5865F2?style=for-the-badge&logo=discord&logoColor=white"></a>
 </p>
@@ -85,8 +85,9 @@ because that file does not exist.
 
 3. The installer opens Minecraft automatically. The "Unlock full game" button is gone.
 
-> The installer scripts are **open source** (GPLv3). Only the unlock binary
-> (`release/winmm.dll`) is closed source - see [LICENSE](LICENSE).
+> The installer scripts and the unlock source are **open source** (GPLv3).
+> The unlock binary (`release/winmm.dll`) is built from the published source.
+> See [LICENSE](LICENSE) for the terms.
 
 The installer locates the game's `Content` folder, closes the game if it is
 running, backs up any original `winmm.dll` (as `winmm.dll.orig`) and installs
@@ -102,7 +103,8 @@ and run it in an elevated PowerShell.
 ## Self-contained, no third-party downloads
 
 Nothing is downloaded from third parties at install time or at runtime. The
-unlock is a **closed-source binary** shipped in this repository:
+unlock is a binary built from the published source and shipped in this
+repository:
 
 - `release/winmm.dll` - the only file the game needs (a fake `winmm.dll` that
   is picked up by the app's DLL search order).
@@ -114,10 +116,11 @@ the license entitlements are owned. The shipped `winmm.dll` intercepts those
 queries and reports "owned", so the game runs as if fully purchased. Everything
 else (account, gamertag, profile) stays real.
 
-## Closed source
+## Open source
 
-The binaries are **closed source** - the unlock mechanism is not published
-here. See `LICENSE` for the terms.
+The unlock source is published in [`source/`](source) under the GPLv3 (see
+`source/LICENSE`). The binary shipped here (`release/winmm.dll`) is built
+from that source. See `LICENSE` for the terms.
 
 ## Binary integrity
 
@@ -149,7 +152,7 @@ The unlock works by hooking the GDK license APIs (`XStore*`), so it is not tied
 to one game build: **any Minecraft for Windows build from 1.21 on is
 accepted**, including a build **newer** than the one this release was verified
 against. The menu downloads `tested-versions.json` from this repository to read
-the minimum supported version; if your game is **older** than that floor,the installer stops before downloading anything and asks you to update Minecraft
+the minimum supported version. If your game is **older** than that floor, the installer stops before downloading anything and asks you to update Minecraft
 from the Xbox app.
 The `tested` list in that file is only a record of the builds verified by hand:
 being newer than it does not block or change anything.

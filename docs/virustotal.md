@@ -75,17 +75,18 @@ The report is for a `.zip`, and the file name matters:
    The installer runs this check by itself, before and after copying the file,
    and refuses to continue when the value does not match.
 3. If a scan still bothers you, run the installer in a disposable VM, or watch
-   what the file touches with Sysinternals Process Monitor. Since the binary is
-   closed source, observing it is the honest way to settle the remaining doubt.
+   what the file touches with Sysinternals Process Monitor. The source is
+   public ([`source/`](../source)), and observing what the shipped binary
+   actually does remains a solid way to settle the remaining doubt.
 
 See [Antivirus false positives](antivirus-false-positives.md) for the general
 explanation and for what to do when an antivirus quarantines the file.
 
 ## If you are not comfortable
 
-That is a valid position. The tool bypasses a license and part of it is closed
-source, so "I cannot verify this, so I will not run it" is a reasonable choice.
-The only fully safe option is not running the tool.
+That is a valid position. The tool bypasses a license, so "I will not run
+this" is a reasonable choice. The only fully safe option is not running the
+tool.
 
 ## Reporting a detection
 

@@ -17,6 +17,7 @@ mbu-error-worker/
 Source-*/
 
 unlock-CoelhoFZ.ini
+!source/resource/unlock-CoelhoFZ.ini
 
 *.dll
 !release/winmm.dll

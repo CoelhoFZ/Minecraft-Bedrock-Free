@@ -5,7 +5,7 @@
   <br>
   <a href="https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases"><img alt="GitHub release" src="https://img.shields.io/github/v/release/CoelhoFZ/Minecraft-Bedrock-Free?style=for-the-badge"></a>
   <img alt="Downloads" src="https://mbu-download-counter.xgobg2020.workers.dev/?v=2">
-  <img alt="License" src="https://img.shields.io/badge/license-GPLv3%20(scripts)-blue?style=for-the-badge">
+  <img alt="License" src="https://img.shields.io/badge/license-GPLv3%20(scripts%20%2B%20source)-blue?style=for-the-badge">
   <a href="https://buymeacoffee.com/coelhofz"><img alt="Buy Me a Coffee" src="https://img.shields.io/badge/Support-Buy%20Me%20a%20Coffee-FFDD00?style=for-the-badge"></a>
   <a href="https://discord.gg/u3S4gFgK6M"><img alt="Discord" src="https://img.shields.io/badge/Discord-Join%20community-5865F2?style=for-the-badge&logo=discord&logoColor=white"></a>
 </p>
@@ -86,8 +86,9 @@ Um erro de digitação como `.../raw/main/e.ps1 | iex` falha com erro de conexã
 
 3. O instalador abre o Minecraft automaticamente. O botão "Desbloquear Jogo Completo" some.
 
-> Os scripts do instalador são **open source** (GPLv3). Apenas o binário do
-> unlock (`release/winmm.dll`) é código fechado - veja [LICENSE](LICENSE).
+> Os scripts do instalador e o código-fonte do unlock são **open source**
+> (GPLv3). O binário do unlock (`release/winmm.dll`) é compilado do código
+> publicado. Veja [LICENSE](LICENSE) para os termos.
 
 O instalador localiza a pasta `Content` do jogo, fecha o jogo se estiver
 aberto, faz backup de qualquer `winmm.dll` original (como `winmm.dll.orig`) e
@@ -104,7 +105,7 @@ e rode em um PowerShell elevado.
 ## Auto-contido, sem downloads de terceiros
 
 Nada é baixado de terceiros na instalação nem em runtime. O unlock é um
-**binário de código fechado** distribuído neste repositório:
+**binário compilado do código publicado**, distribuído neste repositório:
 
 - `release/winmm.dll` - o único arquivo que o jogo precisa (um `winmm.dll`
   falso que é carregado pela ordem de busca de DLLs do app).
@@ -117,10 +118,11 @@ O build GDK do Minecraft consulta uma API do Windows
 "owned", então o jogo roda como se estivesse comprado. Todo o resto (conta,
 gamertag, perfil) continua real.
 
-## Código fechado
+## Código aberto
 
-Os binários são **código fechado** - o mecanismo do unlock não é publicado
-aqui. Veja `LICENSE` para os termos.
+O código-fonte do unlock é publicado em [`source/`](source) sob a GPLv3 (veja
+`source/LICENSE`). O binário distribuído aqui (`release/winmm.dll`) é
+compilado desse código. Veja `LICENSE` para os termos.
 
 ## Integridade do binário
 
@@ -152,7 +154,7 @@ O unlock funciona enganchando as APIs de licença do GDK (`XStore*`), então nã
 depende de uma build específica do jogo: **qualquer build do Minecraft for
 Windows a partir da 1.21 é aceita**, inclusive uma build **mais nova** que a
 verificada nesta release. O menu baixa o `tested-versions.json` deste
-repositório para ler o piso de versão; se o seu jogo for **mais antigo** que
+repositório para ler o piso de versão. Se o seu jogo for **mais antigo** que
 esse piso, o instalador para antes de baixar qualquer coisa e pede para
 atualizar o Minecraft pelo Xbox App.
 A lista `tested` desse arquivo é só o registro das builds verificadas na mão:

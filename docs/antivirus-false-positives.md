@@ -6,8 +6,9 @@ the genuine ones, and what to do if an antivirus quarantines the file.
 
 ## Short version
 
-- The unlocker is **not malware**. The installer is open source (GPLv3) and
-  the full project is public: <https://github.com/CoelhoFZ/Minecraft-Bedrock-Free>.
+- The unlocker is **not malware**. The installer and the unlock source are
+  open source (GPLv3) and the full project is public:
+  <https://github.com/CoelhoFZ/Minecraft-Bedrock-Free>.
 - The unlocker bypasses a license, and antivirus vendors classify any tool in
   that category as `hacktool`/`crack`, regardless of what the file actually
   does.
@@ -21,9 +22,10 @@ the genuine ones, and what to do if an antivirus quarantines the file.
 - **It bypasses a license.** Tools that bypass licensing are classified by
   definition as "hacktool" or "crack" by some vendors. A few of them (e.g.
   ESET) keep that label even after manual review.
-- **The binary is closed source.** Engines that cannot inspect a file end up
-  scoring it with heuristics instead of a signature, so a clean scan on one
-  machine and a detection on another is normal for this category of tool.
+- **Category labels, not signatures.** Engines that cannot match a known
+  signature score the file with heuristics and machine learning, so a clean
+  scan on one machine and a detection on another is normal for this category
+  of tool.
 - **Machine-learning labels.** Vendors that ship ML models report generic
   labels that change with every definition update, such as the Microsoft
   Defender `Wacatac`/`Sabsik`/`Commando` detections.
@@ -31,8 +33,8 @@ the genuine ones, and what to do if an antivirus quarantines the file.
 ## What this means for you
 
 - The detections are **heuristic labels**, not evidence of malicious behavior.
-- The installer is open source, so anyone can audit exactly what it does. Only
-  the unlock binary itself is closed.
+- The installer and the unlock source are open source, so anyone can audit
+  exactly what they do and how the binary is built.
 - You can verify authenticity yourself: the official SHA-256 checksums are
   published on the [release page](https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest)
   and in `SHA256SUMS.txt` in the repository.
@@ -47,17 +49,21 @@ Get-FileHash <file> -Algorithm SHA256
   links in Discord chats that run `irm <short-link> | iex`. That is never
   this project.
 
-## Why the binary is closed source
+## Open source and the antivirus labels
 
-The unlock binary is closed source to prevent code theft. If the source were
-published, anyone could copy it, rebrand it, and spread modified copies,
-including the fake "fix" installers that already circulate in Discord chats.
+The unlock source is published in [`source/`](../source) under the GPLv3, so
+anyone can read, build and audit the mechanism. The labels above do not go
+away because of that: some vendors classify any license bypasser as
+`hacktool`/`crack` by definition, and machine-learning labels move with the
+definition updates.
 
-We are not going to pretend that costs nothing. Closed source means you are
-being asked to run a file you cannot read, and no explanation on this page
-can remove that from the equation. What we can do is be precise about what
-this tool is, what you can verify without the source, and where the real
-trust decision lives.
+Being open has a second effect, and this page will not hide it: anyone can
+rebuild the code and spread their own copies, including the fake "fix"
+installers that already circulate in Discord chats. What separates the
+official file from those copies is identity: the SHA-256 in `SHA256SUMS.txt`
+and on the release page pins the exact binary distributed here, and a rebuild
+will not match it. The official binary is the one downloaded from this
+repository.
 
 ### What this tool actually is
 
@@ -73,11 +79,13 @@ malicious behavior.
 If you are not comfortable running a license unlocker at all, that is a fair
 position, so do not run it.
 
-### What you can verify without the source
+### What you can verify
 
-The source of the binary is closed, but everything around it is open and
-auditable:
+Everything around the binary is open and auditable:
 
+- **The unlock source is public (GPLv3).** The code behind
+  `release/winmm.dll` lives in [`source/`](../source). Read it, or build your
+  own copy from it.
 - **The installer is fully open source (GPLv3).** Read it and see exactly
   what it does: where the binary is downloaded from (this repository's
   official release page, over HTTPS), how the SHA-256 is verified before and
@@ -91,23 +99,23 @@ auditable:
   from a random short link. That narrows the trust question to one concrete
   point: *do you trust the owner of this repository?* There is no hidden
   middleman.
-- **Behavior can be watched.** Since the binary itself is closed, the honest
-  way to satisfy residual doubt is to observe it: run the installer in a
-  disposable VM, or with Sysinternals Process Monitor open, and see what it
-  touches. Uploading the file to VirusTotal is also useful, but expect
+- **Behavior can be watched.** You can also observe the shipped binary:
+  run the installer in a disposable VM, or with Sysinternals Process Monitor
+  open, and see what it touches. Uploading the file to VirusTotal is also
+  useful, but expect
   `hacktool`/`crack` labels from some engines (that is the category, see
   above) and look for whether anything beyond that shows up. See
   [VirusTotal](virustotal.md) for how to read that report.
 
 ### If you still do not trust it
 
-That is a valid outcome. "I cannot verify this, so I will not run it" is a
-reasonable decision, and the only fully safe option is not running the tool.
-Distrusting a closed binary is not "useless". It is a legitimate position.
-The mistake would be to jump from "closed source" straight to "it is
-malware": that conclusion has exactly as much evidence behind it as "the
-README says it is safe, so it is". Neither is proof. The difference is that
-the steps above let you gather real evidence if you want it.
+That is a valid outcome. "I will not run this" is a reasonable decision, and
+the only fully safe option is not running the tool. Not trusting an unlocker
+is a legitimate position. The mistake would be to jump from "I cannot verify
+this myself" straight to "it is malware": that conclusion has exactly as
+much evidence behind it as "the README says it is safe, so it is". Neither
+is proof. The difference is that the steps above let you gather real
+evidence if you want it.
 
 If you still believe this unlocker has a virus after reading this page, do
 not use it. BUY MINECRAFT YOURSELF!

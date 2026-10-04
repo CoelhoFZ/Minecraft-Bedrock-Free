@@ -1,0 +1,45 @@
+// version.rc - VERSIONINFO of the binaries (CompanyName = CoelhoFZ).
+// FILE_NAME comes from the wrappers resource/shim_res.rc and
+// resource/proxy_res.rc (#define FILE_NAME "..." + #include "version.rc") -
+// avoids -D quoting in the shell (windres rejected -DFILE_NAME='...' with a
+// syntax error).
+#include <winver.h>
+
+// HARDENED (--harden): NEUTRAL VERSIONINFO - no product/brand name in the
+// binary (CompanyName "CoelhoFZ"/ProductName "unlock-CoelhoFZ" leaked in the
+// .rsrc). Under harden windres runs with -DHARDENED and none of it is emitted.
+#ifndef HARDENED
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,0
+ PRODUCTVERSION 1,0,0,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName", "CoelhoFZ"
+            VALUE "FileDescription", "Unlocker Minecraft Bedrock - unlock-CoelhoFZ"
+            VALUE "FileVersion", "1.0.0.0"
+            VALUE "InternalName", FILE_NAME
+            VALUE "LegalCopyright", "(c) 2026 CoelhoFZ"
+            VALUE "OriginalFilename", FILE_NAME
+            VALUE "ProductName", "unlock-CoelhoFZ"
+            VALUE "ProductVersion", "1.0.0.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+#endif  // !HARDENED
