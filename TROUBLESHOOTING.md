@@ -345,6 +345,57 @@ separate Trust list), restore the file from the quarantine if it is there, then
 run the installer again. Exclusions added in Windows Security do not cover a
 third-party antivirus.
 
+## "Could not download winmm.dll" because the antivirus intercepted the request (HTTP 499, v4.9.50+)
+
+**What it means:** the download never reached the server. An antivirus with web
+or browsing protection answered the request itself with the code 499,
+`Request has been forbidden by antivirus`, so the installer has no internet
+problem to blame and no file to verify.
+
+**What the report shows:** the `[dl]` line carries `code=499` for every
+address, plus an `av-intercept=1` entry, and `Registered antivirus products`
+names the product that blocked it.
+
+**Older versions:** before v4.9.50 this case used the same message as a real
+connection failure, "Could not download winmm.dll. Check your internet
+connection", with the 499 text as the detail. That wording sent you to check a
+connection that was never the problem. If you see it, run the official one-line
+command from the [Install](README.md#install) section again to get the current
+installer.
+
+**How to fix:** open your antivirus, allow `raw.githubusercontent.com`,
+`github.com` and `cdn.jsdelivr.net` (or turn its web protection off for a few
+minutes), run the installer again and turn the protection back on. You can also
+download `winmm.dll` by hand from the
+[latest release](https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll)
+and save it as `%LOCALAPPDATA%\mbu-cache\payload-x64.bin` so the installer uses
+the offline copy without touching the network.
+
+## "The antivirus removed the downloaded file" during install (v4.9.50+)
+
+**What it means:** the installer downloaded `winmm.dll`, verified its hash, and
+by the time it copied the file into the game the file was gone from
+`%TEMP%\mbu`. A security product quarantined it in between, which no installer
+can undo on its own.
+
+**What the report shows:** `[dl]` ends with a verified download (`hash-match`)
+while `[swap]` shows `failed attempts=3 final=no-winmm move=none copy=none` and
+the error names `payload-x64.bin` as a missing path in `%TEMP%\mbu`.
+
+**What the installer already does (v4.9.50+):** as soon as the download passes
+the hash check it writes the same verified bytes to
+`%LOCALAPPDATA%\mbu-cache\payload-x64.bin`, and if the working copy disappears
+before the swap it restores it from that cache (the `[dl]` line records
+`cache-seeded=1`, the `[swap]` line records `source-restored`). On a machine
+without the cache it now says which antivirus removed the file and which folder
+to exclude, instead of printing a raw missing-path error.
+
+**How to fix:** add `%TEMP%\mbu`, `%LOCALAPPDATA%\mbu-cache` and the game
+folder printed by the installer to the exclusions of your antivirus, restore
+`payload-x64.bin` from its quarantine if it is there, then run the installer
+again. The offline cache is what makes the install survive the file being
+removed a second time.
+
 ## "Bad Image" error (status 0xc0e90007) for WINMM.dll when launching Minecraft
 
 ```
@@ -592,6 +643,13 @@ now describes the state of the installation itself:
   account. `pkg=no` together with an official folder means the game cannot be
   activated either, so the installer tells you to repair the game instead of
   blaming itself.
+- `apps=` (v4.9.50) records the second start attempt, the one that opens the
+  game through its registered package (the same activation the Store copy
+  uses): `skipped` when there was no package to activate or the activation was
+  already the main path, `no-process` when the activation command ran but no
+  game process appeared, or `error=...` when the activation itself failed. It
+  exists so a report can tell "the installer only tried the executable" from
+  "it also tried the registered package and that failed too".
 
 The report can also carry a `[content] used=<folder> now=...` line. It records the
 game folder used during the run and how that same folder looks when the report is
@@ -605,21 +663,36 @@ signature of game files left behind by a game that is no longer registered: the
 folder is still there, the size is still reported, and nothing in it can be read
 or run. Repair does not apply in that state because there is nothing to repair.
 
+`pkg=registered` with `exe-read=denied` is a different state: the files are on
+disk and the game is registered, but Windows refuses to open the executable for
+this session. That usually points at security software or at file permissions,
+not at a download that went wrong. Since v4.9.50 the installer also tries to
+start the game through its registered package before falling back to the
+`minecraft:` protocol: when an attempt through the package starts the game, the
+report shows `[launch] mode=apps official=yes pkg=registered content=...`
+instead of `mode=exe`.
+
 **How to fix:**
 
 1. If the report shows `pkg=no` with `exe-read=denied`, open the **Xbox App**,
    select Minecraft and choose **Uninstall** to clear the leftover, then install
    the game again from there. Do not delete the game folder by hand: a missing
    folder is a different failure the installer also has to explain.
-2. Otherwise open the **Xbox App**, use **Repair**, or reinstall Minecraft. Do
+2. If the report shows `pkg=registered` with `exe-read=denied`, open the game
+   once from the **Xbox App** or from the Start menu. If the game opens, the
+   unlock is already installed and there is nothing else to do. If it does not
+   open, continue to the next step.
+3. Otherwise open the **Xbox App**, use **Repair**, or reinstall Minecraft. Do
    not run the installer against a folder the Xbox app still shows as
    *installing*, *paused* or *needs attention*.
-3. Confirm the game opens on its own once, close it, then run this installer
+4. Confirm the game opens on its own once, close it, then run this installer
    again.
 
-In this state the menu shows a message in your language that names the incomplete
-or unregistered game installation, instead of the generic "could not start
-Minecraft automatically".
+In this state the menu shows a message in your language instead of the generic
+"could not start Minecraft automatically": it names the incomplete or
+unregistered installation when no package is registered, and since v4.9.50 it
+tells you that Windows refused to read or run the executable when the game is
+registered but the read was denied.
 
 Since v4.9.43 the installer detects this state at the start and stops **before
 downloading or writing anything**, with `Installation BLOCKED: Minecraft is not
@@ -727,7 +800,12 @@ Releases up to v4.9.41 tried anyway and ended with a message that named the
 Store (UWP) installation as the cause, said that an antivirus exclusion does not
 help and pointed to the Xbox app version, which is the same advice. The current
 Minecraft version, installed through the Xbox app (GDK), uses a folder the
-installer can write to (`C:\XboxGames`). Back up your worlds before switching:
+installer can write to (`C:\XboxGames`). A Store install of the current GDK era
+keeps its files in `<drive>:\XboxGames\7792D9CE-355A-493C-AFBD-768F4A77C3B0\Content`
+(Preview: `98BD2335-9B01-4E4C-BD05-CCC01614078B`), which is not inside
+`WindowsApps`, so those folders are treated like any other `XboxGames` folder
+and the report names them `Microsoft Store (GDK)` in the install source line.
+Back up your worlds before switching:
 they live in
 `%LOCALAPPDATA%\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds`.
 
@@ -1035,7 +1113,9 @@ Download `uninstall.ps1` from
 <https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/uninstall.ps1>,
 open PowerShell **as administrator**, and run it. It closes the game, restores
 `winmm.dll` (or removes it when there was no original), cleans the Defender
-exclusions the installer added and deletes the local binary cache.
+exclusions the installer added (including the game folder exclusion when it
+lives under an `XboxGames\<GUID>` folder, since v4.9.50) and deletes the local
+binary cache.
 
 ### Does it work with a third-party launcher / version switcher?
 

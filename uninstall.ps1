@@ -266,7 +266,7 @@ function Remove-MbuDefenderExclusions {
                 continue
             }
             $match = ($paths -contains $p) -or ($p -match '\\mbu(-cache)?$') -or
-                     ($p -like '*XboxGames\Minecraft*') -or ($p -like '*MinecraftUWP*')
+                     ($p -like '*XboxGames\Minecraft*') -or ($p -match '(?i)\\XboxGames\\[0-9A-F]{8}-') -or ($p -like '*MinecraftUWP*')
             if ($match) {
                 $targets += $p
             }

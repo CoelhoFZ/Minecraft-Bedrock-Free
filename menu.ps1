@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.49'
+$Script:Version = '4.9.50'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -20,7 +20,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c' = '4.9.49'
+    'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c' = '4.9.50'
     'e44230e539e5ec2378c1937746cfb34846ae1e21f9d4f2739f0d4d8c1e37d8da' = '4.9.34'
     '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.28'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
@@ -471,6 +471,8 @@ $Script:PT = @{
     'err_download_offline' = 'Nao foi possivel baixar o winmm.dll: o instalador nao conseguiu conectar ao servidor de download. Isso costuma ser internet instavel, DNS ou VPN bloqueando o acesso. Nao e um problema do instalador. Verifique sua conexao, desligue a VPN ou o proxy se estiver usando, e rode o instalador de novo.'
     'err_download_failed' = 'Nao foi possivel baixar o winmm.dll. Verifique sua conexao com a internet e rode o instalador de novo. Detalhe: {0}'
     'err_download_write_blocked' = 'Nao foi possivel gravar o arquivo temporario do download em {0}, nem com outra pasta de trabalho. Acesso negado nesse caminho quase sempre e antivirus bloqueando a gravacao. Antivirus detectado: {1}. Adicione essas pastas nas exclusoes (ou nas pastas protegidas) do antivirus, restaure o arquivo da quarentena se ele estiver la, e rode o instalador de novo.'
+    'err_download_av_intercept' = 'Nao foi possivel baixar o winmm.dll: o antivirus {0} interceptou todas as requisicoes de download (erro 499, proibido pelo antivirus). Isso nao e problema de internet nem do instalador, o proprio antivirus bloqueou o download. Abra o antivirus, libere os enderecos raw.githubusercontent.com, github.com e cdn.jsdelivr.net (ou desligue a protecao de web/navegacao por alguns minutos), rode o instalador de novo e ligue a protecao depois. Voce tambem pode baixar o winmm.dll manualmente e colocar em %LOCALAPPDATA%\mbu-cache com o nome payload-x64.bin.'
+    'err_payload_removed' = 'O antivirus {0} removeu o arquivo baixado no meio da instalacao, antes de copiar para o jogo: {1}. Nao havia copia offline em %LOCALAPPDATA%\mbu-cache para restaurar. Adicione a pasta %TEMP%\mbu nas exclusoes (ou pastas protegidas) do antivirus, restaure o arquivo da quarentena se ele estiver la, e rode o instalador de novo.'
     'err_hash_invalid'   = 'Nao foi possivel obter uma copia valida do winmm.dll: o arquivo baixado nao corresponde ao esperado (hash {0}), mesmo tentando todos os enderecos de download. Isso normalmente e um antivirus, um proxy/VPN ou um DNS alterando o download, e nao um problema do instalador. Verifique a conexao, desligue VPN ou proxy se estiver usando, adicione as exclusoes do antivirus e rode o instalador de novo. Se acontecer de novo, envie o relatorio.'
     'err_acl'            = 'Nao foi possivel tomar posse da pasta do Minecraft. Rode como administrador.'
     'err_copy_corrupt'   = 'Falha ao copiar winmm.dll (copia corrompida/bloqueada). Verifique se o antivirus nao bloqueou e tente de novo.'
@@ -496,6 +498,7 @@ $Script:PT = @{
     'mc_start_failed'    = 'Nao foi possivel iniciar o Minecraft automaticamente. Abra pelo menu Iniciar.'
     'mc_start_failed_launcher' = 'Nao foi possivel iniciar o Minecraft automaticamente. Esta pasta nao e a instalacao oficial, entao abra o jogo pelo launcher que voce usou para instalar.'
     'mc_start_failed_broken' = 'O Minecraft nao abriu porque a instalacao do proprio jogo esta incompleta, danificada ou sem registro neste PC: o Windows nao conseguiu executar o Minecraft.Windows.exe da pasta do jogo. Isso nao tem relacao com o desbloqueio. Abra o Xbox App, repare ou reinstale o Minecraft, confirme que o jogo abre uma vez e rode este instalador de novo.'
+    'mc_start_failed_unreadable' = 'O Minecraft nao abriu porque o Windows nao deixou ler nem executar o Minecraft.Windows.exe da pasta do jogo, mesmo com o jogo registrado neste PC. Isso costuma ser software de seguranca ou permissao de arquivo, e nao tem relacao com o desbloqueio. Abra o jogo pelo Xbox App ou pelo menu Iniciar. Se o jogo abrir por la, o desbloqueio ja esta instalado. Se nao abrir, repare ou reinstale o Minecraft no Xbox App e rode este instalador de novo.'
     'state_unlocked_hint'= 'Se quiser, escolha [1] para remover o desbloqueio e voltar a Trial.'
     'state_trial'        = 'O Minecraft esta na versao TRIAL.'
     'state_trial_hint'   = 'Escolha [1] para desbloquear o jogo completo.'
@@ -533,6 +536,7 @@ $Script:PT = @{
     'diag_source'        = 'Origem da instalacao'
     'diag_source_store'  = 'Microsoft Store (UWP)'
     'diag_source_gdk'    = 'Xbox App (GDK)'
+    'diag_source_store_gdk' = 'Microsoft Store (GDK)'
     'diag_source_unknown'= 'desconhecida'
     'diag_game_version'  = 'Versao do jogo'
     'diag_game_arch'     = 'Arquitetura do jogo'
@@ -933,6 +937,24 @@ $Script:I18N = @{
         ar='تعذّر كتابة ملف التنزيل المؤقت في {0}، وحتى باستخدام مجلد عمل آخر. رفض الوصول إلى ذلك المسار يعني غالبًا برنامج مكافحة فيروسات يمنع الكتابة. البرنامج المكتشف: {1}. أضف هذه المجلدات إلى استثناءات ذلك البرنامج (أو المجلدات المحمية)، واستعد الملف من الحجر الصحي إن كان موجودًا، ثم شغّل المثبّت مرة أخرى.'
         ru='Не удалось записать временный файл загрузки в {0}, даже в другой рабочей папке. Отказ в доступе к этому пути почти всегда означает, что антивирус блокирует запись. Обнаруженный антивирус: {1}. Добавьте эти папки в исключения (или защищённые папки) антивируса, восстановите файл из карантина, если он там, и снова запустите установщик.'
     }
+    'err_download_av_intercept' = @{
+        en='Could not download winmm.dll: the antivirus {0} intercepted every download request (error 499, forbidden by antivirus). This is not an internet problem and not an installer problem, the antivirus itself blocked the download. Open the antivirus, allow raw.githubusercontent.com, github.com and cdn.jsdelivr.net (or turn its web/browsing protection off for a few minutes), run the installer again and turn the protection back on. You can also download winmm.dll manually and place it in %LOCALAPPDATA%\mbu-cache as payload-x64.bin.'
+        es='No se pudo descargar winmm.dll: el antivirus {0} intercepto todas las solicitudes de descarga (error 499, prohibido por el antivirus). No es un problema de internet ni del instalador, el propio antivirus bloqueo la descarga. Abre el antivirus, permite raw.githubusercontent.com, github.com y cdn.jsdelivr.net (o desactiva su proteccion web unos minutos), vuelve a ejecutar el instalador y reactiva la proteccion despues. Tambien puedes descargar winmm.dll manualmente y colocarlo en %LOCALAPPDATA%\mbu-cache como payload-x64.bin.'
+        fr='Impossible de telecharger winmm.dll : l''antivirus {0} a intercepte toutes les requetes de telechargement (erreur 499, interdit par l''antivirus). Ce n''est ni un probleme internet ni un probleme de l''installateur, c''est l''antivirus lui-meme qui a bloque le telechargement. Ouvrez l''antivirus, autorisez raw.githubusercontent.com, github.com et cdn.jsdelivr.net (ou desactivez sa protection web quelques minutes), relancez l''installateur puis reactivez la protection. Vous pouvez aussi telecharger winmm.dll manuellement et le placer dans %LOCALAPPDATA%\mbu-cache sous le nom payload-x64.bin.'
+        zh='无法下载 winmm.dll：杀毒软件 {0} 拦截了所有下载请求（错误 499，被杀毒软件禁止）。这既不是网络问题也不是安装程序的问题，是杀毒软件本身阻止了下载。请打开杀毒软件，允许 raw.githubusercontent.com、github.com 和 cdn.jsdelivr.net（或暂时关闭其网页/浏览保护几分钟），重新运行安装程序后再开启保护。也可以手动下载 winmm.dll 并放到 %LOCALAPPDATA%\mbu-cache，命名为 payload-x64.bin。'
+        hi='winmm.dll डाउनलोड नहीं हो सका: एंटीवायरस {0} ने सभी डाउनलोड अनुरोध रोक दिए (त्रुटि 499, एंटीवायरस द्वारा निषिद्ध)। यह इंटरनेट या इंस्टॉलर की समस्या नहीं है, एंटीवायरस ने ही डाउनलोड रोका। एंटीवायरस खोलें, raw.githubusercontent.com, github.com और cdn.jsdelivr.net को अनुमति दें (या कुछ मिनट के लिए वेब/ब्राउज़िंग सुरक्षा बंद करें), इंस्टॉलर फिर से चलाएँ और बाद में सुरक्षा चालू करें। आप winmm.dll मैन्युअल रूप से डाउनलोड करके %LOCALAPPDATA%\mbu-cache में payload-x64.bin नाम से भी रख सकते हैं।'
+        ar='تعذّر تنزيل winmm.dll: اعترض برنامج مكافحة الفيروسات {0} جميع طلبات التنزيل (الخطأ 499، محظور من مكافحة الفيروسات). ليست مشكلة إنترنت ولا مشكلة في المثبّت، بل برنامج الحماية نفسه منع التنزيل. افتح برنامج الحماية واسمح بـ raw.githubusercontent.com و github.com و cdn.jsdelivr.net (أو أوقف حماية الويب لدقائق)، ثم أعد تشغيل المثبّت وشغّل الحماية بعدها. يمكنك أيضًا تنزيل winmm.dll يدويًا ووضعه في %LOCALAPPDATA%\mbu-cache باسم payload-x64.bin.'
+        ru='Не удалось загрузить winmm.dll: антивирус {0} перехватил все запросы загрузки (ошибка 499, запрещено антивирусом). Это не проблема интернета и не проблема установщика, загрузку заблокировал сам антивирус. Откройте антивирус, разрешите raw.githubusercontent.com, github.com и cdn.jsdelivr.net (или отключите веб-защиту на несколько минут), снова запустите установщик и включите защиту обратно. Также можно скачать winmm.dll вручную и положить его в %LOCALAPPDATA%\mbu-cache под именем payload-x64.bin.'
+    }
+    'err_payload_removed' = @{
+        en='The antivirus {0} removed the downloaded file in the middle of the installation, before it was copied into the game: {1}. There was no offline copy in %LOCALAPPDATA%\mbu-cache to restore from. Add the folder %TEMP%\mbu to the antivirus exclusions (or protected folders), restore the file from quarantine if it is there, and run the installer again.'
+        es='El antivirus {0} elimino el archivo descargado en medio de la instalacion, antes de copiarlo al juego: {1}. No habia copia offline en %LOCALAPPDATA%\mbu-cache para restaurar. Anade la carpeta %TEMP%\mbu a las exclusiones (o carpetas protegidas) del antivirus, restaura el archivo de la cuarentena si esta alli y vuelve a ejecutar el instalador.'
+        fr='L''antivirus {0} a supprime le fichier telecharge au milieu de l''installation, avant sa copie dans le jeu : {1}. Il n''y avait pas de copie hors ligne dans %LOCALAPPDATA%\mbu-cache pour la restaurer. Ajoutez le dossier %TEMP%\mbu aux exclusions (ou dossiers proteges) de l''antivirus, restaurez le fichier depuis la quarantaine s''il y est, puis relancez l''installateur.'
+        zh='杀毒软件 {0} 在安装过程中删除了已下载的文件，还没复制到游戏目录：{1}。没有可恢复的离线副本（%LOCALAPPDATA%\mbu-cache）。请把 %TEMP%\mbu 加入杀毒软件的排除项（或受保护文件夹），如果文件在隔离区请先恢复，然后重新运行安装程序。'
+        hi='एंटीवायरस {0} ने इंस्टॉलेशन के बीच में डाउनलोड की गई फ़ाइल हटा दी, गेम में कॉपी होने से पहले: {1}। बहाल करने के लिए %LOCALAPPDATA%\mbu-cache में कोई ऑफ़लाइन प्रतिलिपि नहीं थी। %TEMP%\mbu फ़ोल्डर को एंटीवायरस के बहिष्करण (या संरक्षित फ़ोल्डर) में जोड़ें, फ़ाइल क्वारंटीन में हो तो बहाल करें, और इंस्टॉलर फिर से चलाएँ।'
+        ar='حذف برنامج مكافحة الفيروسات {0} الملف الذي تم تنزيله أثناء التثبيت، قبل نسخه إلى اللعبة: {1}. لم تكن هناك نسخة دون اتصال في %LOCALAPPDATA%\mbu-cache لاستعادتها. أضف المجلد %TEMP%\mbu إلى استثناءات (أو المجلدات المحمية في) برنامج الحماية، واستعد الملف من الحجر الصحي إن كان موجودًا، ثم أعد تشغيل المثبّت.'
+        ru='Антивирус {0} удалил загруженный файл в середине установки, до копирования в игру: {1}. Офлайн-копии в %LOCALAPPDATA%\mbu-cache для восстановления не было. Добавьте папку %TEMP%\mbu в исключения (или защищённые папки) антивируса, восстановите файл из карантина, если он там, и снова запустите установщик.'
+    }
     'err_hash_invalid' = @{
         en='Could not get a valid copy of winmm.dll: the downloaded file does not match the expected one (hash {0}) even after trying every download address. This is usually an antivirus, a proxy/VPN or a DNS modifying the download, not a problem with the installer. Check your connection, turn off any VPN or proxy, add the antivirus exclusions and run the installer again. If it happens again, send the report.'
         zh='无法获取有效的 winmm.dll 副本：即使尝试了所有下载地址，下载的文件仍与预期文件（哈希 {0}）不一致。这通常是杀毒软件、代理/VPN 或 DNS 修改了下载内容，而不是安装程序的问题。请检查网络，关闭 VPN 或代理，添加杀毒软件排除项后重新运行安装程序。如果再次出现，请发送报告。'
@@ -1031,6 +1053,15 @@ $Script:I18N = @{
         hi='Minecraft नहीं खुला क्योंकि गेम का इंस्टॉलेशन ही अधूरा, खराब या इस PC पर पंजीकृत नहीं है: Windows गेम फ़ोल्डर से Minecraft.Windows.exe चला नहीं सका। इसका अनलॉक से कोई संबंध नहीं है। Xbox ऐप खोलें, Minecraft को रिपेयर या फिर से इंस्टॉल करें, सुनिश्चित करें कि गेम एक बार खुल जाए, फिर यह इंस्टॉलर दोबारा चलाएँ।'
         ar='لم يفتح Minecraft لأن تثبيت اللعبة نفسه غير مكتمل أو تالف أو غير مسجّل على هذا الكمبيوتر: لم يتمكن Windows من تشغيل Minecraft.Windows.exe من مجلد اللعبة. هذا لا علاقة له بفتح القفل. افتح تطبيق Xbox، وأصلح أو أعد تثبيت Minecraft، وتأكد من فتح اللعبة مرة واحدة، ثم شغّل هذا المثبّت مرة أخرى.'
         ru='Minecraft не запустился, потому что сама установка игры неполная, повреждена или не зарегистрирована на этом ПК: Windows не смогла запустить Minecraft.Windows.exe из папки игры. К разблокировке это отношения не имеет. Откройте приложение Xbox, восстановите или переустановите Minecraft, убедитесь, что игра запускается, и запустите установщик снова.'
+    }
+    'mc_start_failed_unreadable' = @{
+        en='Minecraft did not open because Windows refused to read or run Minecraft.Windows.exe in the game folder, even though the game is registered on this PC. This is usually caused by security software or file permissions, and it is not caused by the unlock. Open the game from the Xbox app or the Start menu. If the game opens there, the unlock is already installed. If it does not open, repair or reinstall Minecraft in the Xbox app and run this installer again.'
+        es='Minecraft no se abrio porque Windows se nego a leer o ejecutar Minecraft.Windows.exe en la carpeta del juego, aunque el juego esta registrado en este PC. Esto suele deberse a software de seguridad o a permisos de archivo, y no tiene relacion con el desbloqueo. Abre el juego desde la Xbox app o el menu Inicio. Si el juego abre desde ahi, el desbloqueo ya esta instalado. Si no abre, repara o reinstala Minecraft en la Xbox app y vuelve a ejecutar este instalador.'
+        fr='Minecraft ne s''est pas ouvert car Windows a refuse de lire ou d''executer Minecraft.Windows.exe dans le dossier du jeu, alors que le jeu est enregistre sur ce PC. Cela vient generalement d''un logiciel de securite ou des permissions du fichier, et non du deblocage. Ouvrez le jeu depuis l''application Xbox ou le menu Demarrer. Si le jeu s''ouvre, le deblocage est deja installe. S''il ne s''ouvre pas, reparez ou reinstallez Minecraft dans l''application Xbox puis relancez cet installateur.'
+        zh='Minecraft 没有打开，因为 Windows 拒绝读取或运行游戏文件夹中的 Minecraft.Windows.exe，尽管游戏已在此电脑上注册。这通常是安全软件或文件权限造成的，与解锁无关。请从 Xbox 应用或开始菜单打开游戏。如果游戏能打开，说明解锁已安装。如果仍打不开，请在 Xbox 应用里修复或重新安装 Minecraft，然后再次运行本安装程序。'
+        hi='Minecraft नहीं खुला क्योंकि Windows ने गेम फ़ोल्डर में Minecraft.Windows.exe को पढ़ने या चलाने से मना कर दिया, जबकि गेम इस PC पर पंजीकृत है। यह आमतौर पर सुरक्षा सॉफ़्टवेयर या फ़ाइल अनुमतियों की वजह से होता है, अनलॉक की वजह से नहीं। गेम को Xbox ऐप या स्टार्ट मेनू से खोलें। अगर गेम वहाँ खुलता है, तो अनलॉक पहले से इंस्टॉल है। अगर नहीं खुलता, तो Xbox ऐप में Minecraft को रिपेयर या फिर से इंस्टॉल करें और यह इंस्टॉलर दोबारा चलाएँ।'
+        ar='لم يفتح Minecraft لأن Windows رفض قراءة أو تشغيل Minecraft.Windows.exe في مجلد اللعبة، مع أن اللعبة مسجّلة على هذا الكمبيوتر. يحدث هذا عادةً بسبب برنامج أمان أو صلاحيات الملف، وليس بسبب فتح القفل. افتح اللعبة من تطبيق Xbox أو من قائمة ابدأ. إذا فتحت اللعبة من هناك ففتح القفل مثبّت بالفعل. وإذا لم تفتح، فأصلح أو أعد تثبيت Minecraft من تطبيق Xbox ثم شغّل هذا المثبّت مرة أخرى.'
+        ru='Minecraft не запустился, потому что Windows отказалась прочитать или запустить Minecraft.Windows.exe в папке игры, хотя игра зарегистрирована на этом ПК. Обычно это связано с антивирусом или правами на файл, а не с разблокировкой. Откройте игру из приложения Xbox или меню «Пуск». Если игра открывается, разблокировка уже установлена. Если не открывается, восстановите или переустановите Minecraft в приложении Xbox и запустите установщик снова.'
     }
     'state_unlocked_hint' = @{
         en='If you want, choose [1] to remove the unlock and go back to Trial.'
@@ -1355,6 +1386,15 @@ $Script:I18N = @{
         fr='Microsoft Store (UWP)'
         ar='Microsoft Store (UWP)'
         ru='Microsoft Store (UWP)'
+    }
+    'diag_source_store_gdk' = @{
+        en='Microsoft Store (GDK)'
+        es='Microsoft Store (GDK)'
+        zh='Microsoft Store (GDK)'
+        hi='Microsoft Store (GDK)'
+        fr='Microsoft Store (GDK)'
+        ar='Microsoft Store (GDK)'
+        ru='Microsoft Store (GDK)'
     }
     'diag_source_gdk' = @{
         en='Xbox App (GDK)'
@@ -3383,7 +3423,7 @@ function Remove-StaleDefenderExclusions {
             if (-not $item) {
                 continue
             }
-            $ours = ($item -like '*\WindowsApps\Microsoft.MinecraftUWP_*') -or ($item -like '*\XboxGames\*Minecraft*') -or ($item -like '*\mbu-cache') -or ($item -like '*\Temp\mbu')
+            $ours = ($item -like '*\WindowsApps\Microsoft.MinecraftUWP_*') -or ($item -like '*\XboxGames\*Minecraft*') -or ($item -match '(?i)\\XboxGames\\[0-9A-F]{8}-') -or ($item -like '*\mbu-cache') -or ($item -like '*\Temp\mbu')
             if (-not $ours) {
                 continue
             }
@@ -3519,6 +3559,83 @@ function Get-WriteBlockedMessage {
     return (((T 'err_write_blocked') -replace '\{0\}', $who) -replace '\{1\}', $Content)
 }
 
+function Get-PayloadRemovedMessage {
+    param([string]$Source)
+    $avs = Get-ThirdPartyAvNames
+    $who = if ($avs.Count -gt 0) {
+        ($avs -join ', ')
+    } else {
+        T 'av_generic_name'
+    }
+    return (((T 'err_payload_removed') -replace '\{0\}', $who) -replace '\{1\}', [string]$Source)
+}
+
+function Save-UnlockCacheFromFile {
+    param([string]$Path)
+    if (-not $Path) {
+        return $false
+    }
+    try {
+        if (-not (Test-Path -LiteralPath $Path)) {
+            return $false
+        }
+        if ((Get-Item -LiteralPath $Path -Force -ErrorAction Stop).Length -le 0) {
+            return $false
+        }
+        $target = Join-Path $cacheDir $payloadFile
+        New-Item -ItemType Directory -Force -Path $cacheDir | Out-Null
+        Copy-Item -LiteralPath $Path -Destination $target -Force -ErrorAction Stop
+        return ((Get-SafeFileHash -Path $target) -eq (Get-SafeFileHash -Path $Path))
+    } catch {
+        return $false
+    }
+}
+
+function Restore-UnlockSource {
+    # An antivirus can delete the downloaded payload from the work folder between
+    # the download and the swap. When that happens the offline cache (same
+    # verified hash) is the only way to finish without downloading again.
+    param([string]$Source, [string]$CheckHash)
+    if (-not $Source) {
+        return ''
+    }
+    if (Test-Path -LiteralPath $Source) {
+        return $Source
+    }
+    $cached = $null
+    try {
+        $cached = Test-UnlockCache
+    } catch {
+        $cached = $null
+    }
+    if (-not $cached) {
+        return ''
+    }
+    if ($CheckHash) {
+        try {
+            if ((Get-SafeFileHash -Path $cached) -ne $CheckHash) {
+                return ''
+            }
+        } catch {
+            return ''
+        }
+    }
+    $dir = Split-Path -Parent $Source
+    if (-not $dir) {
+        $dir = Get-TempDir
+    }
+    try {
+        if (-not (Test-Path -LiteralPath $dir)) {
+            New-Item -ItemType Directory -Force -Path $dir | Out-Null
+        }
+    } catch { }
+    $staged = Copy-PayloadStaging -Source $cached -Target $Source -Tmp $dir
+    if ($staged) {
+        return $staged
+    }
+    return ''
+}
+
 function Write-UnlockDllAtomic {
     param([string]$SourceDll, [string]$Content, [string]$CheckHash)
     $winmm = Join-Path $Content 'winmm.dll'
@@ -3548,6 +3665,19 @@ function Write-UnlockDllAtomic {
         $stagedDll = Join-Path $Content ('winmm.dll.new-' + [guid]::NewGuid().ToString('N').Substring(0, 8))
         $prevDll = Join-Path $Content ('winmm.dll.mbu-prev-' + [guid]::NewGuid().ToString('N').Substring(0, 8))
         $prevMoved = $false
+        if (-not (Test-Path -LiteralPath $SourceDll)) {
+            $restored = Restore-UnlockSource -Source $SourceDll -CheckHash $CheckHash
+            if ($restored) {
+                if ($restored -ne $SourceDll) {
+                    $Script:SwapDiag.Add("source-restored attempt=$attempt renamed=yes")
+                } else {
+                    $Script:SwapDiag.Add("source-restored attempt=$attempt from=cache")
+                }
+                $SourceDll = $restored
+            } else {
+                $Script:SwapDiag.Add("source-missing attempt=$attempt cache=none")
+            }
+        }
         try {
             Copy-Item $SourceDll $stagedDll -Force -ErrorAction Stop
             $stagedHash = Get-SafeFileHash -Path $stagedDll
@@ -3670,6 +3800,10 @@ function Write-UnlockDllAtomic {
     }
     if ($denied) {
         throw (Get-WriteBlockedMessage -Content $Content -Kind 'publish')
+    }
+    if (-not (Test-Path -LiteralPath $SourceDll)) {
+        $Script:SwapDiag.Add('source-gone final=yes')
+        throw (Get-PayloadRemovedMessage -Source $SourceDll)
     }
     throw $lastErr
 }
@@ -3929,7 +4063,7 @@ function Install-Unlocker {
         if (-not $isArm -and -not $env:MBU_BASE_URL) {
             $dllSources.Add(@{ Url = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll'
                                Tries = 1 })
-            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.49/release/winmm.dll'
+            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.50/release/winmm.dll'
                                Tries = 1 })
         }
         Start-Sleep -Seconds 2
@@ -3938,6 +4072,7 @@ function Install-Unlocker {
         $sawServerError = $false
         $sawConnError = $false
         $sawWriteDenied = $false
+        $sawAvIntercept = $false
         $Script:DownloadDiag = New-Object System.Collections.Generic.List[string]
         $cachedBefore = if ($isArm) {
             $null
@@ -3980,6 +4115,10 @@ function Install-Unlocker {
                     if ($connError) {
                         $sawConnError = $true
                     }
+                    $avIntercept = ($code -eq 499) -or ($netErr -match 'forbidden by antivirus')
+                    if ($avIntercept) {
+                        $sawAvIntercept = $true
+                    }
                     if ($code) {
                         $codeLabel = [string]$code
                     } else {
@@ -3990,6 +4129,9 @@ function Install-Unlocker {
                         $short = $short.Substring(0, 140)
                     }
                     $Script:DownloadDiag.Add("$hostLabel t$attempt code=$codeLabel err=$short")
+                    if ($avIntercept) {
+                        $Script:DownloadDiag.Add("$hostLabel t$attempt av-intercept=1")
+                    }
                     $writeDenied = $false
                     try {
                         $writeDenied = (($_.Exception -is [System.UnauthorizedAccessException]) -or ($_.Exception.HResult -eq -2147024891))
@@ -4067,6 +4209,9 @@ function Install-Unlocker {
                                 $wsList.Add($cacheDir)
                             }
                             throw (((T 'err_download_write_blocked') -replace '\{0\}', ($wsList -join "`n")) -replace '\{1\}', $wsAvLabel)
+                        }
+                        if ($sawAvIntercept) {
+                            throw ((T 'err_download_av_intercept') -replace '\{0\}', $wsAvLabel)
                         }
                         if ($sawConnError -and -not $sawServerError) {
                             throw (T 'err_download_offline')
@@ -4155,6 +4300,14 @@ function Install-Unlocker {
             Write-Host (T 'arm64_hash_skipped') -ForegroundColor Yellow
         }
 
+        if ((-not $isArm) -and $checkHash -and ($actual -eq $checkHash)) {
+            if (Save-UnlockCacheFromFile -Path $dll) {
+                $Script:DownloadDiag.Add('cache-seeded=1')
+            } else {
+                $Script:DownloadDiag.Add('cache-seeded=0')
+            }
+        }
+
         Close-Minecraft
 
         if (-not (Ensure-ContentWritable -Content $content)) {
@@ -4194,11 +4347,9 @@ function Install-Unlocker {
         }
         Clear-UnlockSwapPrev -Content $content
         if (-not $isArm) {
-            try {
-                New-Item -ItemType Directory -Force -Path $cacheDir | Out-Null
-                Copy-Item $winmm (Join-Path $cacheDir $payloadFile) -Force
+            if (Save-UnlockCacheFromFile -Path $winmm) {
                 Write-Host ((T 'cache_saved') -replace '\{0\}', $cacheDir) -ForegroundColor DarkGray
-            } catch { }
+            }
         }
         Write-Host (T 'install_ok')
         Send-DownloadHit
@@ -4211,7 +4362,11 @@ function Install-Unlocker {
         if (-not $mc.opened) {
             $sfReason = Get-WinmmCorruptHint -Content $content
             if (-not $sfReason -and $mc.broken) {
-                $sfReason = 'the game installation is incomplete or not registered (Minecraft.Windows.exe not runnable: exe=' + $mc.exeState + ' size=' + $mc.exeSize + 'B pe=0x' + ('{0:X4}' -f $mc.exePe) + ' read=' + $mc.exeRead + ' attrs=' + $mc.exeAttrs + ' pkg=' + $mc.pkgState + ')'
+                if (($mc.pkgState -eq 'registered') -and ($mc.exeRead -eq 'denied')) {
+                    $sfReason = 'Windows refused to read or run the game executable even though the game is registered (Minecraft.Windows.exe not readable: exe=' + $mc.exeState + ' size=' + $mc.exeSize + 'B pe=0x' + ('{0:X4}' -f $mc.exePe) + ' read=' + $mc.exeRead + ' attrs=' + $mc.exeAttrs + ' pkg=' + $mc.pkgState + ')'
+                } else {
+                    $sfReason = 'the game installation is incomplete or not registered (Minecraft.Windows.exe not runnable: exe=' + $mc.exeState + ' size=' + $mc.exeSize + 'B pe=0x' + ('{0:X4}' -f $mc.exePe) + ' read=' + $mc.exeRead + ' attrs=' + $mc.exeAttrs + ' pkg=' + $mc.pkgState + ')'
+                }
             }
             if (-not $sfReason) {
                 $sfReason = 'the game did not open after the unlock was installed'
@@ -4372,6 +4527,7 @@ function Start-Minecraft {
     $exePe = 0
     $exeRead = 'unknown'
     $exeAttrs = 'none'
+    $appsState = 'skipped'
     try {
         $content = Find-MinecraftContent
         $Script:RunContent = $content
@@ -4416,6 +4572,28 @@ function Start-Minecraft {
     } catch {
         $startErr = Get-ShortText -Text $_.Exception.Message
     }
+    if ((-not $opened) -and (-not $isStore) -and $appx) {
+        try {
+            $appId = 'Game'
+            try {
+                $m = Get-AppxPackageManifest -Package $appx.PackageFullName -ErrorAction Stop
+                $id = $m.Package.Applications.Application | Select-Object -First 1 -ExpandProperty Id
+                if ($id) {
+                    $appId = $id
+                }
+            } catch { }
+            Start-Process "shell:AppsFolder\$($appx.PackageFamilyName)!$appId" -ErrorAction Stop
+            Start-Sleep -Seconds 2
+            if (Get-Process Minecraft.Windows -ErrorAction SilentlyContinue) {
+                $opened = $true
+                $appsState = 'opened'
+            } else {
+                $appsState = 'no-process'
+            }
+        } catch {
+            $appsState = 'error=' + (Get-ShortText -Text $_.Exception.Message)
+        }
+    }
     if (-not $opened) {
         try {
             Start-Process 'minecraft:' -ErrorAction SilentlyContinue
@@ -4444,6 +4622,8 @@ function Start-Minecraft {
     $brokenInstall = ($official -eq 'yes') -and (($pkgState -eq 'no') -or $exeBroken)
     $Script:LaunchDiag = if ($isStore -and $opened) {
         'mode=store content=' + $content
+    } elseif ($appsState -eq 'opened') {
+        'mode=apps official=' + $official + ' pkg=' + $pkgState + ' content=' + $content
     } elseif ($opened) {
         'mode=exe official=' + $official + ' content=' + $content
     } elseif ($isStore) {
@@ -4468,6 +4648,7 @@ function Start-Minecraft {
             $parts.Add('exe-attrs=' + $exeAttrs)
         }
         $parts.Add('pkg=' + $pkgState)
+        $parts.Add('apps=' + $appsState)
         $parts.Add('uri=' + $uriState)
         $parts.Add('start-err=' + $startErr)
         $parts.Add('content=' + $content)
@@ -4475,6 +4656,8 @@ function Start-Minecraft {
     }
     if ($opened) {
         Write-Host (T 'mc_started')
+    } elseif ($brokenInstall -and ($pkgState -eq 'registered') -and ($exeRead -eq 'denied')) {
+        Write-Host (T 'mc_start_failed_unreadable')
     } elseif ($brokenInstall) {
         Write-Host (T 'mc_start_failed_broken')
     } elseif ($official -eq 'yes') {
@@ -4501,7 +4684,7 @@ function Get-DefenderMbuExclusions {
     try {
         $pref = Get-MpPreference -ErrorAction Stop
         $ok = $true
-        $needles = @('\\mbu', 'XboxGames\\Minecraft', 'MinecraftUWP', 'Minecraft.Windows')
+        $needles = @('\\mbu', 'XboxGames\\Minecraft', 'XboxGames\\[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-', 'MinecraftUWP', 'Minecraft.Windows')
         foreach ($p in @($pref.ExclusionPath)) {
             if ($p -and ($needles | Where-Object {
                 $p -match $_
@@ -4795,11 +4978,18 @@ function Get-DiagReportText {
                 $pkgReal = Get-PathFinalTarget -Path $pkgLoc
             }
         }
-        $source = if ($appx -and (($content -eq $pkgLoc) -or ($pkgReal -and ($content -eq $pkgReal)))) {
-            T 'diag_source_store'
+        $gdkLeaf = ''
+        if ($content -match '(?i)^[A-Za-z]:\\XboxGames\\[^\\]+\\Content$') {
+            $gdkLeaf = ($content -split '\\')[-2]
         }
-                  elseif ($content -like 'C:\XboxGames*') {
+        $source = if ($gdkLeaf -match '(?i)^[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}$') {
+            T 'diag_source_store_gdk'
+        }
+                  elseif ($gdkLeaf) {
             T 'diag_source_gdk'
+        }
+                  elseif ($appx -and (($content -eq $pkgLoc) -or ($pkgReal -and ($content -eq $pkgReal)))) {
+            T 'diag_source_store'
         }
                   else {
             T 'diag_source_unknown'
