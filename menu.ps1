@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.50'
+$Script:Version = '4.9.51'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -20,7 +20,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c' = '4.9.50'
+    'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c' = '4.9.51'
     'e44230e539e5ec2378c1937746cfb34846ae1e21f9d4f2739f0d4d8c1e37d8da' = '4.9.34'
     '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.28'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
@@ -480,6 +480,7 @@ $Script:PT = @{
     'err_av_quarantine'  = 'O winmm.dll foi corrompido/removido pelo antivirus logo apos a copia. Adicione uma exclusao para a pasta do Minecraft e rode de novo.'
     'av_cfa_hint'        = 'Atencao: a protecao de pastas do Windows (Acesso controlado a pastas / Ransomware protection) tambem esta LIGADA, e ela NAO usa as exclusoes do antivirus - ela tem lista propria de apps permitidos. Libere o instalador/PowerShell e o Minecraft.Windows.exe nela (ou desligue-a temporariamente) e rode o instalador de novo.'
     'err_av_blocked'     = 'O antivirus bloqueou o download do winmm.dll mesmo com a exclusao automatica. Abra a Seguranca do Windows, va em Protecao contra virus e ameacas, abra o Historico de protecao, localize o winmm.dll bloqueado e escolha Permitir ou Restaurar. Depois adicione manualmente as exclusoes para: {0}. Se voce usa outro antivirus, adicione as mesmas exclusoes nele. Rode o instalador de novo.'
+    'av_blocked_detected' = 'Antivirus detectado: {0}. Adicione as mesmas exclusoes nele.'
     'av_retrying'        = 'O antivirus pode ter removido o arquivo baixado. Tentando novamente ({0}/{1})...'
     'warn_third_party_av' = 'Atencao: antivirus de terceiros ativo ({0}). Ele pode bloquear a copia do winmm.dll para a pasta do Minecraft. Se a instalacao falhar, adicione a pasta do Minecraft nas exclusoes (ou pastas protegidas) desse antivirus e rode de novo.'
     'av_removed_hint'       = 'O winmm.dll sumiu logo apos a instalacao. Causa provavel: {0}. Adicione a pasta do Minecraft nas exclusoes dele (e restaure o winmm.dll da quarentena, se estiver la) e rode este instalador de novo.'
@@ -691,6 +692,15 @@ $Script:I18N = @{
         fr='Votre antivirus a bloqué le winmm.dll téléchargé malgré l''exclusion automatique. Ouvrez Sécurité Windows, allez dans Protection contre les virus et menaces, ouvrez l''historique de protection, trouvez le winmm.dll bloqué et choisissez Autoriser ou Restaurer. Ajoutez ensuite manuellement les exclusions pour : {0}. Si vous utilisez un autre antivirus, ajoutez-y les mêmes exclusions. Relancez l''installateur.'
         ar='حظر مكافح الفيروسات لديك ملف winmm.dll الذي تم تنزيله حتى مع الاستثناء التلقائي. افتح أمان Windows، وانتقل إلى الحماية من الفيروسات والتهديدات، وافتح سجل الحماية، وابحث عن winmm.dll المحظور واختر السماح أو الاستعادة. ثم أضف الاستثناءات يدويًا لهذه المسارات: {0}. إذا كنت تستخدم مكافح فيروسات آخر، أضف نفس الاستثناءات إليه أيضًا. شغّل المثبّت مرة أخرى.'
         ru='Ваш антивирус заблокировал загруженный winmm.dll, даже несмотря на автоматическое исключение. Откройте «Безопасность Windows», перейдите в «Защита от вирусов и угроз», откройте «Журнал защиты», найдите заблокированный winmm.dll и выберите «Разрешить» или «Восстановить». Затем добавьте исключения вручную для: {0}. Если вы используете другой антивирус, добавьте такие же исключения и в него. Запустите установщик снова.'
+    }
+    'av_blocked_detected' = @{
+        en='Detected antivirus: {0}. Add the same exclusions there.'
+        es='Antivirus detectado: {0}. Anade las mismas exclusiones alli.'
+        fr='Antivirus detecte : {0}. Ajoutez-y les memes exclusions.'
+        zh='检测到的杀毒软件：{0}。请在其中添加相同的排除项。'
+        hi='पाया गया एंटीवायरस: {0}। उसमें भी वही बहिष्करण जोड़ें।'
+        ar='البرنامج المكتشف: {0}. أضف الاستثناءات نفسها هناك.'
+        ru='Обнаруженный антивирус: {0}. Добавьте такие же исключения в него.'
     }
     'av_retrying' = @{
         en='The antivirus may have removed the downloaded file. Retrying ({0}/{1})...'
@@ -3592,9 +3602,6 @@ function Save-UnlockCacheFromFile {
 }
 
 function Restore-UnlockSource {
-    # An antivirus can delete the downloaded payload from the work folder between
-    # the download and the swap. When that happens the offline cache (same
-    # verified hash) is the only way to finish without downloading again.
     param([string]$Source, [string]$CheckHash)
     if (-not $Source) {
         return ''
@@ -4063,7 +4070,7 @@ function Install-Unlocker {
         if (-not $isArm -and -not $env:MBU_BASE_URL) {
             $dllSources.Add(@{ Url = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll'
                                Tries = 1 })
-            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.50/release/winmm.dll'
+            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.51/release/winmm.dll'
                                Tries = 1 })
         }
         Start-Sleep -Seconds 2
@@ -4286,7 +4293,24 @@ function Install-Unlocker {
             }
         }
         if (-not $actual) {
-            $blockedMsg = (T 'err_av_blocked') -replace '\{0\}', ($excluded -join ', ')
+            $exclList = @($excluded | Where-Object {
+                $_
+            } | Select-Object -Unique)
+            if ($exclList.Count -eq 0) {
+                $exclList = @($Script:DefenderExclAttempted | Where-Object {
+                    $_
+                } | Select-Object -Unique)
+            }
+            if ($exclList.Count -eq 0) {
+                $exclList = @($content, $cacheDir) | Where-Object {
+                    $_
+                }
+            }
+            $blockedMsg = (T 'err_av_blocked') -replace '\{0\}', ($exclList -join ', ')
+            $blockedAvs = @(Get-ThirdPartyAvNames)
+            if ($blockedAvs.Count -gt 0) {
+                $blockedMsg = $blockedMsg + ' ' + ((T 'av_blocked_detected') -replace '\{0\}', ($blockedAvs -join ', '))
+            }
             if (Test-CfaEnabled) {
                 $blockedMsg = $blockedMsg + ' ' + (T 'av_cfa_hint')
             }
@@ -5691,6 +5715,36 @@ function Get-WinmmDiskState {
     return $info
 }
 
+function Get-WinmmFileMarkers {
+    param([string]$Path)
+    $read = Get-FileReadState -Path $Path
+    $attrs = 'unknown'
+    $head = 'unknown'
+    try {
+        $item = Get-Item -LiteralPath $Path -Force -ErrorAction Stop
+        $attrs = Get-FileAttrFlags -Attributes $item.Attributes
+    } catch { }
+    try {
+        $fs = [IO.File]::OpenRead($Path)
+        try {
+            $b1 = $fs.ReadByte()
+            $b2 = $fs.ReadByte()
+            if (($b1 -eq 0x4D) -and ($b2 -eq 0x5A)) {
+                $head = 'mz'
+            } elseif (($b1 -eq 0) -and ($b2 -eq 0)) {
+                $head = 'zeros'
+            } else {
+                $head = 'other'
+            }
+        } finally {
+            $fs.Dispose()
+        }
+    } catch {
+        $head = 'locked'
+    }
+    return ('read=' + $read + ' attrs=' + $attrs + ' head=' + $head)
+}
+
 function Get-WinmmCorruptHint {
     param([string]$Content)
     try {
@@ -5710,6 +5764,7 @@ function Get-WinmmCorruptHint {
         if ($parts.Count -eq 0) {
             return ''
         }
+        $parts += ('file ' + (Get-WinmmFileMarkers -Path (Join-Path $Content 'winmm.dll')))
         return ($parts -join ' | ')
     } catch {
         return ''

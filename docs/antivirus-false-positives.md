@@ -168,6 +168,10 @@ blocked file until the sources run out. If it still fails, add `%TEMP%\mbu` and
 restore the file from its quarantine if it is there, and run the installer again.
 The full instructions are in [TROUBLESHOOTING](../TROUBLESHOOTING.md).
 
+Since v4.9.51 the message for a download blocked **after it arrives** prints the
+exact list of folders to exclude and names the antivirus products found running
+on the machine, so you do not have to guess which product to configure.
+
 ### If Defender blocks the command you typed instead of a file
 
 This one is not about the binary. If you start the installer by wrapping the

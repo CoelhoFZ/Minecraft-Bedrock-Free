@@ -371,6 +371,31 @@ download `winmm.dll` by hand from the
 and save it as `%LOCALAPPDATA%\mbu-cache\payload-x64.bin` so the installer uses
 the offline copy without touching the network.
 
+## "Your antivirus blocked the downloaded winmm.dll" during install (v4.9.51+)
+
+**What it means:** the download arrived and then the file was deleted or emptied
+before the installer could use it, on every address it tried. What blocks it
+here is a product running on your machine, not the server.
+
+**What the report shows:** the `[dl]` line pairs `ok motw=no` with
+`missing/empty/hash-unreadable` for the same attempt (the request worked and the
+file was already gone), and `[defender]` shows `effective=none` when Windows
+Security refused the automatic exclusions, which is normal while another
+antivirus is active.
+
+**What the installer already does:** it retries every address with a pause,
+adds the Windows Defender exclusions again between the tries, and uses the
+verified offline copy in `%LOCALAPPDATA%\mbu-cache` when one exists.
+
+**How to fix:** add the folders printed at the end of the message to the
+exclusions of **every** antivirus installed, restore `winmm.dll` from the
+quarantine if it is there, and run the installer again. Since v4.9.51 the
+message prints that list of folders and names the antivirus products it found
+running, so there is no guessing which product to configure. Windows Security
+exclusions do not cover a third-party antivirus, and a blocked download is
+usually fixed by `%TEMP%\mbu`, `%LOCALAPPDATA%\mbu-cache` and the game folder
+together.
+
 ## "The antivirus removed the downloaded file" during install (v4.9.50+)
 
 **What it means:** the installer downloaded `winmm.dll`, verified its hash, and

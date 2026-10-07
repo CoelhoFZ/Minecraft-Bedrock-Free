@@ -418,7 +418,7 @@ if (-not $downloaded) {
     Read-Host (L 'press_enter_close')
     exit 1
 }
-$menuHash = '5a70842a18ff232e93a5710916d17b384148831379b6a0abb423146e7bbe5589'
+$menuHash = '688f7c72b49dcdf8693ab0fef38cf4746cf8f5957e468f0db504c0816f37c763'
 $menuBytes = [IO.File]::ReadAllBytes($menu)
 $clean = New-Object System.Collections.Generic.List[byte]
 foreach ($b in $menuBytes) {
