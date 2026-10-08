@@ -382,8 +382,19 @@ for ($attempt = 1; $attempt -le 3; $attempt++) {
             Set-ItemProperty -LiteralPath $winmm -Name IsReadOnly -Value $false -ErrorAction SilentlyContinue
         } catch { }
     }
-    Remove-Item $winmm -Force -ErrorAction SilentlyContinue
-    if (-not (Test-Path $winmm)) {
+    try {
+        Remove-Item -LiteralPath $winmm -Force -ErrorAction Stop
+    } catch { }
+    if (-not (Test-Path -LiteralPath $winmm)) {
+        $removed = $true
+        break
+    }
+    try {
+        $sidelined = Join-Path $content ('winmm.dll.mbu-removed-' + [guid]::NewGuid().ToString('N').Substring(0, 8))
+        Move-Item -LiteralPath $winmm -Destination $sidelined -Force -ErrorAction Stop
+        Remove-Item -LiteralPath $sidelined -Force -ErrorAction SilentlyContinue
+    } catch { }
+    if (-not (Test-Path -LiteralPath $winmm)) {
         $removed = $true
         break
     }
@@ -411,8 +422,10 @@ if (Test-Path $orig) {
 Write-Output (L 'unlock_removed')
 
 try {
-    foreach ($s in @(Get-ChildItem -LiteralPath $content -Filter 'winmm.dll.mbu-prev-*' -Force -ErrorAction SilentlyContinue)) {
-        Remove-Item -LiteralPath $s.FullName -Force -ErrorAction SilentlyContinue
+    foreach ($pat in @('winmm.dll.mbu-prev-*', 'winmm.dll.mbu-removed-*')) {
+        foreach ($s in @(Get-ChildItem -LiteralPath $content -Filter $pat -Force -ErrorAction SilentlyContinue)) {
+            Remove-Item -LiteralPath $s.FullName -Force -ErrorAction SilentlyContinue
+        }
     }
 } catch { }
 

@@ -1,6 +1,6 @@
 ﻿
 $ErrorActionPreference = 'Stop'
-$Script:Version = '4.9.51'
+$Script:Version = '4.9.52'
 $base = if ($env:MBU_BASE_URL) {
     $env:MBU_BASE_URL.TrimEnd('/')
 } else {
@@ -20,7 +20,7 @@ $knownUnlockHashesArm64 = @(
     '7a74d63cec0654c50044c55c144dc59f710ded8ccada4f0bd1dc28f557f13f46'
 )
 $unlockBuildLabels = @{
-    'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c' = '4.9.51'
+    'bd1b4c413c657293935d0a072a5c0aa60c9c7384164e8fa36a62ae4208af067c' = '4.9.52'
     'e44230e539e5ec2378c1937746cfb34846ae1e21f9d4f2739f0d4d8c1e37d8da' = '4.9.34'
     '9371baf3b6ad442f2694e62449f0991805fa941e0281cbabcec3585d54fbd299' = 'v4.9.28'
     'f387b5f6b9717800a8511d554d37023472e4f2dbd60bc74a44205e640ce02d7e' = 'v4.8.0'
@@ -477,6 +477,7 @@ $Script:PT = @{
     'err_acl'            = 'Nao foi possivel tomar posse da pasta do Minecraft. Rode como administrador.'
     'err_copy_corrupt'   = 'Falha ao copiar winmm.dll (copia corrompida/bloqueada). Verifique se o antivirus nao bloqueou e tente de novo.'
     'err_replace'        = 'Nao foi possivel substituir winmm.dll (Access denied ou arquivo em uso). Feche o Minecraft e rode como administrador.'
+    'err_remove_failed'  = 'Nao foi possivel remover o winmm.dll (arquivo em uso ou acesso negado). Feche o Minecraft e rode como administrador.'
     'err_av_quarantine'  = 'O winmm.dll foi corrompido/removido pelo antivirus logo apos a copia. Adicione uma exclusao para a pasta do Minecraft e rode de novo.'
     'av_cfa_hint'        = 'Atencao: a protecao de pastas do Windows (Acesso controlado a pastas / Ransomware protection) tambem esta LIGADA, e ela NAO usa as exclusoes do antivirus - ela tem lista propria de apps permitidos. Libere o instalador/PowerShell e o Minecraft.Windows.exe nela (ou desligue-a temporariamente) e rode o instalador de novo.'
     'err_av_blocked'     = 'O antivirus bloqueou o download do winmm.dll mesmo com a exclusao automatica. Abra a Seguranca do Windows, va em Protecao contra virus e ameacas, abra o Historico de protecao, localize o winmm.dll bloqueado e escolha Permitir ou Restaurar. Depois adicione manualmente as exclusoes para: {0}. Se voce usa outro antivirus, adicione as mesmas exclusoes nele. Rode o instalador de novo.'
@@ -665,6 +666,15 @@ $Script:I18N = @{
         fr='Impossible de remplacer winmm.dll (accès refusé ou fichier utilisé). Fermez Minecraft et exécutez en tant qu''administrateur.'
         ar='تعذّر استبدال winmm.dll (تم رفض الوصول أو الملف قيد الاستخدام). أغلق Minecraft وشغّل كمسؤول.'
         ru='Не удалось заменить winmm.dll (отказано в доступе или файл используется). Закройте Minecraft и запустите от имени администратора.'
+    }
+    'err_remove_failed' = @{
+        en='Could not remove winmm.dll (file in use or access denied). Close Minecraft and run as administrator.'
+        es='No se pudo eliminar winmm.dll (archivo en uso o acceso denegado). Cierra Minecraft y ejecuta como administrador.'
+        fr='Impossible de supprimer winmm.dll (fichier utilise ou acces refuse). Fermez Minecraft et executez en tant qu''administrateur.'
+        zh='无法移除 winmm.dll（文件被占用或访问被拒绝）。请关闭 Minecraft 并以管理员身份运行。'
+        hi='winmm.dll हटाया नहीं जा सका (फ़ाइल उपयोग में है या पहुँच अस्वीकृत)। Minecraft बंद करें और व्यवस्थापक के रूप में चलाएँ।'
+        ar='تعذّرت إزالة winmm.dll (الملف قيد الاستخدام أو تم رفض الوصول). أغلق Minecraft وشغّل كمسؤول.'
+        ru='Не удалось удалить winmm.dll (файл используется или отказано в доступе). Закройте Minecraft и запустите от имени администратора.'
     }
     'err_av_quarantine' = @{
         en='winmm.dll was corrupted/removed by antivirus right after copying. Add an exclusion for the Minecraft folder and run again.'
@@ -3902,6 +3912,7 @@ function Install-Unlocker {
     $Script:RunContent = $null
     $Script:DownloadDiag = $null
     $Script:SwapDiag = @()
+    $Script:RestoreDiag = $null
     $Script:LaunchDiag = $null
     $Script:CrashDiag = New-Object System.Collections.Generic.List[string]
     $Script:DefenderExclAttempted = @()
@@ -4070,7 +4081,7 @@ function Install-Unlocker {
         if (-not $isArm -and -not $env:MBU_BASE_URL) {
             $dllSources.Add(@{ Url = 'https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/winmm.dll'
                                Tries = 1 })
-            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.51/release/winmm.dll'
+            $dllSources.Add(@{ Url = 'https://cdn.jsdelivr.net/gh/CoelhoFZ/Minecraft-Bedrock-Free@v4.9.52/release/winmm.dll'
                                Tries = 1 })
         }
         Start-Sleep -Seconds 2
@@ -4435,8 +4446,10 @@ function Remove-MbuLocalTraces {
     param([string]$Content)
     if ($Content) {
         try {
-            foreach ($s in @(Get-ChildItem -LiteralPath $Content -Filter 'winmm.dll.mbu-prev-*' -Force -ErrorAction SilentlyContinue)) {
-                Remove-Item -LiteralPath $s.FullName -Force -ErrorAction SilentlyContinue
+            foreach ($pat in @('winmm.dll.mbu-prev-*', 'winmm.dll.mbu-removed-*')) {
+                foreach ($s in @(Get-ChildItem -LiteralPath $Content -Filter $pat -Force -ErrorAction SilentlyContinue)) {
+                    Remove-Item -LiteralPath $s.FullName -Force -ErrorAction SilentlyContinue
+                }
             }
         } catch { }
     }
@@ -4486,6 +4499,7 @@ function Restore-Original {
     $Script:GateDiag = $null
     $Script:DownloadDiag = $null
     $Script:SwapDiag = @()
+    $Script:RestoreDiag = New-Object System.Collections.Generic.List[string]
     $Script:LaunchDiag = $null
     $Script:CrashDiag = New-Object System.Collections.Generic.List[string]
     $Script:DefenderExclAttempted = @()
@@ -4505,15 +4519,34 @@ function Restore-Original {
     $removed = $false
     for ($attempt = 1; $attempt -le 3; $attempt++) {
         $null = Ensure-ContentWritable -Content $content
-        Remove-Item $winmm -Force -ErrorAction SilentlyContinue
-        if (-not (Test-Path $winmm)) {
+        $delKind = 'none'
+        try {
+            Remove-Item -LiteralPath $winmm -Force -ErrorAction Stop
+        } catch {
+            $delKind = $_.Exception.GetType().Name
+        }
+        if (-not (Test-Path -LiteralPath $winmm)) {
             $removed = $true
             break
         }
+        $moveKind = 'none'
+        try {
+            $sidelined = Join-Path $content ('winmm.dll.mbu-removed-' + [guid]::NewGuid().ToString('N').Substring(0, 8))
+            Move-Item -LiteralPath $winmm -Destination $sidelined -Force -ErrorAction Stop
+            Remove-Item -LiteralPath $sidelined -Force -ErrorAction SilentlyContinue
+        } catch {
+            $moveKind = $_.Exception.GetType().Name
+        }
+        if (-not (Test-Path -LiteralPath $winmm)) {
+            $Script:RestoreDiag.Add('removed attempt=' + $attempt + ' via=rename del=' + $delKind)
+            $removed = $true
+            break
+        }
+        $Script:RestoreDiag.Add('attempt=' + $attempt + ' del=' + $delKind + ' move=' + $moveKind)
         Start-Sleep -Seconds 2
     }
     if (-not $removed) {
-        throw (T 'err_replace')
+        throw (T 'err_remove_failed')
     }
 
     if (Test-Path $orig) {
@@ -4753,6 +4786,11 @@ function Get-DiagReportText {
     try {
         if ($Script:SwapDiag -and $Script:SwapDiag.Count -gt 0) {
             $lines.Add('[swap] ' + (@($Script:SwapDiag | Select-Object -Unique) -join ' | '))
+        }
+    } catch { }
+    try {
+        if ($Script:RestoreDiag -and $Script:RestoreDiag.Count -gt 0) {
+            $lines.Add('[restore] ' + (@($Script:RestoreDiag | Select-Object -Unique) -join ' | '))
         }
     } catch { }
     try {

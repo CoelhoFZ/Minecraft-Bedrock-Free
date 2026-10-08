@@ -421,6 +421,31 @@ folder printed by the installer to the exclusions of your antivirus, restore
 again. The offline cache is what makes the install survive the file being
 removed a second time.
 
+## "Could not remove winmm.dll" when removing the unlock (v4.9.52+)
+
+**What it means:** you chose the option that removes the unlock (menu option [1],
+or the removal offered after a crash) and Windows refused to delete
+`winmm.dll` from the game folder three times in a row. The file is almost always
+still held open by a running game, or protected by an antivirus that watches
+that file name.
+
+**What the report shows:** a `[restore]` line with the reason of every attempt,
+for example `attempt=1 del=UnauthorizedAccessException move=none`, or
+`removed attempt=1 via=rename` when the fallback below did the job.
+
+**What the remover already does (v4.9.52+):** when the delete is denied, it
+renames the payload out of the way to `winmm.dll.mbu-removed-<id>` and removes
+it from there. Windows refuses to delete a file that is open but allows the
+rename, so the removal finishes even with the game holding the file. If both
+the delete and the rename are denied, the report records the exact exception of
+each attempt instead of a generic message.
+
+**How to fix (when it still fails):** close Minecraft completely (check Task
+Manager for `Minecraft.Windows.exe`), add the game folder to the exclusions of
+every antivirus installed, and run the removal again. A left over
+`winmm.dll.mbu-removed-<id>` file in the game folder is inert (the game only
+loads `winmm.dll`) and can be deleted by hand with the game closed.
+
 ## "Bad Image" error (status 0xc0e90007) for WINMM.dll when launching Minecraft
 
 ```
@@ -1140,7 +1165,9 @@ open PowerShell **as administrator**, and run it. It closes the game, restores
 `winmm.dll` (or removes it when there was no original), cleans the Defender
 exclusions the installer added (including the game folder exclusion when it
 lives under an `XboxGames\<GUID>` folder, since v4.9.50) and deletes the local
-binary cache.
+binary cache. Since v4.9.52, when `winmm.dll` cannot be deleted because the
+game or an antivirus is holding the file, the script moves it aside under
+`winmm.dll.mbu-removed-<id>` and finishes the removal anyway.
 
 ### Does it work with a third-party launcher / version switcher?
 
