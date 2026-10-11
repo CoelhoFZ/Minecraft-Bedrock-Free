@@ -1,3 +1,7 @@
+// Copyright (C) 2026 CoelhoFZ
+// SPDX-License-Identifier: GPL-3.0-only
+// This file is part of unlocker-CoelhoFZ (GPLv3, see LICENSE).
+
 // dllmain.cpp - GDK shim entrypoint (XGameCore.GDK.dll).
 //
 // HARDENED (--harden): deep anti-debug + self-check (CRC32) BEFORE

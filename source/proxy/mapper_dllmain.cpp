@@ -1,3 +1,7 @@
+// Copyright (C) 2026 CoelhoFZ
+// SPDX-License-Identifier: GPL-3.0-only
+// This file is part of unlocker-CoelhoFZ (GPLv3, see LICENSE).
+
 // mapper_dllmain.cpp - layer 2 of the packer (BLOB1 itself, encrypted).
 //
 // This file is compiled as a separate PE (build/mapper.dll) and then

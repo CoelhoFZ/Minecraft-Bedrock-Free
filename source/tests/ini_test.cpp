@@ -1,3 +1,7 @@
+// Copyright (C) 2026 CoelhoFZ
+// SPDX-License-Identifier: GPL-3.0-only
+// This file is part of unlocker-CoelhoFZ (GPLv3, see LICENSE).
+
 // ini_test.cpp - native test of the INI parser (runs on Linux, no Windows).
 // Uses the REAL unlock-CoelhoFZ.ini format (Main/Hashes) to validate the parser.
 

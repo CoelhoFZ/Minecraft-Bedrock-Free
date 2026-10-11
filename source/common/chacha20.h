@@ -1,3 +1,7 @@
+// Copyright (C) 2026 CoelhoFZ
+// SPDX-License-Identifier: GPL-3.0-only
+// This file is part of unlocker-CoelhoFZ (GPLv3, see LICENSE).
+
 // chacha20.h - ChaCha20 (RFC 8439), 256-bit key, 96-bit nonce.
 //
 // Replaces the LCG of the 2-stage packer (F1 of HARDENING-PLAN): the LCG is

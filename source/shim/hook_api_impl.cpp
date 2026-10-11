@@ -1,3 +1,7 @@
+// Copyright (C) 2026 CoelhoFZ
+// SPDX-License-Identifier: GPL-3.0-only
+// This file is part of unlocker-CoelhoFZ (GPLv3, see LICENSE).
+
 // hook_api_impl.cpp - QueryApiImpl HOOK FOR xgameruntime.dll
 //
 // ============================================================================

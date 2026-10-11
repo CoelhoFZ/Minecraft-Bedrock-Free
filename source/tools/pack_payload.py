@@ -1,4 +1,7 @@
-#!/usr/bin/env python3
+# Copyright (C) 2026 CoelhoFZ
+# SPDX-License-Identifier: GPL-3.0-only
+# This file is part of unlocker-CoelhoFZ (GPLv3, see LICENSE).
+
 """pack_payload.py - 2-STAGE packer (stub + mapper + payload).
 
 Usage (build.sh --harden):

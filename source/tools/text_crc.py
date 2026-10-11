@@ -1,4 +1,7 @@
-#!/usr/bin/env python3
+# Copyright (C) 2026 CoelhoFZ
+# SPDX-License-Identifier: GPL-3.0-only
+# This file is part of unlocker-CoelhoFZ (GPLv3, see LICENSE).
+
 """text_crc.py - CRC32 of the .text section of a PE.
 
 Used in the stub self-CRC two-pass (build.sh --harden): after pass 1 with the

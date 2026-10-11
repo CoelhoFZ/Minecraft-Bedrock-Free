@@ -1,3 +1,7 @@
+// Copyright (C) 2026 CoelhoFZ
+// SPDX-License-Identifier: GPL-3.0-only
+// This file is part of unlocker-CoelhoFZ (GPLv3, see LICENSE).
+
 // hook_detour.cpp - detour on the QueryApiImpl export of xgameruntime.dll.
 //
 // The patch installation machinery lives here (relay page + trampoline).

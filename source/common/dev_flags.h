@@ -1,3 +1,7 @@
+// Copyright (C) 2026 CoelhoFZ
+// SPDX-License-Identifier: GPL-3.0-only
+// This file is part of unlocker-CoelhoFZ (GPLv3, see LICENSE).
+
 // dev_flags.h - diagnostic bypasses for the dev builds (--release/--debug).
 // Under --harden the call sites are compiled out (there is no bypass in the
 // distribution binary).

@@ -1,4 +1,7 @@
-#!/usr/bin/env bash
+# Copyright (C) 2026 CoelhoFZ
+# SPDX-License-Identifier: GPL-3.0-only
+# This file is part of unlocker-CoelhoFZ (GPLv3, see LICENSE).
+
 # build.sh - builds the unlock-CoelhoFZ DLLs (cross MinGW, Windows x64+arm64).
 #
 # Usage: ./build.sh [--release|--debug|--harden|--lite] [--arch=x64|arm64|both]

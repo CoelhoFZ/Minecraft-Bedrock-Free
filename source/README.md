@@ -112,6 +112,31 @@ base folder is the user `%TEMP%`.
 | `NWRAP` | the hook runs but returns the real object (no wrapper) |
 | `NOHOOK` | the hook is not even installed (the game runs vanilla) |
 
+## Provenance
+
+This tree is the origin of the binary distributed by the installer.
+
+- First publication: commit `11bbafb` (2026-10-04), under the `source/` path of
+  [CoelhoFZ/Minecraft-Bedrock-Free](https://github.com/CoelhoFZ/Minecraft-Bedrock-Free).
+  The repository history is public and timestamped, so any copy of this code is
+  provably later than that commit.
+- Copyright (C) 2026 CoelhoFZ. Every source file carries the SPDX header
+  `GPL-3.0-only`.
+- The released `winmm.dll` is built from this tree with
+  `./build.sh --harden --arch=x64` (GCC MinGW x64). The released file has
+  1.033.228 bytes and its `.text` CRC32 is `0x15624FBF`. The SHA-256 of the
+  released file is in `SHA256SUMS.txt`, at the repository root.
+- The SHA-256 of the whole hardened file changes on every build by design: the
+  packer encrypts the payload and the mapper with a per-build ChaCha20 key. The
+  provenance check is therefore the `.text` CRC32 plus the file size, not the
+  hash of the whole file.
+- To check a build: `./build.sh --harden --arch=x64`, then
+  `python3 tools/text_crc.py dist/winmm.dll`.
+
+Derivative works have to keep these notices, the license and the statement of
+the changes (GPLv3, section 5). Removing the notices, or presenting this code
+as someone else's work, ends the permission to redistribute it.
+
 ## Notice
 
 This project does not contain or distribute any Minecraft files. It only

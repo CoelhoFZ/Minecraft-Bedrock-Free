@@ -1,3 +1,7 @@
+// Copyright (C) 2026 CoelhoFZ
+// SPDX-License-Identifier: GPL-3.0-only
+// This file is part of unlocker-CoelhoFZ (GPLv3, see LICENSE).
+
 // antidebug.h - anti-debug probes shared between the stub (layer 1) and the
 // mapper (layer 2) of the harden packer.
 //

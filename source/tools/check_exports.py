@@ -1,4 +1,7 @@
-#!/usr/bin/env python3
+# Copyright (C) 2026 CoelhoFZ
+# SPDX-License-Identifier: GPL-3.0-only
+# This file is part of unlocker-CoelhoFZ (GPLv3, see LICENSE).
+
 """check_exports.py - winmm proxy exports parity test.
 
 Why it exists: if the GAME starts importing a winmm function the proxy does

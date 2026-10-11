@@ -1,3 +1,7 @@
+// Copyright (C) 2026 CoelhoFZ
+// SPDX-License-Identifier: GPL-3.0-only
+// This file is part of unlocker-CoelhoFZ (GPLv3, see LICENSE).
+
 // gdk_impls.cpp - REAL IIDs used by the QueryApiImpl hook.
 //
 // Extracted from the .data of the unpacked unlock-CoelhoFZ (dumps + decompiled

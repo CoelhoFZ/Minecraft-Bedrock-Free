@@ -1,3 +1,7 @@
+// Copyright (C) 2026 CoelhoFZ
+// SPDX-License-Identifier: GPL-3.0-only
+// This file is part of unlocker-CoelhoFZ (GPLv3, see LICENSE).
+
 // stub_loader.cpp - layer 1 of the 2-stage packer (inside winmm.dll).
 //
 // Harden architecture (2 stages - the mapper does NOT exist readable
