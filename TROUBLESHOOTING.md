@@ -302,10 +302,48 @@ filling the window with HTML.
    installer starts, so there is nothing on your machine to clean up first.
 3. If it keeps failing, use the official `install.bat` from the [newest
    release](https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/install.bat).
-   It downloads the same bootstrap and retries on temporary errors.
-4. Still failing? Turn off any VPN or proxy you use and add an exclusion for
+   It downloads the same bootstrap, retries on temporary errors and refuses to
+   run anything that is not the installer.
+4. If the message names SSL or TLS instead of the connection being closed, the
+   download never started. See [that
+   error](#could-not-create-ssltls-secure-channel-irm-on-older-or-locked-down-windows).
+5. Still failing? Turn off any VPN or proxy you use and add an exclusion for
    PowerShell in the web protection of your antivirus. Some suites block the
    download and the error is reported exactly like this one.
+
+## "Could not create SSL/TLS secure channel" (`irm` on older or locked-down Windows)
+
+```
+irm : The request was aborted: Could not create SSL/TLS secure channel.
+```
+
+**What it means:** the connection was refused before any file was downloaded,
+so nothing ran. GitHub only accepts TLS 1.2 and newer. Windows PowerShell 5.1
+takes the protocol it uses from the .NET Framework of the machine, so on a
+Windows that is far behind on updates, or with a policy that pins an old
+protocol, the handshake fails here instead of returning a file. The same
+happens on a machine where the root certificates are outdated, and the message
+then mentions the certificate or the chain.
+
+**How to fix:**
+
+1. Set the protocol for this session and run the command again:
+
+   ```powershell
+   [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+   irm https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main/i.ps1 | iex
+   ```
+
+2. If the line above fails too, run Windows Update (the .NET Framework and the
+   root certificates come with it), restart the PC and try again.
+
+**Do not** fix this by disabling certificate checking (`-SkipCertificateCheck`,
+`ServerCertificateValidationCallback`, `-AllowUnencryptedAuthentication`), by
+lowering the protocol to SSL 3.0 or TLS 1.0, or by turning the antivirus off.
+The download is a plain HTTPS request to GitHub, the certificate of that host is
+valid, and the official command never asks for a certificate exception. A guide
+that tells you to disable the check, or to pipe the response of a browser to
+`iex`, is not this project.
 
 ## "Access is denied" during install with a leftover old package folder (v4.9.49+)
 
