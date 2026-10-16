@@ -77,12 +77,16 @@ Passo a passo, com o que cada um faz:
 2. Abra o **PowerShell** e rode:
 
 ```powershell
-irm https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/i.ps1 | iex
+irm https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main/i.ps1 | iex
 ```
 
 O arquivo é **`i.ps1`** (a letra **i**, como em instalador), **não** `e.ps1`.
-Um erro de digitação como `.../raw/main/e.ps1 | iex` falha com erro de conexão
-(`A solicitação foi anulada`) porque esse arquivo não existe.
+Qualquer outro nome devolve 404 antes do instalador rodar, e a mensagem
+(`A solicitação foi anulada`) engana, não é a sua internet. Neste endereço um
+nome errado devolve uma linha curta de texto, `404: Not Found`. Para ver o que o
+download devolve de verdade e para uma versão do comando que avisa em palavras
+claras quando o download falha, veja
+[esse erro](TROUBLESHOOTING.md#the-request-was-aborted-the-connection-was-closed-unexpectedly-irm).
 
 3. O instalador abre o Minecraft automaticamente. O botão "Desbloquear Jogo Completo" some.
 
@@ -99,7 +103,7 @@ removidos.
 
 Para remover o unlock depois, rode o instalador de novo e escolha **Remover
 desbloqueio**. Para remoção manual (sem o menu), baixe o `uninstall.ps1`
-(<https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/uninstall.ps1>)
+(<https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main/uninstall.ps1>)
 e rode em um PowerShell elevado.
 
 ## Auto-contido, sem downloads de terceiros

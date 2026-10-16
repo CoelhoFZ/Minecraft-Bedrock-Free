@@ -75,13 +75,16 @@ Step by step, with what each one does:
 2. Open **PowerShell** and run:
 
 ```powershell
-irm https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/i.ps1 | iex
+irm https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main/i.ps1 | iex
 ```
 
-The file is **`i.ps1`** (the letter **i**, as in "install"), not
-`e.ps1`. A typo like `.../raw/main/e.ps1 | iex` fails with a connection
-error ("the request was aborted: the connection was closed unexpectedly")
-because that file does not exist.
+The file is **`i.ps1`** (the letter **i**, as in "install"), not `e.ps1`. Any
+other name fails with a 404 before the installer runs, and the error message
+("the request was aborted: the connection was closed unexpectedly") is
+misleading, it is not your internet. On this address a wrong name returns one
+short line of text, `404: Not Found`. For what the download really returns and
+for a version of the command that reports a failed download in plain words, see
+[that error](TROUBLESHOOTING.md#the-request-was-aborted-the-connection-was-closed-unexpectedly-irm).
 
 3. The installer opens Minecraft automatically. The "Unlock full game" button is gone.
 
@@ -97,7 +100,7 @@ without a working file. Old artifacts from previous versions are removed.
 
 To remove the unlock later, run the installer again and choose **Remove
 unlock**. For a manual removal (without the menu), download `uninstall.ps1`
-(<https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/uninstall.ps1>)
+(<https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main/uninstall.ps1>)
 and run it in an elevated PowerShell.
 
 ## Self-contained, no third-party downloads

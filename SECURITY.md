@@ -73,7 +73,7 @@ Fake "unlocker fix" installers are being distributed in Discord chats:
   above plus `SHA256SUMS.txt`.
 - Older entry points such as `install.ps1` or `bootstrap-*.ps1` do not exist in this
   repository. The only two supported install methods are
-  `irm https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/i.ps1 | iex` and the
+  `irm https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main/i.ps1 | iex` and the
   `install.bat` published in the Releases page.
 
 ## Install counter (anonymous, no personal data)

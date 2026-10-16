@@ -11,7 +11,8 @@ one.
   category as `hacktool`/`crack`, so a share of them always flags it. The label
   describes the category, not something the file does.
 - Most of the detections are generic heuristics and machine-learning labels
-  (`Evo-gen`, `Heur.BZC.ONG.Boxter`, `Detected`, score entries). Several engines
+  (`Evo-gen`, `Heur.BZC.ONG.Boxter`, `RiskWare.Agent`, `Detected`, score
+  entries). Several engines
   return the very same detection string, which is a shared signature set rather
   than independent discoveries. No real malware family is named.
 - The report does not show data theft, a keylogger, persistence (no service, no
@@ -65,7 +66,7 @@ The report is for a `.zip`, and the file name matters:
 
 1. Download only from the two official entries: the `install.bat` on the
    [release page](https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest),
-   or `irm https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/i.ps1 | iex`.
+   or `irm https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main/i.ps1 | iex`.
 2. Compare the SHA-256 of the downloaded `winmm.dll` with the published value:
 
    ```powershell

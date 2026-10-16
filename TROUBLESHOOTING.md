@@ -1,7 +1,7 @@
 # Troubleshooting
 
 Common problems and how to recover. Run the installer again (`irm
-https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/i.ps1 | iex`)
+https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main/i.ps1 | iex`)
 after fixing the underlying cause.
 
 ## Automatic failure reports
@@ -115,7 +115,7 @@ How to recover:
 
 1. Do not run that file again and do not trust wherever it came from.
 2. Delete it and use one of the two official install methods only:
-   - `irm https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/i.ps1 | iex` in PowerShell, or
+   - `irm https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main/i.ps1 | iex` in PowerShell, or
    - the official `install.bat` from the
      [newest release](https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/releases/latest/download/install.bat).
 3. The official bootstrap file is `i.ps1`. There is no `e.ps1` in this
@@ -148,7 +148,7 @@ somewhere before that. How to recover:
    or run in PowerShell (it always downloads the current menu):
 
    ```powershell
-   irm https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/i.ps1 | iex
+   irm https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main/i.ps1 | iex
    ```
 
 2. If you already downloaded the newest `install.bat`, wait a few minutes and
@@ -197,7 +197,7 @@ do this:
 2. Run:
 
    ```powershell
-   irm https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/menu.ps1 | iex
+   irm https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main/menu.ps1 | iex
    ```
 
    This opens the menu directly in the elevated window, with no second process
@@ -248,20 +248,51 @@ irm : The request was aborted: The connection was closed unexpectedly.
 downloading the bootstrap, and it is misleading: the usual cause is not your
 internet. The official bootstrap file is `i.ps1` (the letter **i**, as in
 "install"). There is no `e.ps1` in this repository, and requesting a file that
-does not exist on the `github.com/.../raw/...` address makes the request die
-with exactly this message, before any installer code runs. `1.ps1`, `l.ps1` and
-other typos end the same way. In Portuguese the same message reads `A solicitacao
-foi anulada: A conexao foi fechada de modo inesperado`. If your command was
-copied exactly from the [Install](README.md#install) section, this message can
-also come from a network filter (antivirus web shield, proxy or VPN) closing the
-connection.
+does not exist makes the request die with exactly this message, before any
+installer code runs. `1.ps1`, `l.ps1` and other typos end the same way. In
+Portuguese the same message reads `A solicitacao foi anulada: A conexao foi
+fechada de modo inesperado`. If your command was copied exactly from the
+[Install](README.md#install) section, this message can also come from a network
+filter (antivirus web shield, proxy or VPN) closing the connection.
+
+The same typo has a second face: instead of the message, the window fills up
+with JSON and HTML. That is the error page GitHub serves when the file name does
+not exist (around 260 KB of HTML with a JSON block inside it), and running it
+does nothing useful. On the `raw.githubusercontent.com` address the same mistake
+returns 14 characters of plain text, `404: Not Found`, which is why every
+command in this repository uses that address. To see what an address really
+returns before running anything, download it in two steps:
+
+```powershell
+$u = 'https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main/i.ps1'
+$f = Join-Path $env:TEMP 'mbu-bootstrap.ps1'
+try {
+    Invoke-WebRequest -UseBasicParsing -Uri $u -OutFile $f -TimeoutSec 30
+} catch {
+    Write-Host 'Download failed. Check your connection and try again.' -ForegroundColor Red
+    Write-Host $_.Exception.Message -ForegroundColor DarkGray
+    return
+}
+$c = Get-Content -LiteralPath $f -Raw
+if ($c.Length -lt 5000 -or $c -notmatch 'Script:Version') {
+    Write-Host 'The address did not return the installer.' -ForegroundColor Red
+    Write-Host 'Check the command you copied. A wrong file name returns a 404.' -ForegroundColor Red
+    return
+}
+Write-Host ('Downloaded ' + $c.Length + ' characters. Running the installer.') -ForegroundColor Green
+iex $c
+```
+
+This is the same file the one-liner runs. The difference is that a broken
+download or a file that is not the installer stops with a message instead of
+filling the window with HTML.
 
 **How to fix:**
 
 1. Compare your command with the official one:
 
    ```powershell
-   irm https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/i.ps1 | iex
+   irm https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main/i.ps1 | iex
    ```
 
    The file is `i.ps1`. Any other address (a short link, another server, a
@@ -1147,7 +1178,7 @@ again, or ask the administrator of the PC to run the command below in a
 PowerShell window opened as administrator:
 
 ```powershell
-irm https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/menu.ps1 | iex
+irm https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main/menu.ps1 | iex
 ```
 
 You can check your account type in Windows Settings, Accounts, Your info, where
@@ -1160,7 +1191,7 @@ declined: run the installer again and accept that window.
 ### How do I remove the unlock without the menu?
 
 Download `uninstall.ps1` from
-<https://github.com/CoelhoFZ/Minecraft-Bedrock-Free/raw/main/uninstall.ps1>,
+<https://raw.githubusercontent.com/CoelhoFZ/Minecraft-Bedrock-Free/main/uninstall.ps1>,
 open PowerShell **as administrator**, and run it. It closes the game, restores
 `winmm.dll` (or removes it when there was no original), cleans the Defender
 exclusions the installer added (including the game folder exclusion when it
