@@ -128,15 +128,18 @@ carried the fingerprint of the `menu.ps1` that was current when that release was
 built, and they download `menu.ps1` from the `main` branch of this repository.
 Every later release that changed `menu.ps1` turned an older `install.bat` into a
 refusal: it stopped instead of running a menu it was not built with. The copy
-could be official and still fail - an outdated download was enough (the Releases
-page lists old versions side by side).
+could be official and still fail - an outdated download was enough (for a long time
+the Releases page listed old versions side by side, so a copy saved months earlier
+was enough to hit this).
 
 Since **v4.9.14** the official `install.bat` is a thin bootstrap: it does not
 carry a fingerprint anymore, it always fetches the current bootstrap (`i.ps1`)
 from the `main` branch and lets it download and verify the current `menu.ps1`.
 That is how the PowerShell one-liner has always worked. The releases that still
-had the old file were also refreshed with this bootstrap, so the links on the
-Releases page (including old versions) now serve a file that keeps working.
+had the old file were also refreshed with this bootstrap, and the older releases
+are no longer published: the Releases page serves only the current version, whose
+`install.bat` is the same bootstrap. A copy saved before v4.9.14 is the only way
+to still see this message.
 
 If you still hit this message, your copy is an old `install.bat` that was saved
 somewhere before that. How to recover:

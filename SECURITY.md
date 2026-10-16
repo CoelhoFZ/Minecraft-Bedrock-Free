@@ -48,7 +48,9 @@ Fake "unlocker fix" installers are being distributed in Discord chats:
   It carries no hash of its own, so a saved `install.bat` does not go stale when `menu.ps1`
   changes. Up to v4.9.13 `install.bat` carried its own pin and refused to run a menu from a
   different release (fail-closed); the assets of those releases were refreshed with the
-  bootstrap, so the files served by the Releases page keep working.
+  bootstrap, and those older releases are no longer published, so the Releases page
+  serves only the current version and a copy saved from an older page still runs the
+  current menu.
 - Since **v4.9.15** the launch step changed (same pin rule, only the way the verified menu is
   started): when the session is already elevated (`install.bat`, or a PowerShell opened as
   administrator) the menu runs in that same window, and otherwise `powershell.exe` is elevated to
